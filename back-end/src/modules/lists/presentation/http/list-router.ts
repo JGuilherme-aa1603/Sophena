@@ -9,6 +9,7 @@ import { requireAuthenticatedUser } from "../../../auth/presentation/http/securi
 import { type AuthenticatedUserView } from "../../../auth/domain/auth-user.ts";
 import { listService } from "../../composition/list-module.ts";
 import { ListNameConflictError } from "../../application/list-errors.ts";
+import { createListItemRouter } from "../../../list-items/presentation/http/list-item-router.ts";
 
 type ListRouteResponseLocals = {
   authenticatedUser?: AuthenticatedUserView;
@@ -18,6 +19,7 @@ export function createListRouter() {
   const router = Router();
 
   router.use(requireAuthenticatedUser);
+  router.use("/:listId/items", createListItemRouter());
 
   router.get("/", async (request, response) => {
     try {

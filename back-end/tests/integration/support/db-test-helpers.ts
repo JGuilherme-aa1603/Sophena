@@ -6,6 +6,7 @@ import { prisma } from "../../../src/infrastructure/prisma/prisma-client.ts";
 import { hashPassword } from "../../../src/modules/auth/infrastructure/security/password-hasher.ts";
 
 export async function resetDatabase() {
+  await prisma.log.deleteMany();
   await prisma.refreshToken.deleteMany();
   await prisma.bookListItem.deleteMany();
   await prisma.bookList.deleteMany();
@@ -16,6 +17,10 @@ export async function resetDatabase() {
 
 export async function disconnectDatabase() {
   await prisma.$disconnect();
+}
+
+export async function clearLogs() {
+  await prisma.log.deleteMany();
 }
 
 export async function createTestUser(input: {
@@ -59,6 +64,32 @@ export async function createTestBook(input: {
   });
 }
 
+export async function createTestList(input: {
+  name: string;
+  user_id: string;
+}) {
+  return prisma.bookList.create({
+    data: {
+      name: input.name,
+      user_id: input.user_id,
+    },
+  });
+}
+
+export async function createTestBookListItem(input: {
+  list_id: string;
+  book_id: string;
+  position: number;
+}) {
+  return prisma.bookListItem.create({
+    data: {
+      list_id: input.list_id,
+      book_id: input.book_id,
+      position: input.position,
+    },
+  });
+}
+
 export async function countBooksByTitleAndAuthor(input: {
   title: string;
   author: string;
@@ -89,6 +120,58 @@ export async function expireRefreshToken(rawToken: string) {
     },
     data: {
       expires_at: new Date(Date.now() - 60_000),
+    },
+  });
+}
+
+export async function findUserWithAdminByUserName(userName: string) {
+  return prisma.user.findUnique({
+    where: {
+      user_name: userName,
+    },
+    include: {
+      admin: true,
+    },
+  });
+}
+
+export async function createTestLog(input: {
+  level: "INFO" | "WARN" | "ERROR";
+  status_code: number;
+  message?: string | null;
+  route?: string | null;
+  method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | null;
+  user_id?: string | null;
+  created_at?: Date;
+}) {
+  return prisma.log.create({
+    data: {
+      level: input.level,
+      status_code: input.status_code,
+      message: input.message ?? null,
+      route: input.route ?? null,
+      method: input.method ?? null,
+      user_id: input.user_id ?? null,
+      created_at: input.created_at,
+    },
+  });
+}
+
+export async function findLogs(input?: {
+  route?: string;
+  method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
+  level?: "INFO" | "WARN" | "ERROR";
+  user_id?: string | null;
+}) {
+  return prisma.log.findMany({
+    where: {
+      route: input?.route,
+      method: input?.method,
+      level: input?.level,
+      user_id: input?.user_id,
+    },
+    orderBy: {
+      created_at: "asc",
     },
   });
 }

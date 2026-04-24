@@ -10,6 +10,7 @@ import {
   ValidationError,
 } from "../../application/auth-errors.ts";
 import { authService } from "../../composition/auth-module.ts";
+import { logService } from "../../../logs/composition/log-module.ts";
 
 export function createAuthRouter() {
   const router = Router();
@@ -26,6 +27,15 @@ export function createAuthRouter() {
     try {
       const result = await authService.login(request.body ?? {});
 
+      await writeAuditLogSafely({
+        level: "INFO",
+        status_code: 200,
+        message: "Login successful",
+        route: "/auth/login",
+        method: "POST",
+        user_id: result.user.id,
+      });
+
       response.cookie("refresh_token", result.refresh_token, {
         httpOnly: true,
         sameSite: "strict",
@@ -39,6 +49,16 @@ export function createAuthRouter() {
         user: result.user,
       });
     } catch (error) {
+      if (error instanceof InvalidCredentialsError) {
+        await writeAuditLogSafely({
+          level: "WARN",
+          status_code: 401,
+          message: "Login failed",
+          route: "/auth/login",
+          method: "POST",
+        });
+      }
+
       handleAuthError(error, response);
     }
   });
@@ -59,13 +79,34 @@ export function createAuthRouter() {
         access_token: result.access_token,
       });
     } catch (error) {
+      if (error instanceof UnauthorizedError) {
+        await writeAuditLogSafely({
+          level: "WARN",
+          status_code: 401,
+          message: "Invalid refresh attempt",
+          route: "/auth/refresh",
+          method: "POST",
+        });
+      }
+
       handleAuthError(error, response);
     }
   });
 
   router.post("/logout", async (request, response) => {
     try {
-      const result = await authService.logout(readRefreshTokenFromCookie(request.header("cookie")));
+      const refreshToken = readRefreshTokenFromCookie(request.header("cookie"));
+      const userId = authService.readRefreshTokenUserId(refreshToken);
+      const result = await authService.logout(refreshToken);
+
+      await writeAuditLogSafely({
+        level: "INFO",
+        status_code: 200,
+        message: "Logout successful",
+        route: "/auth/logout",
+        method: "POST",
+        user_id: userId ?? null,
+      });
 
       response.clearCookie("refresh_token", {
         httpOnly: true,
@@ -91,6 +132,16 @@ export function createAuthRouter() {
   });
 
   return router;
+}
+
+async function writeAuditLogSafely(
+  input: Parameters<typeof logService.createLog>[0],
+) {
+  try {
+    await logService.createLog(input);
+  } catch {
+    // Logging must never change auth response behavior.
+  }
 }
 
 function createAuthRateLimiter(input: {

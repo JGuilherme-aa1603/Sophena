@@ -3,8 +3,10 @@ import cors from "cors";
 import helmet from "helmet";
 
 import { createAuthRouter } from "./modules/auth/presentation/http/auth-router";
+import { createAdminUserRouter } from "./modules/admin/presentation/http/admin-user-router";
 import { createBookRouter } from "./modules/books/presentation/http/book-router";
 import { createListRouter } from "./modules/lists/presentation/http/list-router";
+import { createAdminLogRouter } from "./modules/logs/presentation/http/admin-log-router";
 
 export function createApp() {
   const app = express();
@@ -14,6 +16,8 @@ export function createApp() {
   app.use(cors(createCorsOptions()));
   app.use(express.json());
   app.use("/auth", createAuthRouter());
+  app.use("/admin", createAdminUserRouter());
+  app.use("/admin", createAdminLogRouter());
   app.use("/books", createBookRouter());
   app.use("/lists", createListRouter());
 

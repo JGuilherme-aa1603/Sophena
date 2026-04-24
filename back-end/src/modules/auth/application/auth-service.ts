@@ -147,6 +147,15 @@ export class AuthService {
       message: "Logout successful",
     };
   }
+
+  readRefreshTokenUserId(refreshToken?: string) {
+    if (!refreshToken) {
+      return undefined;
+    }
+
+    const payload = this.tokenService.verifyRefreshToken(refreshToken);
+    return payload?.sub;
+  }
 }
 
 function validateLoginInput(input: LoginInput) {
