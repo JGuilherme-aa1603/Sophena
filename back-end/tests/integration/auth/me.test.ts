@@ -2,7 +2,12 @@ import assert from "node:assert/strict";
 import { afterEach, beforeEach, describe, test } from "node:test";
 import type { Server } from "node:http";
 
-import { app } from "../../../src/app.ts";
+import { createApp } from "../../../src/app.ts";
+import {
+  createTestUser,
+  disconnectDatabase,
+  resetDatabase,
+} from "../support/db-test-helpers.ts";
 import {
   requestJson,
   startHttpServer,
@@ -11,8 +16,24 @@ import {
 
 let server: Server | undefined;
 
+async function loginAndGetAccessToken(credentials: {
+  user_name: string;
+  password: string;
+}) {
+  const loginResponse = await requestJson(server!, {
+    method: "POST",
+    path: "/auth/login",
+    body: credentials,
+  });
+
+  assert.equal(loginResponse.status, 200);
+  assert.equal(typeof loginResponse.body?.access_token, "string");
+  return loginResponse.body.access_token as string;
+}
+
 beforeEach(async () => {
-  server = await startHttpServer(app);
+  await resetDatabase();
+  server = await startHttpServer(createApp());
 });
 
 afterEach(async () => {
@@ -20,6 +41,10 @@ afterEach(async () => {
     await stopHttpServer(server);
     server = undefined;
   }
+});
+
+afterEach(async () => {
+  await disconnectDatabase();
 });
 
 describe("GET /auth/me", () => {
@@ -49,34 +74,52 @@ describe("GET /auth/me", () => {
   });
 
   test("returns the authenticated non-admin user without exposing sensitive fields", async () => {
+    const user = await createTestUser({
+      user_name: "leitora-autenticada",
+      password: "SenhaSegura#456",
+    });
+    const accessToken = await loginAndGetAccessToken({
+      user_name: "leitora-autenticada",
+      password: "SenhaSegura#456",
+    });
+
     const response = await requestJson(server!, {
       method: "GET",
       path: "/auth/me",
       headers: {
-        authorization: "Bearer token-acesso-valido-usuario",
+        authorization: `Bearer ${accessToken}`,
       },
     });
 
     assert.equal(response.status, 200);
     assert.equal(response.body.user_name, "leitora-autenticada");
     assert.equal(response.body.is_admin, false);
-    assert.equal(typeof response.body.id, "string");
-    assert.ok(response.body.id.length > 0);
+    assert.equal(response.body.id, user.id);
     assert.equal("password_hash" in response.body, false);
   });
 
   test("returns the authenticated admin user with is_admin=true", async () => {
+    const adminUser = await createTestUser({
+      user_name: "admin-autenticado",
+      password: "AdminSenha#456",
+      is_admin: true,
+    });
+    const accessToken = await loginAndGetAccessToken({
+      user_name: "admin-autenticado",
+      password: "AdminSenha#456",
+    });
+
     const response = await requestJson(server!, {
       method: "GET",
       path: "/auth/me",
       headers: {
-        authorization: "Bearer token-acesso-valido-admin",
+        authorization: `Bearer ${accessToken}`,
       },
     });
 
     assert.equal(response.status, 200);
     assert.equal(response.body.user_name, "admin-autenticado");
     assert.equal(response.body.is_admin, true);
-    assert.equal(typeof response.body.id, "string");
+    assert.equal(response.body.id, adminUser.id);
   });
 });

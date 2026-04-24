@@ -1,3 +1,5 @@
+import "../../support/test-env.ts";
+
 import { createServer, type Server } from "node:http";
 import { AddressInfo } from "node:net";
 
@@ -40,7 +42,7 @@ export async function stopHttpServer(server: Server): Promise<void> {
 }
 
 type JsonRequestOptions = {
-  method: "GET" | "POST";
+  method: "GET" | "POST" | "PATCH" | "DELETE" | "OPTIONS";
   path: string;
   body?: unknown;
   headers?: Record<string, string>;
@@ -64,11 +66,15 @@ export async function requestJson(server: Server, options: JsonRequestOptions) {
   });
 
   const rawBody = await response.text();
-  const parsedBody = rawBody ? JSON.parse(rawBody) : null;
+  const contentType = response.headers.get("content-type") ?? "";
+  const parsedBody = rawBody && contentType.includes("application/json")
+    ? JSON.parse(rawBody)
+    : null;
 
   return {
     status: response.status,
     body: parsedBody,
     headers: response.headers,
+    rawBody,
   };
 }

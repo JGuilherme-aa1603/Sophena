@@ -2,7 +2,12 @@ import assert from "node:assert/strict";
 import { afterEach, beforeEach, describe, test } from "node:test";
 import type { Server } from "node:http";
 
-import { app } from "../../../src/app.ts";
+import { createApp } from "../../../src/app.ts";
+import {
+  createTestUser,
+  disconnectDatabase,
+  resetDatabase,
+} from "../support/db-test-helpers.ts";
 import {
   requestJson,
   startHttpServer,
@@ -12,7 +17,8 @@ import {
 let server: Server | undefined;
 
 beforeEach(async () => {
-  server = await startHttpServer(app);
+  await resetDatabase();
+  server = await startHttpServer(createApp());
 });
 
 afterEach(async () => {
@@ -22,8 +28,17 @@ afterEach(async () => {
   }
 });
 
+afterEach(async () => {
+  await disconnectDatabase();
+});
+
 describe("POST /auth/login", () => {
   test("authenticates a non-admin user, returns an access token, and sets a secure refresh cookie", async () => {
+    const user = await createTestUser({
+      user_name: "leitora-normal",
+      password: "SenhaForte#123",
+    });
+
     const response = await requestJson(server!, {
       method: "POST",
       path: "/auth/login",
@@ -38,8 +53,7 @@ describe("POST /auth/login", () => {
     assert.ok(response.body.access_token.length > 0);
     assert.equal(response.body.user.user_name, "leitora-normal");
     assert.equal(response.body.user.is_admin, false);
-    assert.equal(typeof response.body.user.id, "string");
-    assert.ok(response.body.user.id.length > 0);
+    assert.equal(response.body.user.id, user.id);
     assert.equal("refresh_token" in response.body, false);
 
     const setCookieHeader = response.headers.get("set-cookie");
@@ -50,6 +64,12 @@ describe("POST /auth/login", () => {
   });
 
   test("authenticates an admin user and returns is_admin=true in the response body", async () => {
+    const adminUser = await createTestUser({
+      user_name: "admin-root",
+      password: "AdminSenha#123",
+      is_admin: true,
+    });
+
     const response = await requestJson(server!, {
       method: "POST",
       path: "/auth/login",
@@ -62,7 +82,7 @@ describe("POST /auth/login", () => {
     assert.equal(response.status, 200);
     assert.equal(response.body.user.user_name, "admin-root");
     assert.equal(response.body.user.is_admin, true);
-    assert.equal(typeof response.body.user.id, "string");
+    assert.equal(response.body.user.id, adminUser.id);
   });
 
   test("rejects login with an unknown user using a safe 401 response", async () => {
@@ -84,6 +104,11 @@ describe("POST /auth/login", () => {
   });
 
   test("rejects login with a wrong password using the same safe 401 response", async () => {
+    await createTestUser({
+      user_name: "leitora-com-senha",
+      password: "SenhaCorreta#123",
+    });
+
     const response = await requestJson(server!, {
       method: "POST",
       path: "/auth/login",
@@ -143,6 +168,24 @@ describe("POST /auth/login", () => {
       body: {
         user_name: 12345,
         password: true,
+      },
+    });
+
+    assert.equal(response.status, 400);
+    assert.equal(response.body?.message, "Validation failed");
+    assert.ok(Array.isArray(response.body?.errors));
+
+    const errorFields = response.body.errors.map((error: { field: string }) => error.field).sort();
+    assert.deepEqual(errorFields, ["password", "user_name"]);
+  });
+
+  test("returns 400 when login fields are empty after trim", async () => {
+    const response = await requestJson(server!, {
+      method: "POST",
+      path: "/auth/login",
+      body: {
+        user_name: "   ",
+        password: "   ",
       },
     });
 
