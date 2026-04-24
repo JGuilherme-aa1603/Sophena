@@ -17,6 +17,9 @@
     "format": "oxfmt src/"
   },
   "dependencies": {
+    "@ionic/vue": "^8.8.4",
+    "@ionic/vue-router": "^8.8.4",
+    "ionicons": "^8.0.13",
     "pinia": "^3.0.4",
     "vue": "^3.5.32",
     "vue-router": "^5.0.4"
@@ -24,6 +27,7 @@
   "devDependencies": {
     "@playwright/test": "^1.59.1",
     "@tsconfig/node24": "^24.0.4",
+    "@types/babel__core": "^7.20.5",
     "@types/jsdom": "^28.0.1",
     "@types/node": "^24.12.2",
     "@vitejs/plugin-vue": "^6.0.6",
