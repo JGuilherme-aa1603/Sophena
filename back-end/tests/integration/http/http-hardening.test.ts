@@ -32,7 +32,7 @@ async function login(credentials: {
 }
 
 beforeEach(async () => {
-  process.env.CORS_ORIGIN = "http://localhost:3000";
+  process.env.CORS_ORIGIN = "http://localhost:5173";
   process.env.AUTH_RATE_LIMIT_WINDOW_MS = "60000";
   process.env.AUTH_LOGIN_RATE_LIMIT_MAX = "2";
   process.env.AUTH_REFRESH_RATE_LIMIT_MAX = "2";
@@ -74,13 +74,13 @@ describe("HTTP hardening", () => {
       method: "OPTIONS",
       path: "/auth/login",
       headers: {
-        origin: "http://localhost:3000",
+        origin: "http://localhost:5173",
         "access-control-request-method": "POST",
       },
     });
 
     assert.equal(response.status, 204);
-    assert.equal(response.headers.get("access-control-allow-origin"), "http://localhost:3000");
+    assert.equal(response.headers.get("access-control-allow-origin"), "http://localhost:5173");
     assert.ok(response.headers.get("access-control-allow-methods")?.includes("POST"));
   });
 

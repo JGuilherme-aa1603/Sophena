@@ -155,4 +155,143 @@ describe('auth store', () => {
     expect(authStore.user).toBeNull()
     expect(authStore.errorMessage).toBe('Usuário ou senha não conferem.')
   })
+
+  it('restaura a sessão com o cookie de refresh ao recarregar o site', async () => {
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(createJsonResponse({
+        status: 200,
+        body: {
+          access_token: 'token-renovado',
+        },
+      }))
+      .mockResolvedValueOnce(createJsonResponse({
+        status: 200,
+        body: {
+          id: 'user-9',
+          user_name: 'leitora-persistida',
+          is_admin: false,
+        },
+      }))
+
+    vi.stubGlobal('fetch', fetchMock)
+
+    const authStore = useAuthStore()
+    const hasSession = await authStore.ensureSession()
+
+    expect(hasSession).toBe(true)
+    expect(authStore.accessToken).toBe('token-renovado')
+    expect(authStore.user).toEqual({
+      id: 'user-9',
+      user_name: 'leitora-persistida',
+      is_admin: false,
+    })
+    expect(localStorage.getItem('access_token')).toBeNull()
+    expect(sessionStorage.getItem('access_token')).toBeNull()
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      expect.stringContaining('/auth/refresh'),
+      expect.objectContaining({
+        method: 'POST',
+        credentials: 'include',
+      }),
+    )
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      expect.stringContaining('/auth/me'),
+      expect.objectContaining({
+        method: 'GET',
+        headers: expect.objectContaining({
+          Authorization: 'Bearer token-renovado',
+        }),
+      }),
+    )
+  })
+
+  it('mantém o usuário deslogado quando o refresh falha', async () => {
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(createJsonResponse({
+        status: 401,
+        body: {
+          message: 'Authentication required',
+        },
+      }))
+
+    vi.stubGlobal('fetch', fetchMock)
+
+    const authStore = useAuthStore()
+    const hasSession = await authStore.ensureSession()
+
+    expect(hasSession).toBe(false)
+    expect(authStore.accessToken).toBeNull()
+    expect(authStore.user).toBeNull()
+    expect(authStore.errorMessage).toBe('')
+  })
+
+  it('faz logout pela API antes de limpar a sessão em memória', async () => {
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(createJsonResponse({
+        status: 200,
+        body: {},
+      }))
+
+    vi.stubGlobal('fetch', fetchMock)
+
+    const authStore = useAuthStore()
+    authStore.setAccessToken('token-valido')
+    authStore.user = {
+      id: 'user-10',
+      user_name: 'leitora-ativa',
+      is_admin: false,
+    }
+
+    await authStore.logout()
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining('/auth/logout'),
+      expect.objectContaining({
+        method: 'POST',
+        credentials: 'include',
+        headers: expect.objectContaining({
+          Authorization: 'Bearer token-valido',
+        }),
+      }),
+    )
+    expect(authStore.accessToken).toBeNull()
+    expect(authStore.user).toBeNull()
+    expect(authStore.errorMessage).toBe('')
+  })
+
+  it('mantém a sessão e mostra mensagem amigável quando o logout falha', async () => {
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(createJsonResponse({
+        status: 500,
+        body: {
+          message: 'Internal server error',
+        },
+      }))
+
+    vi.stubGlobal('fetch', fetchMock)
+
+    const authStore = useAuthStore()
+    authStore.setAccessToken('token-valido')
+    authStore.user = {
+      id: 'user-11',
+      user_name: 'leitora-com-erro',
+      is_admin: false,
+    }
+
+    await expect(authStore.logout()).rejects.toThrow()
+
+    expect(authStore.accessToken).toBe('token-valido')
+    expect(authStore.user).toEqual({
+      id: 'user-11',
+      user_name: 'leitora-com-erro',
+      is_admin: false,
+    })
+    expect(authStore.errorMessage).toBe('Não foi possível sair agora. Tente novamente em instantes.')
+  })
 })

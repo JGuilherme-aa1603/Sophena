@@ -11,6 +11,14 @@ export type LoginResponse = {
   user: AuthenticatedUser
 }
 
+export type RefreshResponse = {
+  access_token: string
+}
+
+export type LogoutResponse = {
+  success: boolean
+}
+
 export async function loginRequest(input: {
   user_name: string
   password: string
@@ -27,6 +35,21 @@ export async function loginRequest(input: {
 export async function meRequest(accessToken: string) {
   return requestJson<AuthenticatedUser>('/auth/me', {
     method: 'GET',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  })
+}
+
+export async function refreshRequest() {
+  return requestJson<RefreshResponse>('/auth/refresh', {
+    method: 'POST',
+  })
+}
+
+export async function logoutRequest(accessToken: string) {
+  return requestJson<LogoutResponse>('/auth/logout', {
+    method: 'POST',
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },

@@ -6,7 +6,10 @@ import type { RouteLocationNormalized, RouterHistory } from 'vue-router'
 
 import { useAuthStore } from '@/stores/auth'
 
-import AppHomeView from '../views/AppHomeView.vue'
+import AdminLogsView from '../views/AdminLogsView.vue'
+import AdminUsersView from '../views/AdminUsersView.vue'
+import ListsView from '../views/ListsView.vue'
+import ListDetailView from '../views/ListDetailView.vue'
 import LoginView from '../views/LoginView.vue'
 
 function isGuestOnlyRoute(route: RouteLocationNormalized) {
@@ -15,6 +18,10 @@ function isGuestOnlyRoute(route: RouteLocationNormalized) {
 
 function requiresAuthentication(route: RouteLocationNormalized) {
   return route.matched.some((record) => record.meta.requiresAuth === true)
+}
+
+function requiresAdmin(route: RouteLocationNormalized) {
+  return route.matched.some((record) => record.meta.requiresAdmin === true)
 }
 
 export function createAppRouter(history: RouterHistory) {
@@ -36,9 +43,35 @@ export function createAppRouter(history: RouterHistory) {
       {
         path: '/app',
         name: 'app-home',
-        component: AppHomeView,
+        component: ListsView,
         meta: {
           requiresAuth: true,
+        },
+      },
+      {
+        path: '/app/lists/:listId',
+        name: 'list-detail',
+        component: ListDetailView,
+        meta: {
+          requiresAuth: true,
+        },
+      },
+      {
+        path: '/app/admin/users',
+        name: 'admin-users',
+        component: AdminUsersView,
+        meta: {
+          requiresAuth: true,
+          requiresAdmin: true,
+        },
+      },
+      {
+        path: '/app/admin/logs',
+        name: 'admin-logs',
+        component: AdminLogsView,
+        meta: {
+          requiresAuth: true,
+          requiresAdmin: true,
         },
       },
     ],
@@ -67,16 +100,20 @@ export function createAppRouter(history: RouterHistory) {
 
     const hasSession = await authStore.ensureSession()
 
-    if (hasSession) {
-      return true
+    if (!hasSession) {
+      return {
+        name: 'login',
+        query: {
+          redirect: to.fullPath,
+        },
+      }
     }
 
-    return {
-      name: 'login',
-      query: {
-        redirect: to.fullPath,
-      },
+    if (requiresAdmin(to) && !authStore.user?.is_admin) {
+      return { name: 'app-home' }
     }
+
+    return true
   })
 
   return router

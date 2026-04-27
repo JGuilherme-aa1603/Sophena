@@ -27,7 +27,7 @@ export function createApp() {
 export const app = createApp();
 
 function createCorsOptions(): cors.CorsOptions {
-  const allowedOrigin = process.env.CORS_ORIGIN ?? "http://localhost:3000";
+  const allowedOrigin = process.env.CORS_ORIGIN ?? "http://localhost:5173";
 
   return {
     origin: allowedOrigin,

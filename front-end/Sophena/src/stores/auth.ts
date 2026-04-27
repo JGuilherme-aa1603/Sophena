@@ -2,7 +2,7 @@ import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 
 import type { AuthenticatedUser } from '@/lib/api/auth'
-import { loginRequest, meRequest } from '@/lib/api/auth'
+import { loginRequest, logoutRequest, meRequest, refreshRequest } from '@/lib/api/auth'
 import { ApiError } from '@/lib/api/http'
 
 function extractFieldNames(body: unknown) {
@@ -46,6 +46,10 @@ function mapAuthError(error: unknown) {
   }
 
   return 'Não foi possível entrar agora. Tente novamente em instantes.'
+}
+
+function mapLogoutError() {
+  return 'Não foi possível sair agora. Tente novamente em instantes.'
 }
 
 export const useAuthStore = defineStore('auth', () => {
@@ -114,10 +118,34 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  async function restoreSessionFromRefreshCookie() {
+    isLoading.value = true
+
+    try {
+      const response = await refreshRequest()
+      accessToken.value = response.access_token
+      const currentUser = await meRequest(response.access_token)
+      user.value = currentUser
+      errorMessage.value = ''
+      hasResolvedSession.value = true
+      return true
+    } catch {
+      accessToken.value = null
+      user.value = null
+      hasResolvedSession.value = true
+      return false
+    } finally {
+      isLoading.value = false
+    }
+  }
+
   async function ensureSession() {
     if (!accessToken.value) {
-      clearSession()
-      return false
+      if (hasResolvedSession.value) {
+        return false
+      }
+
+      return restoreSessionFromRefreshCookie()
     }
 
     if (user.value) {
@@ -133,6 +161,28 @@ export const useAuthStore = defineStore('auth', () => {
     return Boolean(currentUser)
   }
 
+  async function logout() {
+    if (!accessToken.value) {
+      clearSession()
+      errorMessage.value = ''
+      return
+    }
+
+    isLoading.value = true
+    errorMessage.value = ''
+
+    try {
+      await logoutRequest(accessToken.value)
+      clearSession()
+      errorMessage.value = ''
+    } catch (error) {
+      errorMessage.value = mapLogoutError()
+      throw error
+    } finally {
+      isLoading.value = false
+    }
+  }
+
   return {
     accessToken,
     user,
@@ -143,6 +193,8 @@ export const useAuthStore = defineStore('auth', () => {
     ensureSession,
     fetchCurrentUser,
     login,
+    logout,
+    restoreSessionFromRefreshCookie,
     setAccessToken,
   }
 })
