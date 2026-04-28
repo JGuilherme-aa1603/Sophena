@@ -93,6 +93,11 @@ describe('AdminBooksView', () => {
 
     await router.isReady()
     await flushPromises()
+    const card = wrapper.get('[data-testid="book-card"]')
+    expect(card.text()).toContain('Dom Casmurro')
+    expect(card.text()).toContain('Machado de Assis')
+    expect(card.get('[data-testid="book-card-cover-fallback"]').text()).toContain('Sem capa')
+    expect(card.find('[data-testid="book-card-position"]').exists()).toBe(false)
     await wrapper.get('[data-testid="delete-book-book-1"]').trigger('click')
 
     expect(requestDeleteBookSpy).toHaveBeenCalledWith('book-1')

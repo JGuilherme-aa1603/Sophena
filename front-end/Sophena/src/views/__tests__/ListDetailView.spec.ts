@@ -73,11 +73,14 @@ describe('ListDetailView', () => {
     expect(wrapper.text()).toContain('Primeiro livro')
     expect(wrapper.text()).toContain('Segundo livro')
 
-    const renderedTitles = wrapper.findAll('[data-testid="list-item-title"]').map((node) => node.text())
+    const renderedTitles = wrapper.findAll('[data-testid="book-card-title"]').map((node) => node.text())
     expect(renderedTitles).toEqual(['Primeiro livro', 'Segundo livro'])
-    const firstCover = wrapper.get('[data-testid="list-item-cover-item-1"]')
+    const bookCards = wrapper.findAll('[data-testid="book-card"]')
+    expect(bookCards).toHaveLength(2)
+    const firstCover = bookCards[0]!.get('[data-testid="book-card-cover-image"]')
     expect(firstCover.attributes('src')).toBe('https://example.com/capas/primeiro-livro.webp')
     expect(firstCover.attributes('alt')).toBe('Capa do livro Primeiro livro')
+    expect(bookCards[0]!.get('[data-testid="book-card-position"]').text()).toBe('1')
   })
 
   it('mostra um espaço de capa quando o livro não tem imagem', async () => {
@@ -114,8 +117,9 @@ describe('ListDetailView', () => {
 
     await router.isReady()
 
-    expect(wrapper.get('[data-testid="list-item-cover-fallback-item-1"]').text()).toContain('Sem capa')
-    expect(wrapper.find('[data-testid="list-item-cover-item-1"]').exists()).toBe(false)
+    const card = wrapper.get('[data-testid="book-card"]')
+    expect(card.get('[data-testid="book-card-cover-fallback"]').text()).toContain('Sem capa')
+    expect(card.find('[data-testid="book-card-cover-image"]').exists()).toBe(false)
   })
 
   it('mostra estado vazio quando a lista não tem livros', async () => {

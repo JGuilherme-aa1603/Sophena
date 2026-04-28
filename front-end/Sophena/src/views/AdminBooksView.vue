@@ -3,6 +3,7 @@ import { computed, onMounted, reactive } from 'vue'
 import { IonButton, IonCard, IonCardContent, IonContent, IonPage, IonSpinner } from '@ionic/vue'
 import { useRouter } from 'vue-router'
 
+import BookCard from '@/components/books/BookCard.vue'
 import { useAdminBooksStore } from '@/stores/admin-books'
 
 const router = useRouter()
@@ -131,21 +132,24 @@ async function goBack() {
 
               <ul v-else class="books-list">
                 <li v-for="book in adminBooksStore.books" :key="book.id" class="book-item">
-                  <div class="book-info">
-                    <strong>{{ book.title }}</strong>
-                    <span>{{ book.author }}</span>
-                  </div>
-
-                  <IonButton
-                    fill="outline"
-                    color="danger"
-                    class="delete-button"
-                    :disabled="adminBooksStore.isDeleting"
-                    :data-testid="`delete-book-${book.id}`"
-                    @click="requestDeleteBook(book.id)"
+                  <BookCard
+                    :title="book.title"
+                    :author="book.author"
+                    :cover-url="book.cover_url"
                   >
-                    Apagar
-                  </IonButton>
+                    <template #actions>
+                      <IonButton
+                        fill="outline"
+                        color="danger"
+                        class="delete-button"
+                        :disabled="adminBooksStore.isDeleting"
+                        :data-testid="`delete-book-${book.id}`"
+                        @click="requestDeleteBook(book.id)"
+                      >
+                        Apagar
+                      </IonButton>
+                    </template>
+                  </BookCard>
                 </li>
               </ul>
             </IonCardContent>
@@ -277,24 +281,7 @@ async function goBack() {
 }
 
 .book-item {
-  display: flex;
-  gap: 0.75rem;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.95rem 1rem;
-  border: 1px solid #d7dfd4;
-  border-radius: 1rem;
-  background: #fffdf9;
-}
-
-.book-info {
-  display: grid;
-  gap: 0.2rem;
-  color: #20332b;
-}
-
-.book-info span {
-  color: #476055;
+  display: block;
 }
 
 .delete-button {
@@ -303,9 +290,7 @@ async function goBack() {
 }
 
 @media (max-width: 640px) {
-  .book-item,
   .admin-books-header {
-    flex-direction: column;
     align-items: stretch;
   }
 }

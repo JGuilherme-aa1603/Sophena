@@ -3,6 +3,7 @@ import { computed, onMounted, reactive, ref } from 'vue'
 import { IonButton, IonCard, IonCardContent, IonContent, IonPage, IonSpinner } from '@ionic/vue'
 import { useRoute, useRouter } from 'vue-router'
 
+import BookCard from '@/components/books/BookCard.vue'
 import { useListDetailStore } from '@/stores/list-detail'
 
 const router = useRouter()
@@ -334,76 +335,57 @@ const movableLists = computed(() => {
                   :key="item.book_list_item_id"
                   class="item-card"
                 >
-                  <div class="item-order" aria-hidden="true">
-                    {{ item.position }}
-                  </div>
+                  <BookCard
+                    :title="item.book.title"
+                    :author="item.book.author"
+                    :cover-url="item.book.cover_url"
+                    :position="item.position"
+                    :show-position="true"
+                  >
+                    <template #actions>
+                      <IonButton
+                        fill="outline"
+                        class="order-button"
+                        :disabled="item.position === 1 || listDetailStore.reorderingItemId === item.book_list_item_id"
+                        :data-testid="`move-up-${item.book_list_item_id}`"
+                        @click="moveUp(item.book_list_item_id, item.position)"
+                      >
+                        Subir
+                      </IonButton>
 
-                  <div class="item-cover">
-                    <img
-                      v-if="item.book.cover_url"
-                      :src="item.book.cover_url"
-                      :alt="`Capa do livro ${item.book.title}`"
-                      class="item-cover-image"
-                      :data-testid="`list-item-cover-${item.book_list_item_id}`"
-                    />
+                      <IonButton
+                        fill="outline"
+                        class="order-button"
+                        :disabled="item.position === listDetailStore.items.length || listDetailStore.reorderingItemId === item.book_list_item_id"
+                        :data-testid="`move-down-${item.book_list_item_id}`"
+                        @click="moveDown(item.book_list_item_id, item.position)"
+                      >
+                        Descer
+                      </IonButton>
 
-                    <div
-                      v-else
-                      class="item-cover-fallback"
-                      :data-testid="`list-item-cover-fallback-${item.book_list_item_id}`"
-                    >
-                      Sem capa
-                    </div>
-                  </div>
+                      <IonButton
+                        fill="outline"
+                        class="move-button"
+                        :data-testid="`open-move-${item.book_list_item_id}`"
+                        :disabled="listDetailStore.movingItemId === item.book_list_item_id || listDetailStore.isLoadingLists"
+                        @click="openMoveMenu(item.book_list_item_id)"
+                      >
+                        Mover
+                      </IonButton>
 
-                  <div class="item-content">
-                    <strong data-testid="list-item-title">{{ item.book.title }}</strong>
-                    <span>{{ item.book.author }}</span>
-                  </div>
-
-                  <div class="item-actions">
-                    <IonButton
-                      fill="outline"
-                      class="order-button"
-                      :disabled="item.position === 1 || listDetailStore.reorderingItemId === item.book_list_item_id"
-                      :data-testid="`move-up-${item.book_list_item_id}`"
-                      @click="moveUp(item.book_list_item_id, item.position)"
-                    >
-                      Subir
-                    </IonButton>
-
-                    <IonButton
-                      fill="outline"
-                      class="order-button"
-                      :disabled="item.position === listDetailStore.items.length || listDetailStore.reorderingItemId === item.book_list_item_id"
-                      :data-testid="`move-down-${item.book_list_item_id}`"
-                      @click="moveDown(item.book_list_item_id, item.position)"
-                    >
-                      Descer
-                    </IonButton>
-
-                    <IonButton
-                      fill="outline"
-                      class="move-button"
-                      :data-testid="`open-move-${item.book_list_item_id}`"
-                      :disabled="listDetailStore.movingItemId === item.book_list_item_id || listDetailStore.isLoadingLists"
-                      @click="openMoveMenu(item.book_list_item_id)"
-                    >
-                      Mover
-                    </IonButton>
-
-                    <IonButton
-                      fill="clear"
-                      color="danger"
-                      class="remove-button"
-                      :disabled="listDetailStore.removingItemId === item.book_list_item_id"
-                      :data-testid="`remove-item-${item.book_list_item_id}`"
-                      @click="removeBook(item.book_list_item_id)"
-                    >
-                      <span v-if="listDetailStore.removingItemId !== item.book_list_item_id">Remover</span>
-                      <IonSpinner v-else name="crescent" />
-                    </IonButton>
-                  </div>
+                      <IonButton
+                        fill="clear"
+                        color="danger"
+                        class="remove-button"
+                        :disabled="listDetailStore.removingItemId === item.book_list_item_id"
+                        :data-testid="`remove-item-${item.book_list_item_id}`"
+                        @click="removeBook(item.book_list_item_id)"
+                      >
+                        <span v-if="listDetailStore.removingItemId !== item.book_list_item_id">Remover</span>
+                        <IonSpinner v-else name="crescent" />
+                      </IonButton>
+                    </template>
+                  </BookCard>
                   
                   <div
                     v-if="expandedMoveItemId === item.book_list_item_id"
@@ -628,71 +610,7 @@ const movableLists = computed(() => {
 
 .item-card {
   display: grid;
-  grid-template-columns: auto auto 1fr;
-  gap: 0.9rem;
-  align-items: center;
-  padding: 1rem 1.1rem;
-  border: 1px solid #d6decf;
-  border-radius: 1rem;
-  background: #fffdf9;
-}
-
-.item-order {
-  width: 2.1rem;
-  height: 2.1rem;
-  display: grid;
-  place-items: center;
-  border-radius: 999px;
-  background: #e3ebdf;
-  color: #244234;
-  font-weight: 700;
-}
-
-.item-content {
-  display: grid;
-  gap: 0.2rem;
-  color: #22332c;
-}
-
-.item-content span {
-  color: #51665c;
-}
-
-.item-cover {
-  width: 4rem;
-  height: 5.75rem;
-  border-radius: 0.85rem;
-  overflow: hidden;
-  background: #eef3ea;
-  border: 1px solid #d6decf;
-}
-
-.item-cover-image {
-  width: 100%;
-  height: 100%;
-  display: block;
-  object-fit: cover;
-}
-
-.item-cover-fallback {
-  width: 100%;
-  height: 100%;
-  display: grid;
-  place-items: center;
-  padding: 0.5rem;
-  text-align: center;
-  color: #58715f;
-  font-size: 0.82rem;
-  font-weight: 700;
-  line-height: 1.2;
-}
-
-.item-actions {
-  grid-column: 1 / -1;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.55rem;
-  justify-content: flex-end;
+  gap: 0.75rem;
 }
 
 .back-button {
@@ -745,10 +663,6 @@ const movableLists = computed(() => {
   .search-result-item {
     flex-direction: column;
     align-items: stretch;
-  }
-
-  .item-card {
-    grid-template-columns: auto 4rem 1fr;
   }
 
   .remove-button {
