@@ -51,5 +51,10 @@ function createApiProxyConfig() {
       changeOrigin: true,
       secure: false,
     },
+    '/uploads': {
+      target,
+      changeOrigin: true,
+      secure: false,
+    },
   }
 }
