@@ -53,7 +53,7 @@ describe('ListDetailView', () => {
             id: 'book-1',
             title: 'Primeiro livro',
             author: 'Autora A',
-            cover_url: null,
+            cover_url: 'https://example.com/capas/primeiro-livro.webp',
           },
         },
       ]
@@ -75,6 +75,47 @@ describe('ListDetailView', () => {
 
     const renderedTitles = wrapper.findAll('[data-testid="list-item-title"]').map((node) => node.text())
     expect(renderedTitles).toEqual(['Primeiro livro', 'Segundo livro'])
+    const firstCover = wrapper.get('[data-testid="list-item-cover-item-1"]')
+    expect(firstCover.attributes('src')).toBe('https://example.com/capas/primeiro-livro.webp')
+    expect(firstCover.attributes('alt')).toBe('Capa do livro Primeiro livro')
+  })
+
+  it('mostra um espaço de capa quando o livro não tem imagem', async () => {
+    const router = createAppRouter(createMemoryHistory())
+    authenticateUser()
+    const store = useListDetailStore()
+    vi.spyOn(store, 'fetchListDetail').mockImplementation(async () => {
+      store.list = {
+        id: 'lista-1',
+        name: 'Quero ler',
+      }
+      store.items = [
+        {
+          id: 'item-1',
+          book_list_item_id: 'item-1',
+          position: 1,
+          book: {
+            id: 'book-1',
+            title: 'Livro sem capa',
+            author: 'Autora A',
+            cover_url: null,
+          },
+        },
+      ]
+    })
+
+    await router.push('/app/lists/lista-1')
+
+    const wrapper = mount(ListDetailView, {
+      global: {
+        plugins: [router],
+      },
+    })
+
+    await router.isReady()
+
+    expect(wrapper.get('[data-testid="list-item-cover-fallback-item-1"]').text()).toContain('Sem capa')
+    expect(wrapper.find('[data-testid="list-item-cover-item-1"]').exists()).toBe(false)
   })
 
   it('mostra estado vazio quando a lista não tem livros', async () => {

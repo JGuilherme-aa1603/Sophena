@@ -338,6 +338,24 @@ const movableLists = computed(() => {
                     {{ item.position }}
                   </div>
 
+                  <div class="item-cover">
+                    <img
+                      v-if="item.book.cover_url"
+                      :src="item.book.cover_url"
+                      :alt="`Capa do livro ${item.book.title}`"
+                      class="item-cover-image"
+                      :data-testid="`list-item-cover-${item.book_list_item_id}`"
+                    />
+
+                    <div
+                      v-else
+                      class="item-cover-fallback"
+                      :data-testid="`list-item-cover-fallback-${item.book_list_item_id}`"
+                    >
+                      Sem capa
+                    </div>
+                  </div>
+
                   <div class="item-content">
                     <strong data-testid="list-item-title">{{ item.book.title }}</strong>
                     <span>{{ item.book.author }}</span>
@@ -610,7 +628,7 @@ const movableLists = computed(() => {
 
 .item-card {
   display: grid;
-  grid-template-columns: auto 1fr;
+  grid-template-columns: auto auto 1fr;
   gap: 0.9rem;
   align-items: center;
   padding: 1rem 1.1rem;
@@ -638,6 +656,35 @@ const movableLists = computed(() => {
 
 .item-content span {
   color: #51665c;
+}
+
+.item-cover {
+  width: 4rem;
+  height: 5.75rem;
+  border-radius: 0.85rem;
+  overflow: hidden;
+  background: #eef3ea;
+  border: 1px solid #d6decf;
+}
+
+.item-cover-image {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.item-cover-fallback {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  padding: 0.5rem;
+  text-align: center;
+  color: #58715f;
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1.2;
 }
 
 .item-actions {
@@ -701,7 +748,7 @@ const movableLists = computed(() => {
   }
 
   .item-card {
-    grid-template-columns: auto 1fr;
+    grid-template-columns: auto 4rem 1fr;
   }
 
   .remove-button {
