@@ -4,10 +4,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "VITE_API_BASE_URL= VITE_API_PROXY_TARGET=http://localhost:3000 vite --host localhost",
+    "dev": "VITE_API_BASE_URL= VITE_API_PROXY_TARGET=http://localhost:3000 vite --host 127.0.0.1",
     "build": "run-p type-check \"build-only {@}\" --",
     "preview": "vite preview",
+    "test": "run-s test:unit:run test:e2e",
     "test:unit": "vitest",
+    "test:unit:run": "vitest --run",
     "test:e2e": "playwright test",
     "build-only": "vite build",
     "type-check": "vue-tsc --build",
