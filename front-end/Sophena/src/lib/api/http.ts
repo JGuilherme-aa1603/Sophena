@@ -8,7 +8,17 @@ export class ApiError extends Error {
 }
 
 export function getApiBaseUrl() {
-  return import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3000'
+  const configuredBaseUrl = import.meta.env.VITE_API_BASE_URL ?? ''
+
+  if (!configuredBaseUrl) {
+    return ''
+  }
+
+  if (shouldUseRelativeApiBaseUrl(configuredBaseUrl)) {
+    return ''
+  }
+
+  return configuredBaseUrl
 }
 
 export async function requestJson<T>(
@@ -30,4 +40,26 @@ export async function requestJson<T>(
   }
 
   return body as T
+}
+
+function shouldUseRelativeApiBaseUrl(configuredBaseUrl: string) {
+  if (typeof window === 'undefined') {
+    return false
+  }
+
+  if (!isLocalHostname(window.location.hostname)) {
+    return false
+  }
+
+  try {
+    const parsedUrl = new URL(configuredBaseUrl)
+
+    return isLocalHostname(parsedUrl.hostname) && parsedUrl.port === '3000'
+  } catch {
+    return false
+  }
+}
+
+function isLocalHostname(hostname: string) {
+  return hostname === 'localhost' || hostname === '127.0.0.1'
 }

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { mount } from '@vue/test-utils'
+import { flushPromises, mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { createMemoryHistory } from 'vue-router'
 
@@ -24,17 +24,19 @@ describe('LoginView', () => {
         is_admin: false,
       }
     })
+    await router.push('/login')
 
     const wrapper = mount(LoginView, {
       global: {
         plugins: [router],
       },
     })
+    await router.isReady()
 
     await wrapper.get('input[name="user_name"]').setValue('leitora')
     await wrapper.get('input[name="password"]').setValue('SenhaSegura#123')
     await wrapper.get('form').trigger('submit.prevent')
-    await router.isReady()
+    await flushPromises()
 
     expect(loginSpy).toHaveBeenCalledWith({
       user_name: 'leitora',
