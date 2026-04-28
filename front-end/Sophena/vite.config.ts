@@ -12,9 +12,44 @@ export default defineConfig({
     vueJsx(),
     vueDevTools(),
   ],
+  server: createDevServerConfig(),
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))
     },
   },
 })
+
+function createDevServerConfig() {
+  return {
+    host: 'localhost',
+    proxy: createApiProxyConfig(),
+  }
+}
+
+function createApiProxyConfig() {
+  const target = process.env.VITE_API_PROXY_TARGET ?? 'http://localhost:3000'
+
+  return {
+    '/auth': {
+      target,
+      changeOrigin: true,
+      secure: false,
+    },
+    '/admin': {
+      target,
+      changeOrigin: true,
+      secure: false,
+    },
+    '/books': {
+      target,
+      changeOrigin: true,
+      secure: false,
+    },
+    '/lists': {
+      target,
+      changeOrigin: true,
+      secure: false,
+    },
+  }
+}

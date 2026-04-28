@@ -8,6 +8,9 @@
   "main": "index.js",
   "scripts": {
     "dev": "tsx watch src/server.ts",
+    "create:admin-user": "tsx scripts/create-admin-user.ts",
+    "hash:password": "tsx scripts/hash-password-from-env.ts",
+    "reset:user-password": "tsx scripts/reset-user-password.ts",
     "start": "tsx src/server.ts",
     "test": "tsx --test --test-concurrency=1 tests/**/*.test.ts",
     "test:auth": "tsx --test --test-concurrency=1 tests/integration/auth/**/*.test.ts",
