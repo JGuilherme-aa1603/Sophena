@@ -105,7 +105,7 @@ describe('AdminUsersView', () => {
     expect(wrapper.text()).toContain('Preencha usuário e senha com pelo menos 8 caracteres.')
   })
 
-  it('volta para a área principal', async () => {
+  it('volta para a área administrativa', async () => {
     const router = createAppRouter(createMemoryHistory())
     authenticateAdmin()
 
@@ -121,6 +121,6 @@ describe('AdminUsersView', () => {
     await wrapper.get('[data-testid="back-to-app"]').trigger('click')
     await flushPromises()
 
-    expect(router.currentRoute.value.name).toBe('app-home')
+    expect(router.currentRoute.value.name).toBe('admin-home')
   })
 })

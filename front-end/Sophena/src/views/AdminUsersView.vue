@@ -31,7 +31,7 @@ async function submitForm() {
 }
 
 async function goBack() {
-  await router.push('/app')
+  await router.push('/app/admin')
 }
 </script>
 

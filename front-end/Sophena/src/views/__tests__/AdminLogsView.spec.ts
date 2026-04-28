@@ -140,7 +140,7 @@ describe('AdminLogsView', () => {
     expect(wrapper.text()).toContain('Não foi possível carregar os registros agora.')
   })
 
-  it('volta para a área principal', async () => {
+  it('volta para a área administrativa', async () => {
     const router = createAppRouter(createMemoryHistory())
     authenticateAdmin()
     const store = useAdminLogsStore()
@@ -159,6 +159,6 @@ describe('AdminLogsView', () => {
     await wrapper.get('[data-testid="back-to-app"]').trigger('click')
     await flushPromises()
 
-    expect(router.currentRoute.value.name).toBe('app-home')
+    expect(router.currentRoute.value.name).toBe('admin-home')
   })
 })

@@ -52,12 +52,8 @@ async function openList(listId: string) {
   })
 }
 
-async function openAdminUsers() {
-  await router.push('/app/admin/users')
-}
-
-async function openAdminLogs() {
-  await router.push('/app/admin/logs')
+async function openAdminArea() {
+  await router.push('/app/admin')
 }
 
 async function exitSession() {
@@ -86,19 +82,11 @@ async function exitSession() {
               <IonButton
                 v-if="authStore.user?.is_admin"
                 class="admin-button"
+                data-testid="open-admin-area"
                 fill="outline"
-                @click="openAdminUsers"
+                @click="openAdminArea"
               >
-                Criar usuário
-              </IonButton>
-
-              <IonButton
-                v-if="authStore.user?.is_admin"
-                class="admin-button"
-                fill="outline"
-                @click="openAdminLogs"
-              >
-                Ver registros
+                Área administrativa
               </IonButton>
 
               <IonButton class="exit-button" fill="outline" @click="exitSession">

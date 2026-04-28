@@ -145,7 +145,7 @@ describe('ListsView', () => {
     expect(createListSpy).toHaveBeenCalledWith('Lendo agora')
   })
 
-  it('mostra atalho de administração para usuário admin', async () => {
+  it('mostra entrada da área administrativa para usuário admin', async () => {
     const router = createAppRouter(createMemoryHistory())
     authenticateAdmin()
     const listsStore = useListsStore()
@@ -157,11 +157,12 @@ describe('ListsView', () => {
       },
     })
 
-    expect(wrapper.text()).toContain('Criar usuário')
-    expect(wrapper.text()).toContain('Ver registros')
+    expect(wrapper.text()).toContain('Área administrativa')
+    expect(wrapper.text()).not.toContain('Criar usuário')
+    expect(wrapper.text()).not.toContain('Ver registros')
   })
 
-  it('não mostra atalho de administração para usuário comum', async () => {
+  it('não mostra entrada da área administrativa para usuário comum', async () => {
     const router = createAppRouter(createMemoryHistory())
     authenticateUser()
     const listsStore = useListsStore()
@@ -173,8 +174,27 @@ describe('ListsView', () => {
       },
     })
 
-    expect(wrapper.text()).not.toContain('Criar usuário')
-    expect(wrapper.text()).not.toContain('Ver registros')
+    expect(wrapper.text()).not.toContain('Área administrativa')
+  })
+
+  it('leva o admin para a tela administrativa ao tocar no atalho', async () => {
+    const router = createAppRouter(createMemoryHistory())
+    authenticateAdmin()
+    const listsStore = useListsStore()
+    vi.spyOn(listsStore, 'fetchLists').mockResolvedValue()
+    await router.push('/app')
+
+    const wrapper = mount(ListsView, {
+      global: {
+        plugins: [router],
+      },
+    })
+
+    await router.isReady()
+    await wrapper.get('[data-testid="open-admin-area"]').trigger('click')
+    await flushPromises()
+
+    expect(router.currentRoute.value.name).toBe('admin-home')
   })
 
   it('faz logout pela API antes de redirecionar para o login', async () => {

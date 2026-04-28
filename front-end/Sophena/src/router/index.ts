@@ -6,6 +6,7 @@ import type { RouteLocationNormalized, RouterHistory } from 'vue-router'
 
 import { useAuthStore } from '@/stores/auth'
 
+import AdminHomeView from '../views/AdminHomeView.vue'
 import AdminLogsView from '../views/AdminLogsView.vue'
 import AdminUsersView from '../views/AdminUsersView.vue'
 import ListsView from '../views/ListsView.vue'
@@ -54,6 +55,15 @@ export function createAppRouter(history: RouterHistory) {
         component: ListDetailView,
         meta: {
           requiresAuth: true,
+        },
+      },
+      {
+        path: '/app/admin',
+        name: 'admin-home',
+        component: AdminHomeView,
+        meta: {
+          requiresAuth: true,
+          requiresAdmin: true,
         },
       },
       {

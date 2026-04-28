@@ -91,6 +91,38 @@ describe('auth router guards', () => {
     expect(router.currentRoute.value.name).toBe('app-home')
   })
 
+  it('bloqueia usuário não admin da área administrativa', async () => {
+    const router = createAppRouter(createMemoryHistory())
+    const authStore = useAuthStore()
+    authStore.setAccessToken('token-valido')
+    authStore.user = {
+      id: 'user-12',
+      user_name: 'leitora',
+      is_admin: false,
+    }
+    vi.spyOn(authStore, 'ensureSession').mockResolvedValue(true)
+
+    await router.push('/app/admin')
+
+    expect(router.currentRoute.value.name).toBe('app-home')
+  })
+
+  it('permite usuário admin na área administrativa', async () => {
+    const router = createAppRouter(createMemoryHistory())
+    const authStore = useAuthStore()
+    authStore.setAccessToken('token-admin')
+    authStore.user = {
+      id: 'admin-12',
+      user_name: 'admin',
+      is_admin: true,
+    }
+    vi.spyOn(authStore, 'ensureSession').mockResolvedValue(true)
+
+    await router.push('/app/admin')
+
+    expect(router.currentRoute.value.name).toBe('admin-home')
+  })
+
   it('permite usuário admin na rota de usuários', async () => {
     const router = createAppRouter(createMemoryHistory())
     const authStore = useAuthStore()
