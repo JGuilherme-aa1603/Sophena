@@ -12,8 +12,8 @@
     "hash:password": "tsx scripts/hash-password-from-env.ts",
     "reset:user-password": "tsx scripts/reset-user-password.ts",
     "start": "tsx src/server.ts",
-    "test": "tsx --test --test-concurrency=1 tests/**/*.test.ts",
-    "test:auth": "tsx --test --test-concurrency=1 tests/integration/auth/**/*.test.ts",
+    "test": "tsx --import ./tests/integration/support/test-env.ts --test --test-concurrency=1 tests/unit/**/*.test.ts tests/integration/**/*.test.ts",
+    "test:auth": "tsx --import ./tests/integration/support/test-env.ts --test --test-concurrency=1 tests/integration/auth/**/*.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

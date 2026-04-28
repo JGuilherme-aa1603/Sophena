@@ -1,3 +1,5 @@
+import "dotenv/config";
+
 process.env.SOPHENA_RUNTIME_MODE = "test";
 
 if (!process.env.DATABASE_URL_TEST) {

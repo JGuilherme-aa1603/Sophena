@@ -14,16 +14,31 @@ function getRuntimeMode() {
   return process.env.SOPHENA_RUNTIME_MODE === "test" ? "test" : "app";
 }
 
-const adapter = new PrismaPg({
-  connectionString: resolveDatabaseUrlForRuntime(getRuntimeMode(), process.env),
-});
-
-export const prisma =
-  globalThis.__sophenaPrismaClient__ ??
-  new PrismaClient({
-    adapter,
+function createPrismaClient() {
+  const adapter = new PrismaPg({
+    connectionString: resolveDatabaseUrlForRuntime(getRuntimeMode(), process.env),
   });
 
-if (!globalThis.__sophenaPrismaClient__) {
-  globalThis.__sophenaPrismaClient__ = prisma;
+  return new PrismaClient({
+    adapter,
+  });
 }
+
+export function getPrismaClient() {
+  if (!globalThis.__sophenaPrismaClient__) {
+    globalThis.__sophenaPrismaClient__ = createPrismaClient();
+  }
+
+  return globalThis.__sophenaPrismaClient__;
+}
+
+export const prisma = new Proxy({} as PrismaClient, {
+  get(_target, property, receiver) {
+    const client = getPrismaClient();
+    const value = Reflect.get(client, property, receiver);
+
+    return typeof value === "function"
+      ? value.bind(client)
+      : value;
+  },
+});
