@@ -48,6 +48,19 @@ type JsonRequestOptions = {
   headers?: Record<string, string>;
 };
 
+type MultipartRequestOptions = {
+  method: "POST";
+  path: string;
+  headers?: Record<string, string>;
+  fields?: Record<string, string>;
+  file?: {
+    fieldName: string;
+    fileName: string;
+    contentType: string;
+    bytes: Uint8Array;
+  };
+};
+
 export async function requestJson(server: Server, options: JsonRequestOptions) {
   const address = server.address();
 
@@ -63,6 +76,49 @@ export async function requestJson(server: Server, options: JsonRequestOptions) {
       ...options.headers,
     },
     body: options.body ? JSON.stringify(options.body) : undefined,
+  });
+
+  const rawBody = await response.text();
+  const contentType = response.headers.get("content-type") ?? "";
+  const parsedBody = rawBody && contentType.includes("application/json")
+    ? JSON.parse(rawBody)
+    : null;
+
+  return {
+    status: response.status,
+    body: parsedBody,
+    headers: response.headers,
+    rawBody,
+  };
+}
+
+export async function requestMultipart(server: Server, options: MultipartRequestOptions) {
+  const address = server.address();
+
+  if (!address || typeof address === "string") {
+    throw new Error("The HTTP test server did not expose a numeric port.");
+  }
+
+  const { port } = address as AddressInfo;
+  const formData = new FormData();
+
+  for (const [fieldName, fieldValue] of Object.entries(options.fields ?? {})) {
+    formData.append(fieldName, fieldValue);
+  }
+
+  if (options.file) {
+    formData.append(
+      options.file.fieldName,
+      new File([Buffer.from(options.file.bytes)], options.file.fileName, {
+        type: options.file.contentType,
+      }),
+    );
+  }
+
+  const response = await fetch(`http://127.0.0.1:${port}${options.path}`, {
+    method: options.method,
+    headers: options.headers,
+    body: formData,
   });
 
   const rawBody = await response.text();

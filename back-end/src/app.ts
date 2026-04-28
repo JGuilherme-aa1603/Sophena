@@ -7,8 +7,16 @@ import { createAdminUserRouter } from "./modules/admin/presentation/http/admin-u
 import { createBookRouter } from "./modules/books/presentation/http/book-router";
 import { createListRouter } from "./modules/lists/presentation/http/list-router";
 import { createAdminLogRouter } from "./modules/logs/presentation/http/admin-log-router";
+import {
+  createUploadRouter,
+  type BookCoverUploadService,
+} from "./modules/uploads/presentation/http/upload-router";
 
-export function createApp() {
+type AppDependencies = {
+  bookCoverUploadService?: BookCoverUploadService;
+};
+
+export function createApp(dependencies: AppDependencies = {}) {
   const app = express();
 
   app.disable("x-powered-by");
@@ -20,6 +28,9 @@ export function createApp() {
   app.use("/admin", createAdminLogRouter());
   app.use("/books", createBookRouter());
   app.use("/lists", createListRouter());
+  app.use("/uploads", createUploadRouter({
+    bookCoverUploadService: dependencies.bookCoverUploadService,
+  }));
 
   return app;
 }

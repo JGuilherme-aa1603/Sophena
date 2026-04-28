@@ -415,6 +415,111 @@ describe('list detail store', () => {
     )
   })
 
+  it('envia a capa para upload antes de adicionar um livro manualmente', async () => {
+    const coverFile = new File(['capa'], 'capa.png', { type: 'image/png' })
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(createJsonResponse({
+        status: 201,
+        body: {
+          url: 'https://cdn.sophena.test/book-covers/capa.webp',
+        },
+      }))
+      .mockResolvedValueOnce(createJsonResponse({
+        status: 201,
+        body: {
+          id: 'item-1',
+          list_id: 'lista-1',
+          book_id: 'book-99',
+          position: 1,
+          created_at: '2026-01-01T12:00:00.000Z',
+        },
+      }))
+      .mockResolvedValueOnce(createJsonResponse({
+        status: 200,
+        body: {
+          list: {
+            id: 'lista-1',
+            name: 'Quero ler',
+          },
+          items: [
+            {
+              id: 'item-1',
+              book_list_item_id: 'item-1',
+              position: 1,
+              book: {
+                id: 'book-99',
+                title: 'Livro Manual',
+                author: 'Autora Manual',
+                cover_url: 'https://cdn.sophena.test/book-covers/capa.webp',
+              },
+            },
+          ],
+        },
+      }))
+
+    vi.stubGlobal('fetch', fetchMock)
+    authenticateUser()
+
+    const store = useListDetailStore()
+    await store.addManualBook('lista-1', {
+      title: 'Livro Manual',
+      author: 'Autora Manual',
+      cover_file: coverFile,
+    })
+
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      expect.stringContaining('/uploads/book-covers'),
+      expect.objectContaining({
+        method: 'POST',
+        credentials: 'include',
+        body: expect.any(FormData),
+      }),
+    )
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      expect.stringContaining('/lists/lista-1/items'),
+      expect.objectContaining({
+        method: 'POST',
+        credentials: 'include',
+        body: JSON.stringify({
+          book: {
+            title: 'Livro Manual',
+            author: 'Autora Manual',
+            cover_url: 'https://cdn.sophena.test/book-covers/capa.webp',
+          },
+        }),
+      }),
+    )
+    expect(store.feedbackMessage).toBe('Livro adicionado à lista.')
+  })
+
+  it('mostra mensagem amigável quando o upload da capa falha', async () => {
+    const coverFile = new File(['capa'], 'capa.png', { type: 'image/png' })
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(createJsonResponse({
+        status: 500,
+        body: {
+          message: 'Internal server error',
+        },
+      }))
+
+    vi.stubGlobal('fetch', fetchMock)
+    authenticateUser()
+
+    const store = useListDetailStore()
+
+    await expect(store.addManualBook('lista-1', {
+      title: 'Livro Manual',
+      author: 'Autora Manual',
+      cover_file: coverFile,
+    })).rejects.toThrow()
+
+    expect(store.errorMessage).toBe('Não foi possível enviar a capa agora.')
+  })
+
   it('mostra mensagem clara quando o livro já está na lista', async () => {
     const fetchMock = vi
       .fn<typeof fetch>()

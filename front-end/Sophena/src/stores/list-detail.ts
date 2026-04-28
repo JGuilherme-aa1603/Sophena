@@ -14,6 +14,7 @@ import {
   type ListItem,
 } from '@/lib/api/list-items'
 import { fetchListsRequest, type UserList } from '@/lib/api/lists'
+import { uploadBookCoverRequest } from '@/lib/api/uploads'
 import { useAuthStore } from './auth'
 
 function mapFetchListDetailError(error: unknown) {
@@ -56,6 +57,20 @@ function mapAddBookError(error: unknown) {
   }
 
   return 'Não foi possível adicionar o livro agora.'
+}
+
+function mapUploadCoverError(error: unknown) {
+  if (error instanceof ApiError) {
+    if (error.status === 401) {
+      return 'Sua sessão expirou. Entre novamente.'
+    }
+
+    if (error.status === 400) {
+      return 'Escolha uma imagem JPG, PNG ou WebP e tente novamente.'
+    }
+  }
+
+  return 'Não foi possível enviar a capa agora.'
 }
 
 function mapReorderError(error: unknown) {
@@ -227,6 +242,7 @@ export const useListDetailStore = defineStore('list-detail', () => {
       title: string
       author: string
       cover_url?: string
+      cover_file?: File
     },
   ) {
     if (!authStore.accessToken) {
@@ -239,18 +255,39 @@ export const useListDetailStore = defineStore('list-detail', () => {
     feedbackMessage.value = ''
 
     try {
+      const uploadedCoverUrl = input.cover_file
+        ? await uploadBookCover(input.cover_file)
+        : undefined
+
       await addManualBookToListRequest(authStore.accessToken, listId, {
         title: input.title.trim(),
         author: input.author.trim(),
-        cover_url: trimOptionalCoverUrl(input.cover_url),
+        cover_url: uploadedCoverUrl ?? trimOptionalCoverUrl(input.cover_url),
       })
       await fetchListDetail(listId)
       feedbackMessage.value = 'Livro adicionado à lista.'
     } catch (error) {
-      errorMessage.value = mapAddBookError(error)
+      if (!errorMessage.value) {
+        errorMessage.value = mapAddBookError(error)
+      }
       throw error
     } finally {
       isAddingBook.value = false
+    }
+  }
+
+  async function uploadBookCover(file: File) {
+    if (!authStore.accessToken) {
+      errorMessage.value = 'Sua sessão expirou. Entre novamente.'
+      throw new Error('missing access token')
+    }
+
+    try {
+      const response = await uploadBookCoverRequest(authStore.accessToken, file)
+      return response.url
+    } catch (error) {
+      errorMessage.value = mapUploadCoverError(error)
+      throw error
     }
   }
 

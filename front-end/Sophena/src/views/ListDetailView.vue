@@ -17,6 +17,7 @@ const manualForm = reactive({
   title: '',
   author: '',
   cover_url: '',
+  cover_file: undefined as File | undefined,
 })
 const expandedMoveItemId = ref<string | null>(null)
 const moveTargets = reactive<Record<string, string>>({})
@@ -76,13 +77,20 @@ async function submitManualBook() {
       title: manualForm.title,
       author: manualForm.author,
       cover_url: manualForm.cover_url,
+      cover_file: manualForm.cover_file,
     })
     manualForm.title = ''
     manualForm.author = ''
     manualForm.cover_url = ''
+    manualForm.cover_file = undefined
   } catch {
     // A mensagem amigável já é definida no store.
   }
+}
+
+function updateManualCoverFile(event: Event) {
+  const input = event.target as HTMLInputElement
+  manualForm.cover_file = input.files?.[0] ?? undefined
 }
 
 async function moveUp(itemId: string, currentPosition: number) {
@@ -257,6 +265,17 @@ const movableLists = computed(() => {
                         placeholder="Cole o link da imagem, se quiser"
                         :disabled="listDetailStore.isAddingBook"
                         v-model="manualForm.cover_url"
+                      />
+                    </label>
+
+                    <label class="field">
+                      <span>Imagem da capa (opcional)</span>
+                      <input
+                        name="manual-cover-file"
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        :disabled="listDetailStore.isAddingBook"
+                        @change="updateManualCoverFile"
                       />
                     </label>
 

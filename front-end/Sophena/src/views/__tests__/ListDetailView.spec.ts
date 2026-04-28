@@ -280,6 +280,48 @@ describe('ListDetailView', () => {
       title: 'Livro Manual',
       author: 'Autora Manual',
       cover_url: 'https://example.com/manual.jpg',
+      cover_file: undefined,
+    })
+  })
+
+  it('permite cadastrar um livro manualmente com arquivo de capa', async () => {
+    const router = createAppRouter(createMemoryHistory())
+    authenticateUser()
+    const store = useListDetailStore()
+    vi.spyOn(store, 'fetchListDetail').mockImplementation(async () => {
+      store.list = {
+        id: 'lista-1',
+        name: 'Quero ler',
+      }
+      store.items = []
+    })
+    const addManualBookSpy = vi.spyOn(store, 'addManualBook').mockResolvedValue()
+    const coverFile = new File(['capa'], 'capa.png', { type: 'image/png' })
+
+    await router.push('/app/lists/lista-1')
+
+    const wrapper = mount(ListDetailView, {
+      global: {
+        plugins: [router],
+      },
+    })
+
+    await router.isReady()
+    await wrapper.get('input[name="manual-title"]').setValue('Livro com Capa')
+    await wrapper.get('input[name="manual-author"]').setValue('Autora com Capa')
+    const coverFileInput = wrapper.get('input[name="manual-cover-file"]')
+    Object.defineProperty(coverFileInput.element, 'files', {
+      value: [coverFile],
+      configurable: true,
+    })
+    await coverFileInput.trigger('change')
+    await wrapper.get('form[data-testid="manual-book-form"]').trigger('submit.prevent')
+
+    expect(addManualBookSpy).toHaveBeenCalledWith('lista-1', {
+      title: 'Livro com Capa',
+      author: 'Autora com Capa',
+      cover_url: '',
+      cover_file: coverFile,
     })
   })
 
