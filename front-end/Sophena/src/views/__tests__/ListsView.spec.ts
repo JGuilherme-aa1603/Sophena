@@ -56,6 +56,7 @@ describe('ListsView', () => {
 
     expect(wrapper.text()).toContain('Você ainda não criou nenhuma lista.')
     expect(wrapper.text()).toContain('Crie sua primeira lista para começar.')
+    expect(wrapper.get('[data-testid="empty-create-list"]').text()).toContain('Criar minha primeira lista')
   })
 
   it('mostra carregamento ao buscar listas', () => {
@@ -157,7 +158,7 @@ describe('ListsView', () => {
       },
     })
 
-    expect(wrapper.text()).toContain('Área administrativa')
+    expect(wrapper.get('[data-testid="authenticated-dock"]').text()).toContain('Admin')
     expect(wrapper.text()).not.toContain('Criar usuário')
     expect(wrapper.text()).not.toContain('Ver registros')
   })
@@ -174,7 +175,7 @@ describe('ListsView', () => {
       },
     })
 
-    expect(wrapper.text()).not.toContain('Área administrativa')
+    expect(wrapper.get('[data-testid="authenticated-dock"]').text()).not.toContain('Admin')
   })
 
   it('leva o admin para a tela administrativa ao tocar no atalho', async () => {
@@ -191,7 +192,7 @@ describe('ListsView', () => {
     })
 
     await router.isReady()
-    await wrapper.get('[data-testid="open-admin-area"]').trigger('click')
+    await wrapper.get('[data-testid="dock-link-admin"]').trigger('click')
     await flushPromises()
 
     expect(router.currentRoute.value.name).toBe('admin-home')
@@ -214,7 +215,7 @@ describe('ListsView', () => {
     })
 
     await router.isReady()
-    await wrapper.get('.exit-button').trigger('click')
+    await wrapper.get('[data-testid="dock-action-logout"]').trigger('click')
     await flushPromises()
 
     expect(logoutSpy).toHaveBeenCalledTimes(1)
@@ -239,7 +240,7 @@ describe('ListsView', () => {
     })
 
     await router.isReady()
-    await wrapper.get('.exit-button').trigger('click')
+    await wrapper.get('[data-testid="dock-action-logout"]').trigger('click')
     await flushPromises()
 
     expect(router.currentRoute.value.name).toBe('app-home')

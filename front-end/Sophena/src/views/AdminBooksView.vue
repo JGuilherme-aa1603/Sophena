@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive } from 'vue'
-import { IonButton, IonCard, IonCardContent, IonContent, IonPage, IonSpinner } from '@ionic/vue'
+import { IonButton, IonCard, IonCardContent, IonSpinner } from '@ionic/vue'
 import { useRouter } from 'vue-router'
 
 import BookCard from '@/components/books/BookCard.vue'
+import EmptyStateCard from '@/components/feedback/EmptyStateCard.vue'
+import AuthenticatedScaffold from '@/components/layout/AuthenticatedScaffold.vue'
 import { useAdminBooksStore } from '@/stores/admin-books'
 
 const router = useRouter()
@@ -60,156 +62,140 @@ async function goBack() {
 </script>
 
 <template>
-  <IonPage>
-    <IonContent :fullscreen="true">
-      <main class="admin-books-page">
-        <section class="admin-books-shell">
-          <header class="admin-books-header">
-            <div>
-              <p class="admin-books-kicker">Sophena</p>
-              <h1>Gerenciar livros</h1>
-              <p class="admin-books-subtitle">Encontre um livro pelo título ou autor e apague o que não deve mais ficar no sistema.</p>
-            </div>
+  <AuthenticatedScaffold page-class="admin-books-page">
+    <header class="app-page-header">
+      <div class="app-page-header__title">
+        <p class="app-page-kicker">Sophena</p>
+        <h1 class="app-page-title">Gerenciar livros</h1>
+        <p class="app-page-subtitle">
+          Encontre um livro pelo título ou autor e apague o que não deve mais ficar no sistema.
+        </p>
+      </div>
 
-            <IonButton
-              class="back-button"
-              fill="outline"
-              data-testid="back-to-admin-home"
-              @click="goBack"
+      <IonButton
+        class="back-button"
+        fill="outline"
+        data-testid="back-to-admin-home"
+        @click="goBack"
+      >
+        Voltar
+      </IonButton>
+    </header>
+
+    <IonCard class="app-card admin-books-card">
+      <IonCardContent class="admin-books-content">
+        <div class="search-intro">
+          <div>
+            <p class="search-kicker">Busca</p>
+            <h2>Encontrar livro</h2>
+          </div>
+          <p>Use uma busca simples para localizar rapidamente o título que precisa revisar.</p>
+        </div>
+
+        <form data-testid="admin-books-search-form" class="search-form" @submit.prevent="submitSearch">
+          <label class="app-field">
+            <span>Buscar livro</span>
+            <input
+              name="admin-book-search"
+              type="text"
+              autocomplete="off"
+              placeholder="Digite o título ou o autor"
+              :disabled="adminBooksStore.isLoading"
+              v-model="searchForm.term"
+            />
+          </label>
+
+          <IonButton class="search-button" type="submit" :disabled="adminBooksStore.isLoading">
+            <span v-if="!adminBooksStore.isLoading">Buscar</span>
+            <IonSpinner v-else name="crescent" />
+          </IonButton>
+        </form>
+
+        <p
+          v-if="adminBooksStore.errorMessage"
+          class="app-feedback app-feedback--error"
+          role="status"
+          aria-live="polite"
+        >
+          {{ adminBooksStore.errorMessage }}
+        </p>
+
+        <p
+          v-if="adminBooksStore.feedbackMessage"
+          class="app-feedback app-feedback--success"
+          role="status"
+          aria-live="polite"
+        >
+          {{ adminBooksStore.feedbackMessage }}
+        </p>
+
+        <div v-if="adminBooksStore.isLoading" class="loading-state" role="status" aria-live="polite">
+          <IonSpinner name="crescent" />
+          <span>Carregando os livros...</span>
+        </div>
+
+        <EmptyStateCard
+          v-else-if="showEmptyState"
+          title="Nenhum livro foi encontrado."
+          description="Tente buscar outro nome ou outro autor."
+        />
+
+        <ul v-else class="books-list">
+          <li v-for="book in adminBooksStore.books" :key="book.id" class="book-item">
+            <BookCard
+              :title="book.title"
+              :author="book.author"
+              :cover-url="book.cover_url"
             >
-              Voltar
-            </IonButton>
-          </header>
-
-          <IonCard class="admin-books-card">
-            <IonCardContent>
-              <form data-testid="admin-books-search-form" class="search-form" @submit.prevent="submitSearch">
-                <label class="field">
-                  <span>Buscar livro</span>
-                  <input
-                    name="admin-book-search"
-                    type="text"
-                    autocomplete="off"
-                    placeholder="Digite o título ou o autor"
-                    :disabled="adminBooksStore.isLoading"
-                    v-model="searchForm.term"
-                  />
-                </label>
-
-                <IonButton class="search-button" type="submit" :disabled="adminBooksStore.isLoading">
-                  <span v-if="!adminBooksStore.isLoading">Buscar</span>
-                  <IonSpinner v-else name="crescent" />
+              <template #actions>
+                <IonButton
+                  fill="outline"
+                  color="danger"
+                  class="delete-button"
+                  :disabled="adminBooksStore.isDeleting"
+                  :data-testid="`delete-book-${book.id}`"
+                  @click="requestDeleteBook(book.id)"
+                >
+                  Apagar
                 </IonButton>
-              </form>
-
-              <p
-                v-if="adminBooksStore.errorMessage"
-                class="feedback-message error-message"
-                role="status"
-                aria-live="polite"
-              >
-                {{ adminBooksStore.errorMessage }}
-              </p>
-
-              <p
-                v-if="adminBooksStore.feedbackMessage"
-                class="feedback-message success-message"
-                role="status"
-                aria-live="polite"
-              >
-                {{ adminBooksStore.feedbackMessage }}
-              </p>
-
-              <div v-if="adminBooksStore.isLoading" class="loading-state" role="status" aria-live="polite">
-                <IonSpinner name="crescent" />
-                <span>Carregando os livros...</span>
-              </div>
-
-              <div v-else-if="showEmptyState" class="empty-state">
-                <h2>Nenhum livro foi encontrado.</h2>
-                <p>Tente buscar outro nome ou outro autor.</p>
-              </div>
-
-              <ul v-else class="books-list">
-                <li v-for="book in adminBooksStore.books" :key="book.id" class="book-item">
-                  <BookCard
-                    :title="book.title"
-                    :author="book.author"
-                    :cover-url="book.cover_url"
-                  >
-                    <template #actions>
-                      <IonButton
-                        fill="outline"
-                        color="danger"
-                        class="delete-button"
-                        :disabled="adminBooksStore.isDeleting"
-                        :data-testid="`delete-book-${book.id}`"
-                        @click="requestDeleteBook(book.id)"
-                      >
-                        Apagar
-                      </IonButton>
-                    </template>
-                  </BookCard>
-                </li>
-              </ul>
-            </IonCardContent>
-          </IonCard>
-        </section>
-      </main>
-    </IonContent>
-  </IonPage>
+              </template>
+            </BookCard>
+          </li>
+        </ul>
+      </IonCardContent>
+    </IonCard>
+  </AuthenticatedScaffold>
 </template>
 
 <style scoped>
-.admin-books-page {
-  min-height: 100%;
-  padding: 1.25rem;
-  background:
-    radial-gradient(circle at top left, rgba(223, 236, 221, 0.9), transparent 28%),
-    radial-gradient(circle at bottom right, rgba(239, 229, 198, 0.8), transparent 28%),
-    linear-gradient(180deg, #f6f2e8 0%, #fcfbf7 100%);
+.back-button {
+  --color: var(--color-primary);
+  --border-color: var(--color-primary);
+  --border-radius: 999px;
 }
 
-.admin-books-shell {
-  width: min(100%, 46rem);
-  margin: 0 auto;
+.admin-books-content,
+.search-intro {
   display: grid;
   gap: 1rem;
 }
 
-.admin-books-header {
-  display: flex;
-  gap: 1rem;
-  align-items: flex-start;
-  justify-content: space-between;
-}
-
-.admin-books-kicker {
-  margin-bottom: 0.45rem;
+.search-kicker {
   color: #58715f;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
-.admin-books-header h1 {
-  color: #20332b;
-  font-family: 'Atkinson Hyperlegible', 'Trebuchet MS', sans-serif;
-  font-size: 2rem;
+.search-intro h2 {
+  color: var(--color-heading);
+  font-size: 1.25rem;
   font-weight: 700;
-  line-height: 1.1;
 }
 
-.admin-books-subtitle {
-  margin-top: 0.65rem;
-  color: #476055;
-}
-
-.admin-books-card {
-  margin: 0;
-  border-radius: 1.25rem;
-  box-shadow: 0 18px 50px rgba(58, 71, 53, 0.1);
+.search-intro p {
+  color: var(--color-muted);
 }
 
 .search-form {
@@ -217,67 +203,26 @@ async function goBack() {
   gap: 0.85rem;
 }
 
-.field {
-  display: grid;
-  gap: 0.45rem;
-  color: #22332c;
-}
-
-.field span {
-  font-weight: 700;
-}
-
-.field input {
-  width: 100%;
-  padding: 0.95rem 1rem;
-  border: 1px solid #c7d1c2;
-  border-radius: 0.9rem;
-  background: #fffdf9;
-  font: inherit;
-  color: #1c2b25;
-}
-
-.field input:focus {
-  outline: 3px solid rgba(78, 129, 102, 0.2);
-  border-color: #4e8166;
-}
-
 .search-button {
-  --background: #335c47;
-  --background-hover: #284b3a;
-  --border-radius: 0.95rem;
+  --background: var(--color-primary);
+  --background-hover: var(--color-primary-strong);
+  --border-radius: 999px;
   min-height: 3rem;
   font-weight: 700;
 }
 
-.feedback-message {
-  margin: 0.85rem 0 0;
-}
-
-.error-message {
-  color: #7c3b33;
-}
-
-.success-message {
-  color: #2f5d42;
-}
-
-.loading-state,
-.empty-state {
-  margin-top: 1rem;
+.loading-state {
   display: grid;
-  gap: 0.5rem;
-  justify-items: center;
-  text-align: center;
-  color: #476055;
+  gap: 0.65rem;
+  justify-items: start;
+  color: var(--color-muted);
 }
 
 .books-list {
-  list-style: none;
-  padding: 0;
-  margin: 1rem 0 0;
   display: grid;
   gap: 0.85rem;
+  list-style: none;
+  padding: 0;
 }
 
 .book-item {
@@ -285,13 +230,7 @@ async function goBack() {
 }
 
 .delete-button {
-  --border-radius: 0.9rem;
+  --border-radius: 999px;
   flex-shrink: 0;
-}
-
-@media (max-width: 640px) {
-  .admin-books-header {
-    align-items: stretch;
-  }
 }
 </style>

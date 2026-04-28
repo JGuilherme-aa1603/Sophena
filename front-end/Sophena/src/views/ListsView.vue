@@ -1,14 +1,17 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive } from 'vue'
-import { IonButton, IonCard, IonCardContent, IonContent, IonPage, IonSpinner } from '@ionic/vue'
+import { computed, nextTick, onMounted, reactive, ref } from 'vue'
+import { IonButton, IonCard, IonCardContent, IonSpinner } from '@ionic/vue'
 import { useRouter } from 'vue-router'
 
+import EmptyStateCard from '@/components/feedback/EmptyStateCard.vue'
+import AuthenticatedScaffold from '@/components/layout/AuthenticatedScaffold.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useListsStore } from '@/stores/lists'
 
 const router = useRouter()
 const authStore = useAuthStore()
 const listsStore = useListsStore()
+const listNameInput = ref<HTMLInputElement | null>(null)
 
 const form = reactive({
   name: '',
@@ -24,10 +27,6 @@ const greeting = computed(() => {
 
 const showEmptyState = computed(() => {
   return !listsStore.isLoading && listsStore.items.length === 0 && !listsStore.errorMessage
-})
-
-const feedbackMessage = computed(() => {
-  return authStore.errorMessage || listsStore.errorMessage
 })
 
 onMounted(async () => {
@@ -52,162 +51,153 @@ async function openList(listId: string) {
   })
 }
 
-async function openAdminArea() {
-  await router.push('/app/admin')
-}
-
-async function exitSession() {
-  try {
-    await authStore.logout()
-    await router.replace('/login')
-  } catch {
-    // A mensagem amigável já é controlada pelo store.
-  }
+async function focusCreateList() {
+  await nextTick()
+  listNameInput.value?.focus()
 }
 </script>
 
 <template>
-  <IonPage>
-    <IonContent :fullscreen="true">
-      <main class="lists-page">
-        <section class="lists-shell">
-          <header class="lists-header">
-            <div>
-              <p class="lists-kicker">Sophena</p>
-              <h1>{{ greeting }}</h1>
-              <p class="lists-subtitle">Escolha uma lista para continuar ou crie uma nova.</p>
-            </div>
+  <AuthenticatedScaffold page-class="lists-page">
+    <header class="app-page-header">
+      <div class="app-page-header__title">
+        <p class="app-page-kicker">Sophena</p>
+        <h1 class="app-page-title">{{ greeting }}</h1>
+        <p class="app-page-subtitle">
+          Organize suas listas em poucos toques. Crie uma nova e continue de onde parou.
+        </p>
+      </div>
 
-            <div class="header-actions">
-              <IonButton
-                v-if="authStore.user?.is_admin"
-                class="admin-button"
-                data-testid="open-admin-area"
-                fill="outline"
-                @click="openAdminArea"
-              >
-                Área administrativa
-              </IonButton>
+      <div v-if="authStore.user?.is_admin" class="header-note">
+        <strong>Admin</strong>
+        <span>Você também pode acessar atalhos administrativos pelo dock inferior.</span>
+      </div>
+    </header>
 
-              <IonButton class="exit-button" fill="outline" @click="exitSession">
-                Sair
-              </IonButton>
-            </div>
-          </header>
+    <IonCard class="app-card hero-card">
+      <IonCardContent class="hero-card-content">
+        <div class="hero-copy">
+          <p class="hero-kicker">Começar</p>
+          <h2>Criar uma nova lista</h2>
+          <p>Dê um nome simples para encontrar seus livros com facilidade depois.</p>
+        </div>
 
-          <IonCard class="lists-card">
-            <IonCardContent>
-              <form class="create-list-form" @submit.prevent="submitCreateList">
-                <label class="field">
-                  <span>Nova lista</span>
-                  <input
-                    name="list-name"
-                    type="text"
-                    autocomplete="off"
-                    placeholder="Exemplo: Quero ler"
-                    :disabled="listsStore.isCreating"
-                    v-model="form.name"
-                  />
-                </label>
+        <form class="create-list-form" @submit.prevent="submitCreateList">
+          <label class="app-field">
+            <span>Nova lista</span>
+            <input
+              ref="listNameInput"
+              name="list-name"
+              type="text"
+              autocomplete="off"
+              placeholder="Exemplo: Quero ler"
+              :disabled="listsStore.isCreating"
+              v-model="form.name"
+            />
+          </label>
 
-                <IonButton type="submit" class="create-button" :disabled="listsStore.isCreating">
-                  <span v-if="!listsStore.isCreating">Criar lista</span>
-                  <IonSpinner v-else name="crescent" />
-                </IonButton>
-              </form>
+          <IonButton type="submit" class="create-button" :disabled="listsStore.isCreating">
+            <span v-if="!listsStore.isCreating">Criar lista</span>
+            <IonSpinner v-else name="crescent" />
+          </IonButton>
+        </form>
+      </IonCardContent>
+    </IonCard>
 
-              <p v-if="feedbackMessage" class="feedback-message" role="status" aria-live="polite">
-                {{ feedbackMessage }}
-              </p>
+    <p
+      v-if="listsStore.errorMessage"
+      class="app-feedback app-feedback--error"
+      role="status"
+      aria-live="polite"
+    >
+      {{ listsStore.errorMessage }}
+    </p>
 
-              <div v-if="listsStore.isLoading" class="loading-state" role="status" aria-live="polite">
-                <IonSpinner name="crescent" />
-                <span>Carregando suas listas...</span>
-              </div>
+    <section class="lists-section">
+      <div class="section-heading">
+        <h2>Suas listas</h2>
+        <span class="section-count">{{ listsStore.items.length }}</span>
+      </div>
 
-              <div v-else-if="showEmptyState" class="empty-state">
-                <h2>Você ainda não criou nenhuma lista.</h2>
-                <p>Crie sua primeira lista para começar.</p>
-              </div>
+      <div v-if="listsStore.isLoading" class="loading-state" role="status" aria-live="polite">
+        <IonSpinner name="crescent" />
+        <span>Carregando suas listas...</span>
+      </div>
 
-              <ul v-else class="lists-grid">
-                <li v-for="list in listsStore.items" :key="list.id">
-                  <button
-                    type="button"
-                    class="list-link"
-                    :data-testid="`list-link-${list.id}`"
-                    @click="openList(list.id)"
-                  >
-                    <strong>{{ list.name }}</strong>
-                    <span>Abrir lista</span>
-                  </button>
-                </li>
-              </ul>
-            </IonCardContent>
-          </IonCard>
-        </section>
-      </main>
-    </IonContent>
-  </IonPage>
+      <EmptyStateCard
+        v-else-if="showEmptyState"
+        title="Você ainda não criou nenhuma lista."
+        description="Crie sua primeira lista para começar."
+        action-label="Criar minha primeira lista"
+        action-testid="empty-create-list"
+        @action="focusCreateList"
+      />
+
+      <ul v-else class="lists-grid">
+        <li v-for="list in listsStore.items" :key="list.id">
+          <button
+            type="button"
+            class="list-link"
+            :data-testid="`list-link-${list.id}`"
+            @click="openList(list.id)"
+          >
+            <span class="list-link-copy">
+              <strong>{{ list.name }}</strong>
+              <small>Toque para abrir e organizar seus livros</small>
+            </span>
+            <span class="list-link-action">Abrir</span>
+          </button>
+        </li>
+      </ul>
+    </section>
+  </AuthenticatedScaffold>
 </template>
 
 <style scoped>
-.lists-page {
-  min-height: 100%;
-  padding: 1.25rem;
-  background:
-    radial-gradient(circle at top left, rgba(223, 236, 221, 0.9), transparent 28%),
-    radial-gradient(circle at bottom right, rgba(239, 229, 198, 0.8), transparent 28%),
-    linear-gradient(180deg, #f6f2e8 0%, #fcfbf7 100%);
+.header-note {
+  width: min(100%, 15rem);
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.95rem 1rem;
+  border: 1px solid rgba(88, 113, 95, 0.18);
+  border-radius: 1rem;
+  background: rgba(255, 253, 249, 0.75);
+  color: var(--color-muted);
 }
 
-.lists-shell {
-  width: min(100%, 46rem);
-  margin: 0 auto;
+.header-note strong {
+  color: var(--color-heading);
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.hero-card-content {
   display: grid;
   gap: 1rem;
 }
 
-.lists-header {
-  display: flex;
-  gap: 1rem;
-  align-items: flex-start;
-  justify-content: space-between;
+.hero-copy {
+  display: grid;
+  gap: 0.35rem;
 }
 
-.header-actions {
-  display: flex;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-}
-
-.lists-kicker {
-  margin-bottom: 0.45rem;
+.hero-kicker {
   color: #58715f;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
-.lists-header h1 {
-  color: #20332b;
-  font-family: 'Atkinson Hyperlegible', 'Trebuchet MS', sans-serif;
-  font-size: 2rem;
+.hero-copy h2,
+.section-heading h2 {
+  color: var(--color-heading);
+  font-size: 1.25rem;
   font-weight: 700;
-  line-height: 1.1;
 }
 
-.lists-subtitle {
-  margin-top: 0.65rem;
-  color: #476055;
-}
-
-.lists-card {
-  margin: 0;
-  border-radius: 1.25rem;
-  box-shadow: 0 18px 50px rgba(58, 71, 53, 0.1);
+.hero-copy p {
+  color: var(--color-muted);
 }
 
 .create-list-form {
@@ -215,61 +205,43 @@ async function exitSession() {
   gap: 0.85rem;
 }
 
-.field {
-  display: grid;
-  gap: 0.45rem;
-  color: #22332c;
-}
-
-.field span {
-  font-weight: 700;
-}
-
-.field input {
-  width: 100%;
-  padding: 0.95rem 1rem;
-  border: 1px solid #c7d1c2;
-  border-radius: 0.9rem;
-  background: #fffdf9;
-  font: inherit;
-  color: #1c2b25;
-}
-
-.field input:focus {
-  outline: 3px solid rgba(78, 129, 102, 0.2);
-  border-color: #4e8166;
-}
-
 .create-button {
-  --background: #335c47;
-  --background-hover: #284b3a;
-  --border-radius: 0.95rem;
-  min-height: 3rem;
+  --background: var(--color-primary);
+  --background-hover: var(--color-primary-strong);
+  --border-radius: 999px;
+  min-height: 3.2rem;
   font-weight: 700;
 }
 
-.feedback-message {
-  margin-top: 1rem;
-  color: #7c3b33;
-}
-
-.loading-state,
-.empty-state {
+.lists-section {
   display: grid;
-  justify-items: start;
-  gap: 0.65rem;
-  margin-top: 1.25rem;
-  color: #43584d;
+  gap: 0.85rem;
 }
 
-.empty-state h2 {
-  color: #20332b;
-  font-size: 1.15rem;
+.section-heading {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.section-count {
+  min-width: 2rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(51, 92, 71, 0.08);
+  color: var(--color-primary);
   font-weight: 700;
+  text-align: center;
+}
+
+.loading-state {
+  display: grid;
+  gap: 0.65rem;
+  justify-items: start;
+  color: var(--color-muted);
 }
 
 .lists-grid {
-  margin-top: 1.25rem;
   display: grid;
   gap: 0.85rem;
   list-style: none;
@@ -279,57 +251,66 @@ async function exitSession() {
 .list-link {
   width: 100%;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
   gap: 1rem;
-  padding: 1rem 1.1rem;
-  border: 1px solid #d6decf;
-  border-radius: 1rem;
-  background: #fffdf9;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.05rem 1.1rem;
+  border: 1px solid rgba(215, 222, 207, 0.92);
+  border-radius: 1.1rem;
+  background: rgba(255, 253, 249, 0.9);
   color: #22332c;
   text-align: left;
+  box-shadow: 0 10px 26px rgba(58, 71, 53, 0.06);
+  transition:
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast),
+    border-color var(--transition-fast);
 }
 
-.list-link strong {
+.list-link:hover {
+  transform: translateY(-1px);
+  border-color: rgba(78, 129, 102, 0.26);
+  box-shadow: 0 14px 28px rgba(58, 71, 53, 0.08);
+}
+
+.list-link:focus-visible {
+  outline: 3px solid rgba(78, 129, 102, 0.22);
+  outline-offset: 2px;
+}
+
+.list-link-copy {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.list-link-copy strong {
   font-size: 1rem;
   font-weight: 700;
 }
 
-.list-link span {
-  color: #58715f;
+.list-link-copy small {
+  color: var(--color-muted);
 }
 
-.list-link:focus {
-  outline: 3px solid rgba(78, 129, 102, 0.2);
-  border-color: #4e8166;
-}
-
-.exit-button {
-  --color: #335c47;
-  --border-color: #335c47;
-  --border-radius: 0.95rem;
-}
-
-.admin-button {
-  --color: #335c47;
-  --border-color: #335c47;
-  --border-radius: 0.95rem;
+.list-link-action {
+  color: var(--color-primary);
+  font-weight: 700;
 }
 
 @media (min-width: 768px) {
-  .lists-page {
-    padding: 2rem;
+  .hero-card-content {
+    grid-template-columns: minmax(0, 1fr) minmax(18rem, 22rem);
+    align-items: end;
   }
 }
 
 @media (max-width: 640px) {
-  .lists-header {
-    flex-direction: column;
+  .list-link {
+    align-items: flex-start;
   }
 
-  .header-actions {
-    width: 100%;
-    justify-content: stretch;
+  .list-link-action {
+    padding-top: 0.15rem;
   }
 }
 </style>

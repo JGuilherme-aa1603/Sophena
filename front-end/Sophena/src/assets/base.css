@@ -9,6 +9,18 @@
   --color-primary: #335c47;
   --color-primary-strong: #244434;
   --color-danger: #9d3f34;
+  --color-success: #2f5d42;
+  --color-warning: #8f6a25;
+  --color-overlay: rgba(28, 43, 37, 0.35);
+  --shadow-soft: 0 18px 50px rgba(58, 71, 53, 0.1);
+  --shadow-lifted: 0 14px 32px rgba(51, 92, 71, 0.12);
+  --radius-card: 1.25rem;
+  --radius-control: 0.95rem;
+  --space-page: 1.25rem;
+  --space-stack: 1rem;
+  --dock-height: 5.75rem;
+  --transition-fast: 160ms ease;
+  --transition-soft: 220ms ease;
 }
 
 *,
@@ -33,6 +45,14 @@ body {
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+body,
+input,
+button,
+select,
+textarea {
+  -webkit-tap-highlight-color: transparent;
 }
 
 #app,

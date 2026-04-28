@@ -1,8 +1,37 @@
 <script setup lang="ts">
-import { IonButton, IonCard, IonCardContent, IonContent, IonPage } from '@ionic/vue'
+import { IonButton, IonCard, IonCardContent } from '@ionic/vue'
 import { useRouter } from 'vue-router'
 
+import AuthenticatedScaffold from '@/components/layout/AuthenticatedScaffold.vue'
+
 const router = useRouter()
+
+const adminActions = [
+  {
+    id: 'users',
+    title: 'Criar usuário',
+    description: 'Cadastre uma nova pessoa e escolha se ela também poderá administrar o sistema.',
+    actionLabel: 'Abrir criação de usuários',
+    testId: 'open-admin-users',
+    handler: openAdminUsers,
+  },
+  {
+    id: 'logs',
+    title: 'Ver registros',
+    description: 'Acompanhe o que aconteceu no sistema e encontre avisos importantes.',
+    actionLabel: 'Abrir registros',
+    testId: 'open-admin-logs',
+    handler: openAdminLogs,
+  },
+  {
+    id: 'books',
+    title: 'Gerenciar livros',
+    description: 'Busque livros cadastrados e apague o que não deve mais ficar disponível no sistema.',
+    actionLabel: 'Abrir gerenciamento de livros',
+    testId: 'open-admin-books',
+    handler: openAdminBooks,
+  },
+]
 
 async function openAdminUsers() {
   await router.push('/app/admin/users')
@@ -22,123 +51,79 @@ async function goBack() {
 </script>
 
 <template>
-  <IonPage>
-    <IonContent :fullscreen="true">
-      <main class="admin-home-page">
-        <section class="admin-home-shell">
-          <header class="admin-home-header">
-            <div>
-              <p class="admin-home-kicker">Sophena</p>
-              <h1>Área administrativa</h1>
-              <p class="admin-home-subtitle">Escolha a tarefa que deseja fazer.</p>
-            </div>
+  <AuthenticatedScaffold page-class="admin-home-page">
+    <header class="app-page-header">
+      <div class="app-page-header__title">
+        <p class="app-page-kicker">Sophena</p>
+        <h1 class="app-page-title">Área administrativa</h1>
+        <p class="app-page-subtitle">Escolha a tarefa que deseja fazer.</p>
+      </div>
 
-            <IonButton
-              class="back-button"
-              fill="outline"
-              data-testid="back-to-app"
-              @click="goBack"
-            >
-              Voltar
-            </IonButton>
-          </header>
+      <IonButton
+        class="back-button"
+        fill="outline"
+        data-testid="back-to-app"
+        @click="goBack"
+      >
+        Voltar
+      </IonButton>
+    </header>
 
-          <div class="admin-home-grid">
-            <IonCard class="admin-home-card">
-              <IonCardContent>
-                <h2>Criar usuário</h2>
-                <p>Cadastre uma nova pessoa e escolha se ela também poderá administrar o sistema.</p>
+    <section class="admin-summary">
+      <div class="summary-badge">
+        <strong>Admin</strong>
+        <span>Atalhos rápidos para cuidar do acesso, acompanhar registros e gerenciar livros.</span>
+      </div>
+    </section>
 
-                <IonButton
-                  class="action-button"
-                  data-testid="open-admin-users"
-                  @click="openAdminUsers"
-                >
-                  Abrir criação de usuários
-                </IonButton>
-              </IonCardContent>
-            </IonCard>
+    <div class="admin-home-grid">
+      <IonCard
+        v-for="action in adminActions"
+        :key="action.id"
+        class="app-card admin-home-card"
+      >
+        <IonCardContent>
+          <p class="card-kicker">Tarefa</p>
+          <h2>{{ action.title }}</h2>
+          <p>{{ action.description }}</p>
 
-            <IonCard class="admin-home-card">
-              <IonCardContent>
-                <h2>Ver registros</h2>
-                <p>Acompanhe o que aconteceu no sistema e encontre avisos importantes.</p>
-
-                <IonButton
-                  class="action-button"
-                  data-testid="open-admin-logs"
-                  @click="openAdminLogs"
-                >
-                  Abrir registros
-                </IonButton>
-              </IonCardContent>
-            </IonCard>
-
-            <IonCard class="admin-home-card">
-              <IonCardContent>
-                <h2>Gerenciar livros</h2>
-                <p>Busque livros cadastrados e apague o que não deve mais ficar disponível no sistema.</p>
-
-                <IonButton
-                  class="action-button"
-                  data-testid="open-admin-books"
-                  @click="openAdminBooks"
-                >
-                  Abrir gerenciamento de livros
-                </IonButton>
-              </IonCardContent>
-            </IonCard>
-          </div>
-        </section>
-      </main>
-    </IonContent>
-  </IonPage>
+          <IonButton
+            class="action-button"
+            :data-testid="action.testId"
+            @click="action.handler"
+          >
+            {{ action.actionLabel }}
+          </IonButton>
+        </IonCardContent>
+      </IonCard>
+    </div>
+  </AuthenticatedScaffold>
 </template>
 
 <style scoped>
-.admin-home-page {
-  min-height: 100%;
-  padding: 1.25rem;
-  background:
-    radial-gradient(circle at top left, rgba(223, 236, 221, 0.9), transparent 28%),
-    radial-gradient(circle at bottom right, rgba(239, 229, 198, 0.8), transparent 28%),
-    linear-gradient(180deg, #f6f2e8 0%, #fcfbf7 100%);
+.back-button {
+  --color: var(--color-primary);
+  --border-color: var(--color-primary);
+  --border-radius: 999px;
 }
 
-.admin-home-shell {
-  width: min(100%, 46rem);
-  margin: 0 auto;
+.summary-badge {
   display: grid;
-  gap: 1rem;
+  gap: 0.35rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid rgba(88, 113, 95, 0.18);
+  border-radius: 1rem;
+  background: rgba(255, 253, 249, 0.75);
 }
 
-.admin-home-header {
-  display: flex;
-  gap: 1rem;
-  align-items: flex-start;
-  justify-content: space-between;
-}
-
-.admin-home-kicker {
-  margin-bottom: 0.45rem;
-  color: #58715f;
-  font-size: 0.85rem;
+.summary-badge strong {
+  color: var(--color-heading);
   font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
 }
 
-.admin-home-header h1 {
-  color: #20332b;
-  font-family: 'Atkinson Hyperlegible', 'Trebuchet MS', sans-serif;
-  font-size: 2rem;
-  font-weight: 700;
-  line-height: 1.1;
-}
-
-.admin-home-subtitle {
-  margin-top: 0.65rem;
-  color: #476055;
+.summary-badge span,
+.admin-home-card p {
+  color: var(--color-muted);
 }
 
 .admin-home-grid {
@@ -146,28 +131,27 @@ async function goBack() {
   gap: 1rem;
 }
 
-.admin-home-card {
-  margin: 0;
-  border-radius: 1.25rem;
-  box-shadow: 0 18px 50px rgba(58, 71, 53, 0.1);
+.card-kicker {
+  margin-bottom: 0.45rem;
+  color: #58715f;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .admin-home-card h2 {
-  margin: 0 0 0.6rem;
-  color: #20332b;
+  margin-bottom: 0.6rem;
+  color: var(--color-heading);
   font-size: 1.25rem;
-}
-
-.admin-home-card p {
-  margin: 0;
-  color: #476055;
+  font-weight: 700;
 }
 
 .action-button {
   margin-top: 1rem;
-  --background: #335c47;
-  --background-hover: #284b3a;
-  --border-radius: 0.95rem;
+  --background: var(--color-primary);
+  --background-hover: var(--color-primary-strong);
+  --border-radius: 999px;
   min-height: 3rem;
   font-weight: 700;
 }

@@ -42,6 +42,7 @@ describe('AdminHomeView', () => {
     expect(wrapper.text()).toContain('Ver registros')
     expect(wrapper.text()).toContain('Gerenciar livros')
     expect(wrapper.text()).toContain('Escolha a tarefa que deseja fazer.')
+    expect(wrapper.get('[data-testid="authenticated-dock"]').text()).toContain('Admin')
   })
 
   it('leva para a criação de usuários', async () => {

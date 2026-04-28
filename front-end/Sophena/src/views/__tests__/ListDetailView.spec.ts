@@ -145,6 +145,7 @@ describe('ListDetailView', () => {
     await router.isReady()
     expect(wrapper.text()).toContain('Esta lista ainda não tem livros.')
     expect(wrapper.text()).toContain('Quando você adicionar um livro, ele aparecerá aqui.')
+    expect(wrapper.get('[data-testid="empty-open-add-book"]').text()).toContain('Adicionar o primeiro livro')
   })
 
   it('mostra carregamento ao abrir a lista', async () => {
@@ -282,6 +283,7 @@ describe('ListDetailView', () => {
     })
 
     await router.isReady()
+    await wrapper.get('[data-testid="open-add-book-flow"]').trigger('click')
     await wrapper.get('input[name="book-search"]').setValue('Dom')
     await wrapper.get('form[data-testid="search-books-form"]').trigger('submit.prevent')
     await flushPromises()
@@ -315,6 +317,7 @@ describe('ListDetailView', () => {
     })
 
     await router.isReady()
+    await wrapper.get('[data-testid="open-add-book-flow"]').trigger('click')
     await wrapper.get('input[name="manual-title"]').setValue('Livro Manual')
     await wrapper.get('input[name="manual-author"]').setValue('Autora Manual')
     await wrapper.get('input[name="manual-cover-url"]').setValue('https://example.com/manual.jpg')
@@ -352,6 +355,7 @@ describe('ListDetailView', () => {
     })
 
     await router.isReady()
+    await wrapper.get('[data-testid="open-add-book-flow"]').trigger('click')
     await wrapper.get('input[name="manual-title"]').setValue('Livro com Capa')
     await wrapper.get('input[name="manual-author"]').setValue('Autora com Capa')
     const coverFileInput = wrapper.get('input[name="manual-cover-file"]')
@@ -439,6 +443,7 @@ describe('ListDetailView', () => {
     await router.isReady()
     await wrapper.get('[data-testid="open-move-item-1"]').trigger('click')
     await flushPromises()
+    expect(wrapper.get('[data-testid="move-book-flow"]').text()).toContain('Enviar livro para outra lista')
     await wrapper.get('select[name="target-list-item-1"]').setValue('lista-2')
     await wrapper.get('[data-testid="confirm-move-item-1"]').trigger('click')
 

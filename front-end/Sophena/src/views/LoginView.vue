@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, reactive } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { IonButton, IonCard, IonCardContent, IonContent, IonPage, IonSpinner } from '@ionic/vue'
+import { IonButton, IonCard, IonCardContent, IonSpinner } from '@ionic/vue'
 
 import { useAuthStore } from '@/stores/auth'
 
@@ -45,9 +45,14 @@ async function submitLogin() {
           </div>
 
           <IonCard class="login-card">
-            <IonCardContent>
+            <IonCardContent class="login-card-content">
+              <div class="login-helper">
+                <p class="helper-kicker">Acesso privado</p>
+                <p>Entre com seu usuário e sua senha para continuar.</p>
+              </div>
+
               <form class="login-form" @submit.prevent="submitLogin">
-                <label class="field">
+                <label class="app-field">
                   <span>Usuário</span>
                   <input
                     name="user_name"
@@ -60,7 +65,7 @@ async function submitLogin() {
                   />
                 </label>
 
-                <label class="field">
+                <label class="app-field">
                   <span>Senha</span>
                   <input
                     name="password"
@@ -102,10 +107,10 @@ async function submitLogin() {
 }
 
 .login-panel {
-  width: min(100%, 28rem);
+  width: min(100%, 30rem);
   margin: 0 auto;
   display: grid;
-  gap: 1.25rem;
+  gap: 1rem;
 }
 
 .login-brand {
@@ -124,51 +129,44 @@ async function submitLogin() {
 
 .login-brand h1 {
   font-family: 'Atkinson Hyperlegible', 'Trebuchet MS', sans-serif;
-  font-size: 2rem;
+  font-size: 2.15rem;
   font-weight: 700;
-  line-height: 1.1;
+  line-height: 1.05;
 }
 
 .login-subtitle {
   margin-top: 0.75rem;
-  font-size: 1rem;
   color: #385144;
 }
 
 .login-card {
   margin: 0;
-  border-radius: 1.25rem;
-  box-shadow: 0 18px 48px rgba(62, 70, 52, 0.12);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-soft);
 }
 
+.login-card-content,
 .login-form {
   display: grid;
   gap: 1rem;
 }
 
-.field {
+.login-helper {
   display: grid;
-  gap: 0.45rem;
-  color: #22332c;
-}
-
-.field span {
-  font-weight: 700;
-}
-
-.field input {
-  width: 100%;
+  gap: 0.3rem;
   padding: 0.95rem 1rem;
-  border: 1px solid #c7d1c2;
-  border-radius: 0.9rem;
-  background: #fffdf9;
-  font: inherit;
-  color: #1c2b25;
+  border: 1px solid rgba(88, 113, 95, 0.18);
+  border-radius: 1rem;
+  background: rgba(243, 239, 229, 0.72);
+  color: var(--color-muted);
 }
 
-.field input:focus {
-  outline: 3px solid rgba(78, 129, 102, 0.2);
-  border-color: #4e8166;
+.helper-kicker {
+  color: #58715f;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .helper-message {
@@ -177,9 +175,9 @@ async function submitLogin() {
 }
 
 .submit-button {
-  --background: #335c47;
-  --background-hover: #284b3a;
-  --border-radius: 0.95rem;
+  --background: var(--color-primary);
+  --background-hover: var(--color-primary-strong);
+  --border-radius: 999px;
   min-height: 3.2rem;
   font-weight: 700;
 }
@@ -189,12 +187,8 @@ async function submitLogin() {
     padding: 2.5rem;
   }
 
-  .login-panel {
-    width: min(100%, 31rem);
-  }
-
   .login-brand h1 {
-    font-size: 2.5rem;
+    font-size: 2.6rem;
   }
 }
 </style>
