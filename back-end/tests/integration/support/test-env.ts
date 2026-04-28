@@ -1,3 +1,13 @@
+process.env.SOPHENA_RUNTIME_MODE = "test";
+
+if (!process.env.DATABASE_URL_TEST) {
+  throw new Error("DATABASE_URL_TEST is required for automated tests");
+}
+
+if (process.env.DATABASE_URL && process.env.DATABASE_URL === process.env.DATABASE_URL_TEST) {
+  throw new Error("DATABASE_URL_TEST must be different from DATABASE_URL");
+}
+
 if (!process.env.ACCESS_TOKEN_SECRET) {
   process.env.ACCESS_TOKEN_SECRET = "test-access-secret";
 }
