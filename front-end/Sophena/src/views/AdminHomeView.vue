@@ -12,6 +12,10 @@ async function openAdminLogs() {
   await router.push('/app/admin/logs')
 }
 
+async function openAdminBooks() {
+  await router.push('/app/admin/books')
+}
+
 async function goBack() {
   await router.push('/app')
 }
@@ -66,6 +70,21 @@ async function goBack() {
                   @click="openAdminLogs"
                 >
                   Abrir registros
+                </IonButton>
+              </IonCardContent>
+            </IonCard>
+
+            <IonCard class="admin-home-card">
+              <IonCardContent>
+                <h2>Gerenciar livros</h2>
+                <p>Busque livros cadastrados e apague o que não deve mais ficar disponível no sistema.</p>
+
+                <IonButton
+                  class="action-button"
+                  data-testid="open-admin-books"
+                  @click="openAdminBooks"
+                >
+                  Abrir gerenciamento de livros
                 </IonButton>
               </IonCardContent>
             </IonCard>
@@ -155,7 +174,7 @@ async function goBack() {
 
 @media (min-width: 768px) {
   .admin-home-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 </style>

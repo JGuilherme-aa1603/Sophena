@@ -40,6 +40,7 @@ describe('AdminHomeView', () => {
     expect(wrapper.text()).toContain('Área administrativa')
     expect(wrapper.text()).toContain('Criar usuário')
     expect(wrapper.text()).toContain('Ver registros')
+    expect(wrapper.text()).toContain('Gerenciar livros')
     expect(wrapper.text()).toContain('Escolha a tarefa que deseja fazer.')
   })
 
@@ -79,6 +80,25 @@ describe('AdminHomeView', () => {
     await flushPromises()
 
     expect(router.currentRoute.value.name).toBe('admin-logs')
+  })
+
+  it('leva para o gerenciamento de livros', async () => {
+    const router = createAppRouter(createMemoryHistory())
+    authenticateAdmin()
+
+    await router.push('/app/admin')
+
+    const wrapper = mount(AdminHomeView, {
+      global: {
+        plugins: [router],
+      },
+    })
+
+    await router.isReady()
+    await wrapper.get('[data-testid="open-admin-books"]').trigger('click')
+    await flushPromises()
+
+    expect(router.currentRoute.value.name).toBe('admin-books')
   })
 
   it('volta para a área principal', async () => {

@@ -3,6 +3,7 @@ import { SharpImageProcessor } from "../infrastructure/image-processing/sharp-im
 import { R2ObjectStorage } from "../infrastructure/storage/r2-object-storage.ts";
 
 let cachedBookCoverUploadService: BookCoverUploadService | undefined;
+let cachedBookCoverObjectStorage: R2ObjectStorage | undefined;
 
 export function getBookCoverUploadService() {
   if (!cachedBookCoverUploadService) {
@@ -11,18 +12,26 @@ export function getBookCoverUploadService() {
         maxWidth: readPositiveIntegerEnv("IMAGE_MAX_WIDTH", 1200),
         webpQuality: readPositiveIntegerEnv("IMAGE_WEBP_QUALITY", 80),
       }),
-      new R2ObjectStorage({
-        endpoint: readRequiredEnv("R2_ENDPOINT"),
-        bucketName: readRequiredEnv("R2_BUCKET_NAME"),
-        accessKeyId: readRequiredEnv("R2_ACCESS_KEY_ID"),
-        secretAccessKey: readRequiredEnv("R2_SECRET_ACCESS_KEY"),
-        publicBaseUrl: readRequiredEnv("R2_PUBLIC_BASE_URL"),
-        region: process.env.R2_REGION ?? "auto",
-      }),
+      getBookCoverObjectStorage(),
     );
   }
 
   return cachedBookCoverUploadService;
+}
+
+export function getBookCoverObjectStorage() {
+  if (!cachedBookCoverObjectStorage) {
+    cachedBookCoverObjectStorage = new R2ObjectStorage({
+      endpoint: readRequiredEnv("R2_ENDPOINT"),
+      bucketName: readRequiredEnv("R2_BUCKET_NAME"),
+      accessKeyId: readRequiredEnv("R2_ACCESS_KEY_ID"),
+      secretAccessKey: readRequiredEnv("R2_SECRET_ACCESS_KEY"),
+      publicBaseUrl: readRequiredEnv("R2_PUBLIC_BASE_URL"),
+      region: process.env.R2_REGION ?? "auto",
+    });
+  }
+
+  return cachedBookCoverObjectStorage;
 }
 
 export function readImageMaxUploadBytes() {

@@ -33,6 +33,16 @@ export class PrismaBookRepository implements BookRepository {
     return books.map(mapBook);
   }
 
+  async findById(bookId: string): Promise<Book | null> {
+    const book = await prisma.book.findUnique({
+      where: {
+        id: bookId,
+      },
+    });
+
+    return book ? mapBook(book) : null;
+  }
+
   async findByTitleAndAuthor(input: { title: string; author: string }): Promise<Book | null> {
     const book = await prisma.book.findFirst({
       where: {
@@ -72,6 +82,64 @@ export class PrismaBookRepository implements BookRepository {
 
       throw error;
     }
+  }
+
+  async deleteBookAndRemoveListReferencesPreview(bookId: string) {
+    const removedFromListsCount = await prisma.bookListItem.count({
+      where: {
+        book_id: bookId,
+      },
+    });
+
+    return {
+      removed_from_lists_count: removedFromListsCount,
+    };
+  }
+
+  async deleteBookAndRemoveListReferences(bookId: string): Promise<{ removed_from_lists_count: number }> {
+    const listItems = await prisma.bookListItem.findMany({
+      where: {
+        book_id: bookId,
+      },
+      orderBy: [
+        { list_id: "asc" },
+        { position: "asc" },
+      ],
+    });
+
+    await prisma.$transaction(async (tx) => {
+      for (const item of listItems) {
+        await tx.bookListItem.delete({
+          where: {
+            id: item.id,
+          },
+        });
+
+        await tx.bookListItem.updateMany({
+          where: {
+            list_id: item.list_id,
+            position: {
+              gt: item.position,
+            },
+          },
+          data: {
+            position: {
+              decrement: 1,
+            },
+          },
+        });
+      }
+
+      await tx.book.delete({
+        where: {
+          id: bookId,
+        },
+      });
+    });
+
+    return {
+      removed_from_lists_count: listItems.length,
+    };
   }
 }
 

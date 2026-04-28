@@ -1,4 +1,4 @@
-import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { DeleteObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 
 export class R2ObjectStorage {
   private readonly s3Client: S3Client;
@@ -40,6 +40,30 @@ export class R2ObjectStorage {
     return {
       url: `${removeTrailingSlash(this.config.publicBaseUrl)}/${input.key}`,
     };
+  }
+
+  async deleteObjectByUrl(url: string) {
+    const objectKey = this.readManagedObjectKey(url);
+
+    if (!objectKey) {
+      return;
+    }
+
+    await this.s3Client.send(new DeleteObjectCommand({
+      Bucket: this.config.bucketName,
+      Key: objectKey,
+    }));
+  }
+
+  private readManagedObjectKey(url: string) {
+    const normalizedBaseUrl = removeTrailingSlash(this.config.publicBaseUrl);
+
+    if (!url.startsWith(`${normalizedBaseUrl}/`)) {
+      return null;
+    }
+
+    const objectKey = url.slice(normalizedBaseUrl.length + 1);
+    return objectKey.length > 0 ? objectKey : null;
   }
 }
 

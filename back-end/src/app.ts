@@ -11,9 +11,12 @@ import {
   createUploadRouter,
   type BookCoverUploadService,
 } from "./modules/uploads/presentation/http/upload-router";
+import { createBookService } from "./modules/books/composition/book-module";
+import type { BookCoverStorage } from "./modules/books/application/book-service.ts";
 
 type AppDependencies = {
   bookCoverUploadService?: BookCoverUploadService;
+  bookCoverStorage?: BookCoverStorage;
 };
 
 export function createApp(dependencies: AppDependencies = {}) {
@@ -26,7 +29,9 @@ export function createApp(dependencies: AppDependencies = {}) {
   app.use("/auth", createAuthRouter());
   app.use("/admin", createAdminUserRouter());
   app.use("/admin", createAdminLogRouter());
-  app.use("/books", createBookRouter());
+  app.use("/books", createBookRouter(createBookService({
+    bookCoverStorage: dependencies.bookCoverStorage,
+  })));
   app.use("/lists", createListRouter());
   app.use("/uploads", createUploadRouter({
     bookCoverUploadService: dependencies.bookCoverUploadService,

@@ -419,8 +419,10 @@ When deleting a `Book_List`:
 
 ### Book deletion
 When deleting a `Book`:
-- block deletion if the book is referenced by any `Book_List_Item`
-- the system must not delete a global book that is still being used
+- only administrators may delete books
+- if the book is referenced by any `Book_List_Item`, the system may remove those references as part of the same administrative deletion flow
+- the deletion must remove the book cover object from external storage when a managed cover exists
+- the deletion must keep list ordering consistent after removing related `Book_List_Item` records
 
 ### Log deletion
 - logs should generally be preserved
@@ -443,6 +445,7 @@ These rules must never be violated.
 - books must not be duplicated logically
 - logical uniqueness is defined by `title + author`
 - before creating a book, the back-end must check whether a book with the same `title` and `author` already exists
+- administrative book deletion may remove a global book and all of its `Book_List_Item` references in a single controlled operation
 
 ### Book list invariants
 - a user cannot have two lists with the same name

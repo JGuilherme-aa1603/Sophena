@@ -102,6 +102,33 @@ export async function countBooksByTitleAndAuthor(input: {
   });
 }
 
+export async function findBookById(bookId: string) {
+  return prisma.book.findUnique({
+    where: {
+      id: bookId,
+    },
+  });
+}
+
+export async function countBookListItemsByBookId(bookId: string) {
+  return prisma.bookListItem.count({
+    where: {
+      book_id: bookId,
+    },
+  });
+}
+
+export async function findListItemsByListId(listId: string) {
+  return prisma.bookListItem.findMany({
+    where: {
+      list_id: listId,
+    },
+    orderBy: {
+      position: "asc",
+    },
+  });
+}
+
 export async function findRefreshTokensByUserId(userId: string) {
   return prisma.refreshToken.findMany({
     where: {
