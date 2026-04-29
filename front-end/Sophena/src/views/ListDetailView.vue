@@ -122,6 +122,17 @@ const canShowManualBookPath = computed(() => {
     && listDetailStore.searchResults.length === 0
 })
 
+const inlineErrorMessage = computed(() => {
+  if (
+    listDetailStore.errorMessage === 'Esse livro já está nesta lista.'
+    || listDetailStore.errorMessage === 'Esse livro já está na lista de destino.'
+  ) {
+    return ''
+  }
+
+  return listDetailStore.errorMessage
+})
+
 onMounted(async () => {
   await listDetailStore.fetchListDetail(listId.value)
 })
@@ -329,12 +340,12 @@ async function confirmMove(itemId: string) {
         </div>
 
         <p
-          v-if="listDetailStore.errorMessage"
+          v-if="inlineErrorMessage"
           class="app-feedback app-feedback--error"
           role="status"
           aria-live="polite"
         >
-          {{ listDetailStore.errorMessage }}
+          {{ inlineErrorMessage }}
         </p>
 
         <p

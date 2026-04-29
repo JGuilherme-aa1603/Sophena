@@ -186,6 +186,32 @@ describe('ListDetailView', () => {
     expect(wrapper.text()).toContain('Não foi possível abrir essa lista agora.')
   })
 
+  it('não repete no aviso fixo a mensagem de livro já existente na lista', async () => {
+    const router = createAppRouter(createMemoryHistory())
+    authenticateUser()
+    const store = useListDetailStore()
+    store.list = {
+      id: 'lista-1',
+      name: 'Quero ler',
+    }
+    store.items = []
+    store.errorMessage = 'Esse livro já está nesta lista.'
+    vi.spyOn(store, 'fetchListDetail').mockResolvedValue()
+
+    await router.push('/app/lists/lista-1')
+
+    const wrapper = mount(ListDetailView, {
+      global: {
+        plugins: [router],
+      },
+    })
+
+    await router.isReady()
+
+    expect(wrapper.text()).not.toContain('Esse livro já está nesta lista.')
+    expect(wrapper.find('.app-feedback--error').exists()).toBe(false)
+  })
+
   it('abre opções do livro e remove somente depois da confirmação em português', async () => {
     const router = createAppRouter(createMemoryHistory())
     authenticateUser()
