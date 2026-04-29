@@ -7,10 +7,12 @@ import EmptyStateCard from '@/components/feedback/EmptyStateCard.vue'
 import AuthenticatedScaffold from '@/components/layout/AuthenticatedScaffold.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useListsStore } from '@/stores/lists'
+import { useToastStore } from '@/stores/toast'
 
 const router = useRouter()
 const authStore = useAuthStore()
 const listsStore = useListsStore()
+const toastStore = useToastStore()
 const listNameInput = ref<HTMLInputElement | null>(null)
 
 const form = reactive({
@@ -37,8 +39,9 @@ async function submitCreateList() {
   try {
     await listsStore.createList(form.name.trim())
     form.name = ''
+    toastStore.showSuccess('Lista criada.')
   } catch {
-    // A mensagem amigável já é controlada pelo store.
+    toastStore.showError(listsStore.errorMessage || 'Não foi possível criar a lista agora.')
   }
 }
 
@@ -66,11 +69,6 @@ async function focusCreateList() {
         <p class="app-page-subtitle">
           Organize suas listas em poucos toques. Crie uma nova e continue de onde parou.
         </p>
-      </div>
-
-      <div v-if="authStore.user?.is_admin" class="header-note">
-        <strong>Admin</strong>
-        <span>Você também pode acessar atalhos administrativos pelo dock inferior.</span>
       </div>
     </header>
 
@@ -160,24 +158,6 @@ async function focusCreateList() {
 </template>
 
 <style scoped>
-.header-note {
-  width: min(100%, 15rem);
-  display: grid;
-  gap: var(--space-xs);
-  padding: var(--space-md);
-  border: 1px solid rgba(226, 224, 219, 0.96);
-  border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.76);
-  color: var(--color-muted);
-  box-shadow: var(--shadow-sm);
-}
-
-.header-note strong {
-  color: var(--color-heading);
-  font-size: 14px;
-  font-weight: 700;
-}
-
 .hero-card-content {
   display: grid;
   gap: var(--space-md);

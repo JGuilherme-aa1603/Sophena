@@ -7,6 +7,7 @@ import ListsView from '../ListsView.vue'
 import { createAppRouter } from '@/router'
 import { useAuthStore } from '@/stores/auth'
 import { useListsStore } from '@/stores/lists'
+import { useToastStore } from '@/stores/toast'
 
 describe('ListsView', () => {
   function authenticateUser() {
@@ -145,6 +146,7 @@ describe('ListsView', () => {
     await wrapper.get('form').trigger('submit.prevent')
 
     expect(createListSpy).toHaveBeenCalledWith('Lendo agora')
+    expect(useToastStore().current?.message).toBe('Lista criada.')
   })
 
   it('mostra entrada da área administrativa para usuário admin', async () => {
@@ -162,6 +164,7 @@ describe('ListsView', () => {
     expect(wrapper.get('[data-testid="authenticated-dock"]').text()).toContain('Admin')
     expect(wrapper.text()).not.toContain('Criar usuário')
     expect(wrapper.text()).not.toContain('Ver registros')
+    expect(wrapper.text()).not.toContain('Você também pode acessar atalhos administrativos pelo dock inferior.')
   })
 
   it('não mostra entrada da área administrativa para usuário comum', async () => {
@@ -217,6 +220,7 @@ describe('ListsView', () => {
 
     await router.isReady()
     await wrapper.get('[data-testid="dock-action-logout"]').trigger('click')
+    await wrapper.get('[data-testid="confirm-sheet-confirm"]').trigger('click')
     await flushPromises()
 
     expect(logoutSpy).toHaveBeenCalledTimes(1)
@@ -242,6 +246,7 @@ describe('ListsView', () => {
 
     await router.isReady()
     await wrapper.get('[data-testid="dock-action-logout"]').trigger('click')
+    await wrapper.get('[data-testid="confirm-sheet-confirm"]').trigger('click')
     await flushPromises()
 
     expect(router.currentRoute.value.name).toBe('app-home')

@@ -104,13 +104,19 @@ const hasActions = computed(() => Boolean(slots.actions))
 }
 
 .book-card-cover {
-  width: 4rem;
-  height: 5.75rem;
+  width: 4.85rem;
+  height: 7rem;
+  display: grid;
+  place-items: center;
   border-radius: var(--radius-sm);
   overflow: hidden;
-  background: var(--color-surface-soft);
-  border: 1px solid var(--color-border);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(233, 238, 230, 0.84)),
+    var(--color-surface-soft);
+  border: 1px solid rgba(173, 184, 165, 0.82);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.42),
+    0 10px 20px rgba(36, 51, 43, 0.08);
 }
 
 .book-card-cover-image {
@@ -125,12 +131,14 @@ const hasActions = computed(() => Boolean(slots.actions))
   height: 100%;
   display: grid;
   place-items: center;
-  padding: 0.5rem;
+  padding: 0.85rem 0.7rem;
   text-align: center;
-  color: var(--color-muted);
-  font-size: 14px;
+  color: var(--color-heading);
+  font-size: 0.95rem;
   font-weight: 700;
-  line-height: 1.2;
+  line-height: 1.3;
+  background:
+    linear-gradient(180deg, rgba(248, 246, 240, 0.98), rgba(233, 238, 230, 0.9));
 }
 
 .book-card-content {
@@ -159,7 +167,7 @@ const hasActions = computed(() => Boolean(slots.actions))
 
 @media (max-width: 640px) {
   .book-card--with-position {
-    grid-template-columns: auto 4rem 1fr;
+    grid-template-columns: auto 4.85rem 1fr;
   }
 }
 </style>

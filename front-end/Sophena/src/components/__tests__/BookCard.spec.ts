@@ -32,6 +32,7 @@ describe('BookCard', () => {
 
     expect(wrapper.get('[data-testid="book-card-cover-fallback"]').text()).toContain('Sem capa')
     expect(wrapper.find('[data-testid="book-card-cover-image"]').exists()).toBe(false)
+    expect(wrapper.get('[data-testid="book-card"]').classes()).toContain('book-card')
   })
 
   it('mostra a posição quando configurado', () => {
@@ -90,5 +91,28 @@ describe('BookCard', () => {
     })
 
     expect(wrapper.get('[data-testid="book-card"]').classes()).toContain('book-card--interactive')
+  })
+
+  it('mantém a estrutura de capa e conteúdo quando tem imagem ou fallback', () => {
+    const withImage = mount(BookCard, {
+      props: {
+        title: 'Livro com capa',
+        author: 'Autora',
+        coverUrl: 'https://example.com/capa.webp',
+      },
+    })
+
+    const withFallback = mount(BookCard, {
+      props: {
+        title: 'Livro sem capa',
+        author: 'Autora',
+        coverUrl: null,
+      },
+    })
+
+    expect(withImage.find('.book-card-cover').exists()).toBe(true)
+    expect(withImage.find('.book-card-content').exists()).toBe(true)
+    expect(withFallback.find('.book-card-cover').exists()).toBe(true)
+    expect(withFallback.find('.book-card-content').exists()).toBe(true)
   })
 })

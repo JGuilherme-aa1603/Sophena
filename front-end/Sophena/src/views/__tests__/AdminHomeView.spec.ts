@@ -42,7 +42,10 @@ describe('AdminHomeView', () => {
     expect(wrapper.text()).toContain('Ver registros')
     expect(wrapper.text()).toContain('Gerenciar livros')
     expect(wrapper.text()).toContain('Escolha a tarefa que deseja fazer.')
+    expect(wrapper.find('[data-testid="admin-task-list"]').exists()).toBe(true)
+    expect(wrapper.findAll('[data-testid="admin-task-icon"]')).toHaveLength(3)
     expect(wrapper.get('[data-testid="authenticated-dock"]').text()).toContain('Admin')
+    expect(wrapper.find('[data-testid="back-to-app"]').exists()).toBe(false)
   })
 
   it('leva para a criação de usuários', async () => {
@@ -100,24 +103,5 @@ describe('AdminHomeView', () => {
     await flushPromises()
 
     expect(router.currentRoute.value.name).toBe('admin-books')
-  })
-
-  it('volta para a área principal', async () => {
-    const router = createAppRouter(createMemoryHistory())
-    authenticateAdmin()
-
-    await router.push('/app/admin')
-
-    const wrapper = mount(AdminHomeView, {
-      global: {
-        plugins: [router],
-      },
-    })
-
-    await router.isReady()
-    await wrapper.get('[data-testid="back-to-app"]').trigger('click')
-    await flushPromises()
-
-    expect(router.currentRoute.value.name).toBe('app-home')
   })
 })

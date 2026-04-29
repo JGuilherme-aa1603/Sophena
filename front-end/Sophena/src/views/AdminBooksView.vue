@@ -1,23 +1,76 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive } from 'vue'
-import { IonButton, IonCard, IonCardContent, IonSpinner } from '@ionic/vue'
+import { computed, onMounted, reactive, ref } from 'vue'
+import { IonButton, IonCard, IonCardContent, IonIcon, IonSpinner } from '@ionic/vue'
+import { ellipsisHorizontalOutline, searchOutline, trashOutline } from 'ionicons/icons'
 import { useRouter } from 'vue-router'
 
 import BookCard from '@/components/books/BookCard.vue'
 import EmptyStateCard from '@/components/feedback/EmptyStateCard.vue'
 import AuthenticatedScaffold from '@/components/layout/AuthenticatedScaffold.vue'
+import AppConfirmSheet from '@/components/overlay/AppConfirmSheet.vue'
+import ResponsiveSheetModal from '@/components/overlay/ResponsiveSheetModal.vue'
 import { useAdminBooksStore } from '@/stores/admin-books'
+import { useToastStore } from '@/stores/toast'
 
 const router = useRouter()
 const adminBooksStore = useAdminBooksStore()
+const toastStore = useToastStore()
 const searchForm = reactive({
   term: '',
 })
+const activeOptionsBookId = ref<string | null>(null)
+const pendingDeleteBookId = ref<string | null>(null)
+const deleteMode = ref<'initial' | 'force'>('initial')
 
 const showEmptyState = computed(() => {
   return !adminBooksStore.isLoading
     && adminBooksStore.books.length === 0
     && !adminBooksStore.errorMessage
+})
+
+const optionsBook = computed(() => {
+  if (!activeOptionsBookId.value) {
+    return null
+  }
+
+  return adminBooksStore.books.find((book) => book.id === activeOptionsBookId.value) ?? null
+})
+
+const isBookOptionsOpen = computed({
+  get: () => Boolean(activeOptionsBookId.value),
+  set: (value: boolean) => {
+    if (!value) {
+      activeOptionsBookId.value = null
+    }
+  },
+})
+
+const isDeleteConfirmOpen = computed({
+  get: () => Boolean(pendingDeleteBookId.value),
+  set: (value: boolean) => {
+    if (!value) {
+      cancelDeleteBook()
+    }
+  },
+})
+
+const deleteConfirmTitle = computed(() => {
+  return deleteMode.value === 'force' ? 'Apagar mesmo assim?' : 'Apagar livro do sistema?'
+})
+
+const deleteConfirmMessage = computed(() => {
+  if (deleteMode.value === 'force') {
+    const count = adminBooksStore.pendingDeletion?.removedFromListsCount ?? 0
+    const listLabel = count === 1 ? 'lista' : 'listas'
+
+    return `Esse livro está em ${count} ${listLabel}. Se continuar, ele será removido dessas listas e apagado do sistema.`
+  }
+
+  return 'Essa ação apaga o livro para todos os usuários. Se ele estiver em listas, o Sophena pedirá uma confirmação extra.'
+})
+
+const deleteConfirmLabel = computed(() => {
+  return deleteMode.value === 'force' ? 'Apagar mesmo assim' : 'Apagar livro'
 })
 
 onMounted(async () => {
@@ -28,11 +81,42 @@ async function submitSearch() {
   await adminBooksStore.fetchBooks(searchForm.term)
 }
 
-async function requestDeleteBook(bookId: string) {
+function openBookOptions(bookId: string) {
+  activeOptionsBookId.value = bookId
+}
+
+function requestDeleteBook(bookId: string) {
+  activeOptionsBookId.value = null
+  pendingDeleteBookId.value = bookId
+  deleteMode.value = 'initial'
+}
+
+function cancelDeleteBook() {
+  pendingDeleteBookId.value = null
+  deleteMode.value = 'initial'
+  adminBooksStore.clearPendingDeletion()
+}
+
+async function confirmDeleteBook() {
+  if (!pendingDeleteBookId.value) {
+    return
+  }
+
+  const bookId = pendingDeleteBookId.value
+
   try {
-    await adminBooksStore.requestDeleteBook(bookId)
+    if (deleteMode.value === 'force') {
+      await adminBooksStore.confirmDeleteBook(bookId)
+    } else {
+      await adminBooksStore.requestDeleteBook(bookId)
+    }
+
+    pendingDeleteBookId.value = null
+    deleteMode.value = 'initial'
+    toastStore.showSuccess('Livro apagado com sucesso.')
   } catch (error) {
     if ((error as Error).message !== 'confirmation required') {
+      toastStore.showError(adminBooksStore.errorMessage || 'Não foi possível apagar o livro agora.')
       return
     }
 
@@ -42,17 +126,7 @@ async function requestDeleteBook(bookId: string) {
       return
     }
 
-    const listLabel = pendingDeletion.removedFromListsCount === 1 ? 'lista' : 'listas'
-    const confirmed = window.confirm(
-      `Esse livro está em ${pendingDeletion.removedFromListsCount} ${listLabel}. Se continuar, ele será removido dessas listas e apagado do sistema. Deseja continuar?`,
-    )
-
-    if (!confirmed) {
-      adminBooksStore.clearPendingDeletion()
-      return
-    }
-
-    await adminBooksStore.confirmDeleteBook(bookId)
+    deleteMode.value = 'force'
   }
 }
 
@@ -106,7 +180,10 @@ async function goBack() {
           </label>
 
           <IonButton class="search-button" type="submit" :disabled="adminBooksStore.isLoading">
-            <span v-if="!adminBooksStore.isLoading">Buscar</span>
+            <span v-if="!adminBooksStore.isLoading" class="button-inline-content">
+              <IonIcon :icon="searchOutline" aria-hidden="true" />
+              Buscar
+            </span>
             <IonSpinner v-else name="crescent" />
           </IonButton>
         </form>
@@ -156,13 +233,15 @@ async function goBack() {
               <template #actions>
                 <IonButton
                   fill="outline"
-                  color="danger"
-                  class="delete-button"
+                  class="options-button"
                   :disabled="adminBooksStore.isDeleting"
-                  :data-testid="`delete-book-${book.id}`"
-                  @click="requestDeleteBook(book.id)"
+                  :data-testid="`open-admin-book-options-${book.id}`"
+                  @click="openBookOptions(book.id)"
                 >
-                  Apagar
+                  <span class="button-inline-content">
+                    <IonIcon :icon="ellipsisHorizontalOutline" aria-hidden="true" />
+                    Opções
+                  </span>
                 </IonButton>
               </template>
             </BookCard>
@@ -170,6 +249,47 @@ async function goBack() {
         </ul>
       </IonCardContent>
     </IonCard>
+
+    <ResponsiveSheetModal
+      v-model="isBookOptionsOpen"
+      title="Opções do livro"
+      description="Escolha o que deseja fazer com este livro."
+      panel-testid="admin-book-options-sheet"
+      close-testid="close-admin-book-options"
+    >
+      <div v-if="optionsBook" class="admin-book-options">
+        <BookCard
+          :title="optionsBook.title"
+          :author="optionsBook.author"
+          :cover-url="optionsBook.cover_url"
+        />
+
+        <IonButton
+          fill="outline"
+          color="danger"
+          class="delete-button"
+          :disabled="adminBooksStore.isDeleting"
+          :data-testid="`request-delete-book-${optionsBook.id}`"
+          @click="requestDeleteBook(optionsBook.id)"
+        >
+          <span class="button-inline-content">
+            <IonIcon :icon="trashOutline" aria-hidden="true" />
+            Apagar
+          </span>
+        </IonButton>
+      </div>
+    </ResponsiveSheetModal>
+
+    <AppConfirmSheet
+      v-model="isDeleteConfirmOpen"
+      :title="deleteConfirmTitle"
+      :message="deleteConfirmMessage"
+      :confirm-label="deleteConfirmLabel"
+      cancel-label="Cancelar"
+      tone="danger"
+      panel-testid="admin-delete-book-confirm-sheet"
+      @confirm="confirmDeleteBook"
+    />
   </AuthenticatedScaffold>
 </template>
 
@@ -218,6 +338,14 @@ async function goBack() {
   font-weight: 700;
 }
 
+.button-inline-content {
+  display: inline-flex;
+  gap: 0.55rem;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.2;
+}
+
 .loading-state {
   display: grid;
   gap: var(--space-sm);
@@ -242,8 +370,20 @@ async function goBack() {
   display: block;
 }
 
+.admin-book-options {
+  display: grid;
+  gap: var(--space-md);
+}
+
+.options-button {
+  --border-radius: var(--radius-lg);
+  font-weight: 700;
+}
+
 .delete-button {
   --border-radius: var(--radius-lg);
+  min-height: 3rem;
+  font-weight: 700;
   flex-shrink: 0;
 }
 </style>

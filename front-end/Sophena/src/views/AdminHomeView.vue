@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { IonButton, IonCard, IonCardContent } from '@ionic/vue'
+import { IonButton, IonIcon } from '@ionic/vue'
+import { bookOutline, documentTextOutline, peopleOutline } from 'ionicons/icons'
 import { useRouter } from 'vue-router'
 
 import AuthenticatedScaffold from '@/components/layout/AuthenticatedScaffold.vue'
@@ -12,6 +13,7 @@ const adminActions = [
     title: 'Criar usuário',
     description: 'Cadastre uma nova pessoa e escolha se ela também poderá administrar o sistema.',
     actionLabel: 'Abrir criação de usuários',
+    icon: peopleOutline,
     testId: 'open-admin-users',
     handler: openAdminUsers,
   },
@@ -20,6 +22,7 @@ const adminActions = [
     title: 'Ver registros',
     description: 'Acompanhe o que aconteceu no sistema e encontre avisos importantes.',
     actionLabel: 'Abrir registros',
+    icon: documentTextOutline,
     testId: 'open-admin-logs',
     handler: openAdminLogs,
   },
@@ -28,6 +31,7 @@ const adminActions = [
     title: 'Gerenciar livros',
     description: 'Busque livros cadastrados e apague o que não deve mais ficar disponível no sistema.',
     actionLabel: 'Abrir gerenciamento de livros',
+    icon: bookOutline,
     testId: 'open-admin-books',
     handler: openAdminBooks,
   },
@@ -44,29 +48,16 @@ async function openAdminLogs() {
 async function openAdminBooks() {
   await router.push('/app/admin/books')
 }
-
-async function goBack() {
-  await router.push('/app')
-}
 </script>
 
 <template>
   <AuthenticatedScaffold page-class="admin-home-page">
-    <header class="app-page-header">
+    <header class="app-page-header admin-home-header">
       <div class="app-page-header__title">
         <p class="app-page-kicker">Sophena</p>
         <h1 class="app-page-title">Área administrativa</h1>
         <p class="app-page-subtitle">Escolha a tarefa que deseja fazer.</p>
       </div>
-
-      <IonButton
-        class="back-button"
-        fill="outline"
-        data-testid="back-to-app"
-        @click="goBack"
-      >
-        Voltar
-      </IonButton>
     </header>
 
     <section class="admin-summary app-fade-in">
@@ -76,35 +67,41 @@ async function goBack() {
       </div>
     </section>
 
-    <div class="admin-home-grid app-fade-in">
-      <IonCard
+    <div class="admin-home-grid app-fade-in" data-testid="admin-task-list">
+      <article
         v-for="action in adminActions"
         :key="action.id"
-        class="app-card admin-home-card"
+        class="admin-home-task"
       >
-        <IonCardContent>
-          <p class="card-kicker">Tarefa</p>
+        <div class="task-icon-wrap">
+          <IonIcon
+            class="task-icon"
+            :icon="action.icon"
+            aria-hidden="true"
+            data-testid="admin-task-icon"
+          />
+        </div>
+
+        <div class="task-copy">
           <h2>{{ action.title }}</h2>
           <p>{{ action.description }}</p>
+        </div>
 
-          <IonButton
-            class="action-button"
-            :data-testid="action.testId"
-            @click="action.handler"
-          >
-            {{ action.actionLabel }}
-          </IonButton>
-        </IonCardContent>
-      </IonCard>
+        <IonButton
+          class="action-button"
+          :data-testid="action.testId"
+          @click="action.handler"
+        >
+          {{ action.actionLabel }}
+        </IonButton>
+      </article>
     </div>
   </AuthenticatedScaffold>
 </template>
 
 <style scoped>
-.back-button {
-  --color: var(--color-primary);
-  --border-color: var(--color-primary);
-  --border-radius: var(--radius-lg);
+.admin-home-header {
+  justify-content: flex-start;
 }
 
 .summary-badge {
@@ -123,37 +120,56 @@ async function goBack() {
 }
 
 .summary-badge span,
-.admin-home-card p {
+.admin-home-task p {
   color: var(--color-muted);
 }
 
 .admin-home-grid {
   display: grid;
+  gap: var(--space-sm);
+}
+
+.admin-home-task {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
   gap: var(--space-md);
+  align-items: center;
+  padding: var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: var(--shadow-sm);
 }
 
-.card-kicker {
-  margin-bottom: var(--space-sm);
-  color: var(--color-muted);
-  font-size: 14px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+.task-icon-wrap {
+  width: 2.75rem;
+  height: 2.75rem;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-md);
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
 }
 
-.admin-home-card h2 {
-  margin-bottom: var(--space-sm);
+.task-icon {
+  width: 1.35rem;
+  height: 1.35rem;
+}
+
+.task-copy {
+  min-width: 0;
+  display: grid;
+  gap: var(--space-xs);
+}
+
+.admin-home-task h2 {
   color: var(--color-heading);
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 600;
 }
 
-.admin-home-card {
-  background: rgba(255, 255, 255, 0.92);
-}
-
 .action-button {
-  margin-top: var(--space-md);
+  grid-column: 1 / -1;
   --background: var(--color-primary);
   --background-hover: var(--color-primary-hover);
   --border-radius: var(--radius-lg);
@@ -165,6 +181,11 @@ async function goBack() {
 @media (min-width: 768px) {
   .admin-home-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .admin-home-task {
+    align-content: start;
+    grid-template-columns: auto minmax(0, 1fr);
   }
 }
 </style>

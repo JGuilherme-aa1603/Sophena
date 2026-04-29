@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { IonIcon } from '@ionic/vue'
+import { bookOutline, libraryOutline, logOutOutline } from 'ionicons/icons'
 
 const props = defineProps<{
   activeRoute: string
@@ -25,6 +27,12 @@ const isAdminActive = computed(() => props.activeRoute.startsWith('admin-'))
       data-testid="dock-link-lists"
       @click="emit('navigate', 'app-home')"
     >
+      <IonIcon
+        class="dock-link-icon"
+        :icon="libraryOutline"
+        aria-hidden="true"
+        data-testid="dock-icon-lists"
+      />
       <span class="dock-link-label">Listas</span>
     </button>
 
@@ -37,6 +45,12 @@ const isAdminActive = computed(() => props.activeRoute.startsWith('admin-'))
       data-testid="dock-link-admin"
       @click="emit('navigate', 'admin-home')"
     >
+      <IonIcon
+        class="dock-link-icon"
+        :icon="bookOutline"
+        aria-hidden="true"
+        data-testid="dock-icon-admin"
+      />
       <span class="dock-link-label">Admin</span>
     </button>
 
@@ -46,6 +60,12 @@ const isAdminActive = computed(() => props.activeRoute.startsWith('admin-'))
       data-testid="dock-action-logout"
       @click="emit('logout')"
     >
+      <IonIcon
+        class="dock-link-icon"
+        :icon="logOutOutline"
+        aria-hidden="true"
+        data-testid="dock-icon-logout"
+      />
       <span class="dock-link-label">Sair</span>
     </button>
   </nav>
@@ -74,6 +94,11 @@ const isAdminActive = computed(() => props.activeRoute.startsWith('admin-'))
   min-width: 5.25rem;
   min-height: 3rem;
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.38rem;
+  align-items: center;
+  justify-content: center;
   padding: 0.8rem 0.95rem;
   border: 0;
   border-radius: var(--radius-lg);
@@ -90,7 +115,13 @@ const isAdminActive = computed(() => props.activeRoute.startsWith('admin-'))
 
 .dock-link-label {
   display: block;
-  line-height: 1;
+  line-height: 1.1;
+  text-align: center;
+}
+
+.dock-link-icon {
+  width: 1.2rem;
+  height: 1.2rem;
 }
 
 .dock-link:hover {
@@ -111,6 +142,8 @@ const isAdminActive = computed(() => props.activeRoute.startsWith('admin-'))
 
 .dock-link--danger {
   color: var(--color-danger);
+  flex: 0.78;
+  font-weight: 600;
 }
 
 .dock-link--danger:hover {

@@ -1,17 +1,29 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
-import { IonButton, IonCard, IonCardContent, IonSpinner } from '@ionic/vue'
+import { IonButton, IonCard, IonCardContent, IonIcon, IonSpinner } from '@ionic/vue'
+import {
+  addCircleOutline,
+  arrowDownOutline,
+  arrowUpOutline,
+  ellipsisHorizontalOutline,
+  searchOutline,
+  swapHorizontalOutline,
+  trashOutline,
+} from 'ionicons/icons'
 import { useRoute, useRouter } from 'vue-router'
 
 import BookCard from '@/components/books/BookCard.vue'
 import EmptyStateCard from '@/components/feedback/EmptyStateCard.vue'
 import AuthenticatedScaffold from '@/components/layout/AuthenticatedScaffold.vue'
+import AppConfirmSheet from '@/components/overlay/AppConfirmSheet.vue'
 import ResponsiveSheetModal from '@/components/overlay/ResponsiveSheetModal.vue'
 import { useListDetailStore } from '@/stores/list-detail'
+import { useToastStore } from '@/stores/toast'
 
 const router = useRouter()
 const route = useRoute()
 const listDetailStore = useListDetailStore()
+const toastStore = useToastStore()
 
 const searchForm = reactive({
   term: '',
@@ -25,7 +37,11 @@ const manualForm = reactive({
 })
 
 const isAddBookFlowOpen = ref(false)
+const hasSearchedBooks = ref(false)
+const showManualBookForm = ref(false)
+const activeOptionsItemId = ref<string | null>(null)
 const activeMoveItemId = ref<string | null>(null)
+const pendingRemoveItemId = ref<string | null>(null)
 const moveTargets = reactive<Record<string, string>>({})
 
 const listId = computed(() => {
@@ -64,6 +80,14 @@ const movingItem = computed(() => {
   return listDetailStore.items.find((item) => item.book_list_item_id === activeMoveItemId.value) ?? null
 })
 
+const optionsItem = computed(() => {
+  if (!activeOptionsItemId.value) {
+    return null
+  }
+
+  return listDetailStore.items.find((item) => item.book_list_item_id === activeOptionsItemId.value) ?? null
+})
+
 const isMoveFlowOpen = computed({
   get: () => Boolean(activeMoveItemId.value),
   set: (value: boolean) => {
@@ -71,6 +95,31 @@ const isMoveFlowOpen = computed({
       activeMoveItemId.value = null
     }
   },
+})
+
+const isOptionsFlowOpen = computed({
+  get: () => Boolean(activeOptionsItemId.value),
+  set: (value: boolean) => {
+    if (!value) {
+      activeOptionsItemId.value = null
+    }
+  },
+})
+
+const isRemoveConfirmOpen = computed({
+  get: () => Boolean(pendingRemoveItemId.value),
+  set: (value: boolean) => {
+    if (!value) {
+      pendingRemoveItemId.value = null
+    }
+  },
+})
+
+const canShowManualBookPath = computed(() => {
+  return hasSearchedBooks.value
+    && !listDetailStore.isSearching
+    && searchForm.term.trim().length > 0
+    && listDetailStore.searchResults.length === 0
 })
 
 onMounted(async () => {
@@ -83,21 +132,46 @@ async function goBack() {
 
 function openAddBookFlow() {
   isAddBookFlowOpen.value = true
+  hasSearchedBooks.value = false
+  showManualBookForm.value = false
 }
 
 function closeAddBookFlow() {
   isAddBookFlowOpen.value = false
 }
 
-async function removeBook(itemId: string) {
+function openBookOptions(itemId: string) {
+  activeOptionsItemId.value = itemId
+}
+
+function closeBookOptions() {
+  activeOptionsItemId.value = null
+}
+
+function requestRemoveBook(itemId: string) {
+  pendingRemoveItemId.value = itemId
+  closeBookOptions()
+}
+
+async function confirmRemoveBook() {
+  if (!pendingRemoveItemId.value) {
+    return
+  }
+
+  const itemId = pendingRemoveItemId.value
+
   try {
     await listDetailStore.removeItem(listId.value, itemId)
+    pendingRemoveItemId.value = null
+    toastStore.showSuccess('Livro removido da lista.')
   } catch {
-    // A mensagem amigável já é definida no store.
+    toastStore.showError(listDetailStore.errorMessage || 'Não foi possível remover o livro agora.')
   }
 }
 
 async function submitBookSearch() {
+  hasSearchedBooks.value = searchForm.term.trim().length > 0
+  showManualBookForm.value = false
   await listDetailStore.searchBooks(searchForm.term)
 }
 
@@ -105,8 +179,12 @@ async function chooseExistingBook(bookId: string) {
   try {
     await listDetailStore.addExistingBook(listId.value, bookId)
     searchForm.term = ''
+    hasSearchedBooks.value = false
+    showManualBookForm.value = false
+    isAddBookFlowOpen.value = false
+    toastStore.showSuccess('Livro adicionado à lista.')
   } catch {
-    // A mensagem amigável já é definida no store.
+    toastStore.showError(listDetailStore.errorMessage || 'Não foi possível adicionar o livro agora.')
   }
 }
 
@@ -122,9 +200,18 @@ async function submitManualBook() {
     manualForm.author = ''
     manualForm.cover_url = ''
     manualForm.cover_file = undefined
+    searchForm.term = ''
+    hasSearchedBooks.value = false
+    showManualBookForm.value = false
+    isAddBookFlowOpen.value = false
+    toastStore.showSuccess('Livro adicionado à lista.')
   } catch {
-    // A mensagem amigável já é definida no store.
+    toastStore.showError(listDetailStore.errorMessage || 'Não foi possível adicionar o livro agora.')
   }
+}
+
+function showManualForm() {
+  showManualBookForm.value = true
 }
 
 function updateManualCoverFile(event: Event) {
@@ -139,8 +226,10 @@ async function moveUp(itemId: string, currentPosition: number) {
 
   try {
     await listDetailStore.reorderItem(listId.value, itemId, currentPosition - 1)
+    closeBookOptions()
+    toastStore.showSuccess('Ordem atualizada.')
   } catch {
-    // A mensagem amigável já é definida no store.
+    toastStore.showError(listDetailStore.errorMessage || 'Não foi possível mudar a ordem agora.')
   }
 }
 
@@ -151,12 +240,15 @@ async function moveDown(itemId: string, currentPosition: number) {
 
   try {
     await listDetailStore.reorderItem(listId.value, itemId, currentPosition + 1)
+    closeBookOptions()
+    toastStore.showSuccess('Ordem atualizada.')
   } catch {
-    // A mensagem amigável já é definida no store.
+    toastStore.showError(listDetailStore.errorMessage || 'Não foi possível mudar a ordem agora.')
   }
 }
 
 async function openMoveMenu(itemId: string) {
+  closeBookOptions()
   activeMoveItemId.value = itemId
   await listDetailStore.fetchAvailableLists()
 }
@@ -170,6 +262,7 @@ async function confirmMove(itemId: string) {
 
   if (!targetListId) {
     listDetailStore.errorMessage = 'Escolha a lista para onde deseja enviar o livro.'
+    toastStore.showWarning('Escolha a lista de destino.')
     return
   }
 
@@ -177,8 +270,9 @@ async function confirmMove(itemId: string) {
     await listDetailStore.moveItemToList(listId.value, itemId, targetListId, 1)
     closeMoveFlow()
     delete moveTargets[itemId]
+    toastStore.showSuccess('Livro movido com sucesso.')
   } catch {
-    // A mensagem amigável já é definida no store.
+    toastStore.showError(listDetailStore.errorMessage || 'Não foi possível mover o livro agora.')
   }
 }
 </script>
@@ -217,7 +311,10 @@ async function confirmMove(itemId: string) {
           data-testid="open-add-book-flow"
           @click="openAddBookFlow"
         >
-          Adicionar livro
+          <span class="button-inline-content">
+            <IonIcon :icon="addCircleOutline" aria-hidden="true" />
+            Adicionar livro
+          </span>
         </IonButton>
       </IonCardContent>
     </IonCard>
@@ -296,44 +393,14 @@ async function confirmMove(itemId: string) {
               <template #actions>
                 <IonButton
                   fill="outline"
-                  class="order-button"
-                  :disabled="item.position === 1 || listDetailStore.reorderingItemId === item.book_list_item_id"
-                  :data-testid="`move-up-${item.book_list_item_id}`"
-                  @click="moveUp(item.book_list_item_id, item.position)"
+                  class="options-button"
+                  :data-testid="`open-book-options-${item.book_list_item_id}`"
+                  @click="openBookOptions(item.book_list_item_id)"
                 >
-                  Subir
-                </IonButton>
-
-                <IonButton
-                  fill="outline"
-                  class="order-button"
-                  :disabled="item.position === listDetailStore.items.length || listDetailStore.reorderingItemId === item.book_list_item_id"
-                  :data-testid="`move-down-${item.book_list_item_id}`"
-                  @click="moveDown(item.book_list_item_id, item.position)"
-                >
-                  Descer
-                </IonButton>
-
-                <IonButton
-                  fill="outline"
-                  class="move-button"
-                  :data-testid="`open-move-${item.book_list_item_id}`"
-                  :disabled="listDetailStore.movingItemId === item.book_list_item_id || listDetailStore.isLoadingLists"
-                  @click="openMoveMenu(item.book_list_item_id)"
-                >
-                  Mover
-                </IonButton>
-
-                <IonButton
-                  fill="clear"
-                  color="danger"
-                  class="remove-button"
-                  :disabled="listDetailStore.removingItemId === item.book_list_item_id"
-                  :data-testid="`remove-item-${item.book_list_item_id}`"
-                  @click="removeBook(item.book_list_item_id)"
-                >
-                  <span v-if="listDetailStore.removingItemId !== item.book_list_item_id">Remover</span>
-                  <IonSpinner v-else name="crescent" />
+                  <span class="button-inline-content">
+                    <IonIcon :icon="ellipsisHorizontalOutline" aria-hidden="true" />
+                    Opções
+                  </span>
                 </IonButton>
               </template>
             </BookCard>
@@ -345,14 +412,14 @@ async function confirmMove(itemId: string) {
     <ResponsiveSheetModal
       v-model="isAddBookFlowOpen"
       title="Adicionar livro"
-      description="Escolha um livro já cadastrado ou preencha os dados de um novo."
+      description="Busque pelo título ou autor. Se o livro não aparecer, você poderá cadastrar um novo."
       panel-testid="add-book-flow"
       close-testid="close-add-book-flow"
     >
       <div class="flow-grid">
         <section class="flow-section app-fade-in">
-          <h3>Escolher um livro já existente</h3>
-          <p>Se o livro já estiver cadastrado, você pode encontrá-lo pela busca.</p>
+          <h3>Primeiro, procure o livro</h3>
+          <p>Digite uma parte do título ou do nome do autor.</p>
 
           <form data-testid="search-books-form" class="flow-form" @submit.prevent="submitBookSearch">
             <label class="app-field">
@@ -372,17 +439,27 @@ async function confirmMove(itemId: string) {
               class="flow-button"
               :disabled="listDetailStore.isSearching || listDetailStore.isAddingBook"
             >
-              <span v-if="!listDetailStore.isSearching">Buscar</span>
+              <span v-if="!listDetailStore.isSearching" class="button-inline-content">
+                <IonIcon :icon="searchOutline" aria-hidden="true" />
+                Buscar
+              </span>
               <IonSpinner v-else name="crescent" />
             </IonButton>
           </form>
 
-          <p
-            v-if="!listDetailStore.isSearching && searchForm.term.trim().length > 0 && listDetailStore.searchResults.length === 0"
-            class="secondary-feedback"
-          >
-            Nenhum livro apareceu na busca. Se quiser, cadastre um novo logo abaixo.
-          </p>
+          <div v-if="canShowManualBookPath && !showManualBookForm" class="manual-path">
+            <p class="secondary-feedback">
+              Nenhum livro apareceu na busca.
+            </p>
+            <button
+              type="button"
+              class="manual-path-button"
+              data-testid="show-manual-book-form"
+              @click="showManualForm"
+            >
+              Cadastrar este livro
+            </button>
+          </div>
 
           <ul v-if="listDetailStore.searchResults.length > 0" class="search-results">
             <li
@@ -408,9 +485,9 @@ async function confirmMove(itemId: string) {
           </ul>
         </section>
 
-        <section class="flow-section app-fade-in">
+        <section v-if="showManualBookForm" class="flow-section app-fade-in">
           <h3>Cadastrar um livro novo</h3>
-          <p>Use esta opção quando o livro ainda não aparecer na busca.</p>
+          <p>Preencha título e autor para adicionar o livro à lista.</p>
 
           <form data-testid="manual-book-form" class="flow-form" @submit.prevent="submitManualBook">
             <label class="app-field">
@@ -472,6 +549,90 @@ async function confirmMove(itemId: string) {
         </section>
       </div>
     </ResponsiveSheetModal>
+
+    <ResponsiveSheetModal
+      v-model="isOptionsFlowOpen"
+      title="Opções do livro"
+      description="Escolha o que deseja fazer com este livro."
+      panel-testid="book-options-sheet"
+      close-testid="close-book-options"
+    >
+      <div v-if="optionsItem" class="options-flow">
+        <BookCard
+          :title="optionsItem.book.title"
+          :author="optionsItem.book.author"
+          :cover-url="optionsItem.book.cover_url"
+          :position="optionsItem.position"
+          :show-position="true"
+        />
+
+        <div class="options-action-list">
+          <IonButton
+            fill="outline"
+            class="sheet-action-button"
+            :disabled="optionsItem.position === 1 || listDetailStore.reorderingItemId === optionsItem.book_list_item_id"
+            :data-testid="`move-up-${optionsItem.book_list_item_id}`"
+            @click="moveUp(optionsItem.book_list_item_id, optionsItem.position)"
+          >
+            <span class="button-inline-content">
+              <IonIcon :icon="arrowUpOutline" aria-hidden="true" />
+              Subir na lista
+            </span>
+          </IonButton>
+
+          <IonButton
+            fill="outline"
+            class="sheet-action-button"
+            :disabled="optionsItem.position === listDetailStore.items.length || listDetailStore.reorderingItemId === optionsItem.book_list_item_id"
+            :data-testid="`move-down-${optionsItem.book_list_item_id}`"
+            @click="moveDown(optionsItem.book_list_item_id, optionsItem.position)"
+          >
+            <span class="button-inline-content">
+              <IonIcon :icon="arrowDownOutline" aria-hidden="true" />
+              Descer na lista
+            </span>
+          </IonButton>
+
+          <IonButton
+            fill="outline"
+            class="sheet-action-button"
+            :data-testid="`open-move-${optionsItem.book_list_item_id}`"
+            :disabled="listDetailStore.movingItemId === optionsItem.book_list_item_id || listDetailStore.isLoadingLists"
+            @click="openMoveMenu(optionsItem.book_list_item_id)"
+          >
+            <span class="button-inline-content">
+              <IonIcon :icon="swapHorizontalOutline" aria-hidden="true" />
+              Mover para outra lista
+            </span>
+          </IonButton>
+        </div>
+
+        <IonButton
+          fill="outline"
+          color="danger"
+          class="sheet-action-button sheet-action-button--danger"
+          :disabled="listDetailStore.removingItemId === optionsItem.book_list_item_id"
+          :data-testid="`request-remove-${optionsItem.book_list_item_id}`"
+          @click="requestRemoveBook(optionsItem.book_list_item_id)"
+        >
+          <span class="button-inline-content">
+            <IonIcon :icon="trashOutline" aria-hidden="true" />
+            Remover da lista
+          </span>
+        </IonButton>
+      </div>
+    </ResponsiveSheetModal>
+
+    <AppConfirmSheet
+      v-model="isRemoveConfirmOpen"
+      title="Remover livro da lista?"
+      message="O livro sairá desta lista, mas continuará cadastrado no Sophena."
+      confirm-label="Remover livro"
+      cancel-label="Manter na lista"
+      tone="danger"
+      panel-testid="remove-book-confirm-sheet"
+      @confirm="confirmRemoveBook"
+    />
 
     <ResponsiveSheetModal
       v-model="isMoveFlowOpen"
@@ -566,11 +727,22 @@ async function confirmMove(itemId: string) {
   font-weight: 700;
 }
 
+.button-inline-content {
+  display: inline-flex;
+  gap: 0.55rem;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.2;
+}
+
 .items-card-content,
 .flow-grid,
 .flow-section,
 .flow-form,
-.move-flow {
+.move-flow,
+.options-flow,
+.options-action-list,
+.manual-path {
   display: grid;
   gap: var(--space-md);
 }
@@ -613,8 +785,8 @@ async function confirmMove(itemId: string) {
 }
 
 .item-skeleton-cover {
-  width: 4rem;
-  height: 5.75rem;
+  width: 4.85rem;
+  height: 7rem;
   border-radius: var(--radius-sm);
 }
 
@@ -635,14 +807,36 @@ async function confirmMove(itemId: string) {
   display: grid;
 }
 
-.order-button,
-.move-button {
+.options-button,
+.sheet-action-button {
   --border-radius: var(--radius-lg);
   font-weight: 700;
 }
 
-.remove-button {
-  --color: #a34e49;
+.sheet-action-button {
+  min-height: 3rem;
+}
+
+.sheet-action-button--danger {
+  margin-top: var(--space-xs);
+}
+
+.manual-path {
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  border: 1px dashed rgba(53, 95, 74, 0.32);
+  border-radius: var(--radius-md);
+  background: rgba(230, 239, 233, 0.36);
+}
+
+.manual-path-button {
+  min-height: 3rem;
+  padding: 0.8rem 1rem;
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-lg);
+  background: transparent;
+  color: var(--color-primary);
+  font: inherit;
   font-weight: 700;
 }
 
@@ -706,7 +900,7 @@ async function confirmMove(itemId: string) {
   }
 
   .flow-grid {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr));
     align-items: start;
   }
 }

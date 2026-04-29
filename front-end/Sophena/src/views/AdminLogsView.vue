@@ -1,14 +1,19 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive } from 'vue'
-import { IonButton, IonCard, IonCardContent, IonSpinner } from '@ionic/vue'
+import { computed, onMounted, reactive, ref } from 'vue'
+import { IonButton, IonCard, IonCardContent, IonIcon, IonSpinner } from '@ionic/vue'
+import { filterOutline } from 'ionicons/icons'
 import { useRouter } from 'vue-router'
 
 import EmptyStateCard from '@/components/feedback/EmptyStateCard.vue'
 import AuthenticatedScaffold from '@/components/layout/AuthenticatedScaffold.vue'
+import ResponsiveSheetModal from '@/components/overlay/ResponsiveSheetModal.vue'
 import { useAdminLogsStore } from '@/stores/admin-logs'
+import { useToastStore } from '@/stores/toast'
 
 const router = useRouter()
 const adminLogsStore = useAdminLogsStore()
+const toastStore = useToastStore()
+const isFilterSheetOpen = ref(false)
 const filtersForm = reactive({
   from: '',
   to: '',
@@ -45,6 +50,14 @@ async function submitFilters() {
   adminLogsStore.filters.to = localDateTimeToUtcIso(filtersForm.to)
   adminLogsStore.pagination.page = 1
   await adminLogsStore.fetchLogs()
+  isFilterSheetOpen.value = false
+
+  if (adminLogsStore.errorMessage) {
+    toastStore.showError(adminLogsStore.errorMessage)
+    return
+  }
+
+  toastStore.showSuccess('Filtros aplicados.')
 }
 
 async function goToNextPage() {
@@ -155,63 +168,24 @@ function formatDateTime(value: string) {
 
     <IonCard class="app-card admin-logs-card">
       <IonCardContent class="logs-content">
-        <form data-testid="logs-filters-form" class="filters-form" @submit.prevent="submitFilters">
-          <label class="app-field">
-            <span>Nível</span>
-            <select name="logs-level" v-model="adminLogsStore.filters.level">
-              <option value="">Todos</option>
-              <option value="INFO">Informação</option>
-              <option value="WARN">Aviso</option>
-              <option value="ERROR">Erro</option>
-            </select>
-          </label>
+        <div class="logs-toolbar">
+          <div>
+            <h2>Registros encontrados</h2>
+            <p>Use filtros apenas quando precisar procurar algo específico.</p>
+          </div>
 
-          <label class="app-field">
-            <span>Método</span>
-            <select name="logs-method" v-model="adminLogsStore.filters.method">
-              <option value="">Todos</option>
-              <option value="GET">GET</option>
-              <option value="POST">POST</option>
-              <option value="PUT">PUT</option>
-              <option value="PATCH">PATCH</option>
-              <option value="DELETE">DELETE</option>
-            </select>
-          </label>
-
-          <label class="app-field">
-            <span>Status</span>
-            <input
-              name="logs-status-code"
-              type="text"
-              inputmode="numeric"
-              placeholder="Exemplo: 401"
-              v-model="adminLogsStore.filters.status_code"
-            />
-          </label>
-
-          <label class="app-field">
-            <span>De</span>
-            <input
-              name="logs-from"
-              type="datetime-local"
-              v-model="filtersForm.from"
-            />
-          </label>
-
-          <label class="app-field">
-            <span>Até</span>
-            <input
-              name="logs-to"
-              type="datetime-local"
-              v-model="filtersForm.to"
-            />
-          </label>
-
-          <IonButton class="filter-button" type="submit" :disabled="adminLogsStore.isLoadingLogs">
-            <span v-if="!adminLogsStore.isLoadingLogs">Aplicar filtros</span>
-            <IonSpinner v-else name="crescent" />
+          <IonButton
+            fill="outline"
+            class="open-filters-button"
+            data-testid="open-logs-filters"
+            @click="isFilterSheetOpen = true"
+          >
+            <span class="button-inline-content">
+              <IonIcon :icon="filterOutline" aria-hidden="true" />
+              Filtrar registros
+            </span>
           </IonButton>
-        </form>
+        </div>
 
         <p
           v-if="adminLogsStore.errorMessage"
@@ -293,6 +267,72 @@ function formatDateTime(value: string) {
         </div>
       </IonCardContent>
     </IonCard>
+
+    <ResponsiveSheetModal
+      v-model="isFilterSheetOpen"
+      title="Filtrar registros"
+      description="Escolha somente os filtros necessários."
+      panel-testid="logs-filters-sheet"
+      close-testid="close-logs-filters"
+    >
+      <form data-testid="logs-filters-form" class="filters-form" @submit.prevent="submitFilters">
+        <label class="app-field">
+          <span>Nível</span>
+          <select name="logs-level" v-model="adminLogsStore.filters.level">
+            <option value="">Todos</option>
+            <option value="INFO">Informação</option>
+            <option value="WARN">Aviso</option>
+            <option value="ERROR">Erro</option>
+          </select>
+        </label>
+
+        <label class="app-field">
+          <span>Método</span>
+          <select name="logs-method" v-model="adminLogsStore.filters.method">
+            <option value="">Todos</option>
+            <option value="GET">GET</option>
+            <option value="POST">POST</option>
+            <option value="PUT">PUT</option>
+            <option value="PATCH">PATCH</option>
+            <option value="DELETE">DELETE</option>
+          </select>
+        </label>
+
+        <label class="app-field">
+          <span>Status</span>
+          <input
+            name="logs-status-code"
+            type="text"
+            inputmode="numeric"
+            placeholder="Exemplo: 401"
+            v-model="adminLogsStore.filters.status_code"
+          />
+        </label>
+
+        <label class="app-field">
+          <span>De</span>
+          <input
+            name="logs-from"
+            type="datetime-local"
+            v-model="filtersForm.from"
+          />
+        </label>
+
+        <label class="app-field">
+          <span>Até</span>
+          <input
+            name="logs-to"
+            type="datetime-local"
+            v-model="filtersForm.to"
+          />
+        </label>
+
+        <IonButton class="filter-button" type="submit" :disabled="adminLogsStore.isLoadingLogs">
+          <span v-if="!adminLogsStore.isLoadingLogs">Aplicar filtros</span>
+          <IonSpinner v-else name="crescent" />
+        </IonButton>
+      </form>
+    </ResponsiveSheetModal>
   </AuthenticatedScaffold>
 </template>
 
@@ -341,6 +381,36 @@ function formatDateTime(value: string) {
 .logs-content {
   display: grid;
   gap: var(--space-md);
+}
+
+.logs-toolbar {
+  display: grid;
+  gap: var(--space-md);
+}
+
+.logs-toolbar h2 {
+  color: var(--color-heading);
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.logs-toolbar p {
+  color: var(--color-muted);
+}
+
+.open-filters-button {
+  --border-color: var(--color-primary);
+  --border-radius: var(--radius-lg);
+  --color: var(--color-primary);
+  font-weight: 700;
+}
+
+.button-inline-content {
+  display: inline-flex;
+  gap: 0.55rem;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.2;
 }
 
 .filters-form {
@@ -451,10 +521,13 @@ function formatDateTime(value: string) {
   display: grid;
   gap: 0.75rem;
   align-items: center;
+  justify-items: stretch;
 }
 
 .pagination-button {
   --border-radius: 999px;
+  width: 100%;
+  min-width: min(100%, 11.5rem);
   font-weight: 700;
 }
 
@@ -463,9 +536,24 @@ function formatDateTime(value: string) {
   color: var(--color-muted);
 }
 
+@media (min-width: 480px) {
+  .pagination-bar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .pagination-text {
+    grid-column: 1 / -1;
+  }
+}
+
 @media (min-width: 768px) {
   .summary-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .logs-toolbar {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
   }
 
   .filters-form {
@@ -474,11 +562,15 @@ function formatDateTime(value: string) {
   }
 
   .pagination-bar {
-    grid-template-columns: auto 1fr auto;
+    grid-template-columns: minmax(11.5rem, 1fr) auto minmax(11.5rem, 1fr);
   }
 
   .log-meta {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .pagination-text {
+    grid-column: auto;
   }
 }
 
