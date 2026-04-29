@@ -15,18 +15,21 @@ import { useToastStore } from '@/stores/toast'
 const router = useRouter()
 const adminBooksStore = useAdminBooksStore()
 const toastStore = useToastStore()
+const ADMIN_BOOKS_LAYOUT_STORAGE_KEY = 'sophena:admin-books-layout'
 const searchForm = reactive({
   term: '',
 })
 const activeOptionsBookId = ref<string | null>(null)
 const pendingDeleteBookId = ref<string | null>(null)
 const deleteMode = ref<'initial' | 'force'>('initial')
+const booksLayout = ref<'comfortable' | 'compact'>('comfortable')
 
 const showEmptyState = computed(() => {
   return !adminBooksStore.isLoading
     && adminBooksStore.books.length === 0
     && !adminBooksStore.errorMessage
 })
+const isCompactLayout = computed(() => booksLayout.value === 'compact')
 
 const optionsBook = computed(() => {
   if (!activeOptionsBookId.value) {
@@ -74,6 +77,7 @@ const deleteConfirmLabel = computed(() => {
 })
 
 onMounted(async () => {
+  booksLayout.value = readSavedBooksLayout()
   await adminBooksStore.fetchBooks()
 })
 
@@ -95,6 +99,16 @@ function cancelDeleteBook() {
   pendingDeleteBookId.value = null
   deleteMode.value = 'initial'
   adminBooksStore.clearPendingDeletion()
+}
+
+function setBooksLayout(layout: 'comfortable' | 'compact') {
+  booksLayout.value = layout
+  localStorage.setItem(ADMIN_BOOKS_LAYOUT_STORAGE_KEY, layout)
+}
+
+function readSavedBooksLayout() {
+  const savedLayout = localStorage.getItem(ADMIN_BOOKS_LAYOUT_STORAGE_KEY)
+  return savedLayout === 'compact' ? 'compact' : 'comfortable'
 }
 
 async function confirmDeleteBook() {
@@ -166,6 +180,33 @@ async function goBack() {
           <p>Use uma busca simples para localizar rapidamente o título que precisa revisar.</p>
         </div>
 
+        <div class="layout-toggle" aria-label="Escolher visualização dos livros">
+          <span class="layout-toggle-label">Visualização</span>
+          <div class="layout-toggle-actions">
+            <button
+              type="button"
+              class="layout-toggle-button"
+              :class="{ 'layout-toggle-button--active': !isCompactLayout }"
+              data-testid="admin-books-layout-comfortable"
+              :aria-pressed="!isCompactLayout"
+              @click="setBooksLayout('comfortable')"
+            >
+              Linha
+            </button>
+
+            <button
+              type="button"
+              class="layout-toggle-button"
+              :class="{ 'layout-toggle-button--active': isCompactLayout }"
+              data-testid="admin-books-layout-compact"
+              :aria-pressed="isCompactLayout"
+              @click="setBooksLayout('compact')"
+            >
+              Compacta
+            </button>
+          </div>
+        </div>
+
         <form data-testid="admin-books-search-form" class="search-form" @submit.prevent="submitSearch">
           <label class="app-field">
             <span>Buscar livro</span>
@@ -223,25 +264,33 @@ async function goBack() {
           description="Tente buscar outro nome ou outro autor."
         />
 
-        <ul v-else class="books-list app-fade-in">
+        <ul
+          v-else
+          class="books-list app-fade-in"
+          :class="{
+            'books-list--comfortable': !isCompactLayout,
+            'books-list--compact': isCompactLayout,
+          }"
+          data-testid="admin-books-list"
+        >
           <li v-for="book in adminBooksStore.books" :key="book.id" class="book-item">
             <BookCard
               :title="book.title"
               :author="book.author"
               :cover-url="book.cover_url"
+              :layout="booksLayout"
             >
               <template #actions>
                 <IonButton
-                  fill="outline"
-                  class="options-button"
+                  fill="clear"
+                  class="options-button options-button--icon-only"
                   :disabled="adminBooksStore.isDeleting"
                   :data-testid="`open-admin-book-options-${book.id}`"
+                  :aria-label="`Ver opções do livro ${book.title}`"
+                  :title="`Ver opções do livro ${book.title}`"
                   @click="openBookOptions(book.id)"
                 >
-                  <span class="button-inline-content">
-                    <IonIcon :icon="ellipsisHorizontalOutline" aria-hidden="true" />
-                    Opções
-                  </span>
+                  <IonIcon :icon="ellipsisHorizontalOutline" aria-hidden="true" />
                 </IonButton>
               </template>
             </BookCard>
@@ -277,6 +326,12 @@ async function goBack() {
             Apagar
           </span>
         </IonButton>
+
+        <div
+          class="admin-book-options-bottom-spacer"
+          aria-hidden="true"
+          data-testid="admin-book-options-bottom-spacer"
+        ></div>
       </div>
     </ResponsiveSheetModal>
 
@@ -301,7 +356,8 @@ async function goBack() {
 }
 
 .admin-books-content,
-.search-intro {
+.search-intro,
+.layout-toggle {
   display: grid;
   gap: var(--space-md);
 }
@@ -327,6 +383,42 @@ async function goBack() {
 .search-form {
   display: grid;
   gap: var(--space-sm);
+}
+
+.layout-toggle {
+  justify-items: start;
+}
+
+.layout-toggle-label {
+  color: var(--color-muted);
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.layout-toggle-actions {
+  display: inline-flex;
+  gap: 0.35rem;
+  padding: 0.25rem;
+  border: 1px solid rgba(226, 224, 219, 0.96);
+  border-radius: 999px;
+  background: rgba(243, 242, 239, 0.9);
+}
+
+.layout-toggle-button {
+  min-height: 2.4rem;
+  padding: 0.45rem 0.85rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--color-heading);
+  font: inherit;
+  font-weight: 700;
+}
+
+.layout-toggle-button--active {
+  background: var(--color-primary);
+  color: #fff;
+  box-shadow: var(--shadow-sm);
 }
 
 .search-button {
@@ -363,11 +455,17 @@ async function goBack() {
   display: grid;
   gap: var(--space-sm);
   list-style: none;
+  margin: 0;
   padding: 0;
 }
 
+.books-list--compact {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
 .book-item {
-  display: block;
+  display: grid;
 }
 
 .admin-book-options {
@@ -375,8 +473,25 @@ async function goBack() {
   gap: var(--space-md);
 }
 
+.admin-book-options-bottom-spacer {
+  min-height: var(--space-sm);
+}
+
 .options-button {
-  --border-radius: var(--radius-lg);
+  --color: var(--color-muted);
+  --box-shadow: none;
+  margin: 0;
+}
+
+.options-button--icon-only {
+  --border-radius: 999px;
+  --padding-start: 0.32rem;
+  --padding-end: 0.32rem;
+  min-width: 2.2rem;
+  min-height: 2.2rem;
+  border: 1px solid rgba(95, 111, 102, 0.22);
+  border-radius: 999px;
+  background: rgba(243, 242, 239, 0.68);
   font-weight: 700;
 }
 
@@ -385,5 +500,26 @@ async function goBack() {
   min-height: 3rem;
   font-weight: 700;
   flex-shrink: 0;
+}
+
+@media (min-width: 768px) {
+  .books-list--compact {
+    grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .layout-toggle {
+    width: 100%;
+  }
+
+  .layout-toggle-actions {
+    width: 100%;
+  }
+
+  .layout-toggle-button {
+    flex: 1;
+    text-align: center;
+  }
 }
 </style>

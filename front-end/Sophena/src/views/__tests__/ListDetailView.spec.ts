@@ -354,6 +354,7 @@ describe('ListDetailView', () => {
     await wrapper.get('[data-testid="open-book-options-item-1"]').trigger('click')
     expect(wrapper.get('[data-testid="book-options-sheet"]').text()).toContain('Opções do livro')
     expect(wrapper.get('[data-testid="book-options-sheet"]').text()).toContain('Livro removido')
+    expect(wrapper.find('[data-testid="book-options-bottom-spacer"]').exists()).toBe(true)
 
     await wrapper.get('[data-testid="request-remove-item-1"]').trigger('click')
     expect(wrapper.get('[data-testid="remove-book-confirm-sheet"]').text()).toContain('Remover livro da lista?')

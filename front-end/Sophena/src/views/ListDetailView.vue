@@ -681,6 +681,12 @@ async function confirmMove(itemId: string) {
             Remover da lista
           </span>
         </IonButton>
+
+        <div
+          class="sheet-inline-bottom-spacer"
+          aria-hidden="true"
+          data-testid="book-options-bottom-spacer"
+        ></div>
       </div>
     </ResponsiveSheetModal>
 
@@ -941,6 +947,10 @@ async function confirmMove(itemId: string) {
 
 .sheet-action-button--danger {
   margin-top: var(--space-xs);
+}
+
+.sheet-inline-bottom-spacer {
+  min-height: var(--space-sm);
 }
 
 .manual-path {

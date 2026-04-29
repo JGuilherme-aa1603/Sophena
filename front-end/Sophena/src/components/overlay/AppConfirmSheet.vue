@@ -63,6 +63,12 @@ function confirm() {
         {{ props.confirmLabel }}
       </button>
     </div>
+
+    <div
+      class="confirm-sheet-bottom-spacer"
+      aria-hidden="true"
+      data-testid="confirm-sheet-bottom-spacer"
+    ></div>
   </ResponsiveSheetModal>
 </template>
 
@@ -70,6 +76,10 @@ function confirm() {
 .confirm-sheet-actions {
   display: grid;
   gap: var(--space-sm);
+}
+
+.confirm-sheet-bottom-spacer {
+  min-height: var(--space-sm);
 }
 
 .confirm-sheet-button {
