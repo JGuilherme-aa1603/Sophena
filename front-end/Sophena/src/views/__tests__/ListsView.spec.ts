@@ -123,6 +123,33 @@ describe('ListsView', () => {
     expect(router.currentRoute.value.params.listId).toBe('lista-1')
   })
 
+  it('mantém a contagem e a ação de abrir centralizadas nos cartões de lista', async () => {
+    const router = createAppRouter(createMemoryHistory())
+    authenticateUser()
+    const listsStore = useListsStore()
+    vi.spyOn(listsStore, 'fetchLists').mockImplementation(async () => {
+      listsStore.items = [
+        {
+          id: 'lista-1',
+          name: 'Lista com nome maior para leitura da família',
+          created_at: '2026-01-01T10:00:00.000Z',
+          updated_at: '2026-01-01T10:00:00.000Z',
+        },
+      ]
+    })
+
+    const wrapper = mount(ListsView, {
+      global: {
+        plugins: [router],
+      },
+    })
+
+    await router.isReady()
+
+    expect(wrapper.get('[data-testid="lists-section-count"]').classes()).toContain('centered-inline-badge')
+    expect(wrapper.get('[data-testid="list-open-action-lista-1"]').classes()).toContain('centered-list-action')
+  })
+
   it('envia o nome para criar uma nova lista', async () => {
     const router = createAppRouter(createMemoryHistory())
     authenticateUser()

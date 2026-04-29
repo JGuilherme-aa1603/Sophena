@@ -214,7 +214,9 @@ async function focusCreateList() {
     <section class="lists-section">
       <div class="section-heading">
         <h2>Suas listas</h2>
-        <span class="section-count">{{ listsStore.items.length }}</span>
+        <span class="section-count centered-inline-badge" data-testid="lists-section-count">
+          {{ listsStore.items.length }}
+        </span>
       </div>
 
       <div v-if="listsStore.isLoading" class="loading-state" role="status" aria-live="polite">
@@ -250,7 +252,12 @@ async function focusCreateList() {
                 <strong>{{ list.name }}</strong>
                 <small>Toque para abrir e organizar seus livros</small>
               </span>
-              <span class="list-link-action">Abrir</span>
+              <span
+                class="list-link-action centered-list-action"
+                :data-testid="`list-open-action-${list.id}`"
+              >
+                Abrir
+              </span>
             </button>
 
             <IonButton
@@ -410,11 +417,18 @@ async function focusCreateList() {
 
 .section-count {
   min-width: 2rem;
+  min-height: 2rem;
   padding: 0.2rem 0.6rem;
   border-radius: 999px;
   background: var(--color-primary-soft);
   color: var(--color-primary);
   font-weight: 700;
+  line-height: 1;
+}
+
+.centered-inline-badge {
+  display: inline-grid;
+  place-items: center;
   text-align: center;
 }
 
@@ -472,6 +486,7 @@ async function focusCreateList() {
 .list-options-button {
   --color: var(--color-primary);
   --border-radius: var(--radius-md);
+  align-self: center;
   width: 3rem;
   min-width: 3rem;
   min-height: 3rem;
@@ -501,6 +516,15 @@ async function focusCreateList() {
 .list-link-action {
   color: var(--color-primary);
   font-weight: 700;
+}
+
+.centered-list-action {
+  display: inline-grid;
+  place-items: center;
+  align-self: center;
+  min-height: 2rem;
+  text-align: center;
+  line-height: 1.2;
 }
 
 .list-options,
@@ -544,11 +568,7 @@ async function focusCreateList() {
 @media (max-width: 640px) {
   .list-card,
   .list-link {
-    align-items: flex-start;
-  }
-
-  .list-link-action {
-    padding-top: 0.15rem;
+    align-items: center;
   }
 }
 </style>
