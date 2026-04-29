@@ -17,8 +17,9 @@ const props = withDefaults(defineProps<{
 })
 
 const slots = useSlots()
-const resolvedCoverAlt = computed(() => props.coverAlt ?? `${props.title}`)
+const resolvedCoverAlt = computed(() => props.coverAlt ?? `Capa do livro ${props.title}`)
 const hasActions = computed(() => Boolean(slots.actions))
+const useOverlayControls = computed(() => props.layout === 'compact')
 </script>
 
 <template>
@@ -29,6 +30,7 @@ const hasActions = computed(() => Boolean(slots.actions))
       'book-card--compact': props.layout === 'compact',
       'book-card--with-actions': hasActions,
       'book-card--interactive': hasActions,
+      'book-card--with-overlay-controls': useOverlayControls,
     }"
     data-testid="book-card"
   >
@@ -38,6 +40,7 @@ const hasActions = computed(() => Boolean(slots.actions))
           v-if="showPosition"
           class="book-card-position"
           data-testid="book-card-position"
+          :data-placement="useOverlayControls ? 'cover-overlay' : 'inline'"
           aria-hidden="true"
         >
           {{ position }}
@@ -61,6 +64,15 @@ const hasActions = computed(() => Boolean(slots.actions))
             Sem capa
           </div>
         </div>
+
+        <div
+          v-if="hasActions && useOverlayControls"
+          class="book-card-actions"
+          data-testid="book-card-actions"
+          data-placement="cover-overlay"
+        >
+          <slot name="actions" />
+        </div>
       </div>
 
       <div class="book-card-details" data-testid="book-card-details">
@@ -70,7 +82,12 @@ const hasActions = computed(() => Boolean(slots.actions))
         </div>
       </div>
 
-      <div v-if="hasActions" class="book-card-actions" data-testid="book-card-actions">
+      <div
+        v-if="hasActions && !useOverlayControls"
+        class="book-card-actions"
+        data-testid="book-card-actions"
+        data-placement="inline"
+      >
         <slot name="actions" />
       </div>
     </div>
@@ -114,6 +131,7 @@ const hasActions = computed(() => Boolean(slots.actions))
 }
 
 .book-card-media {
+  position: relative;
   display: grid;
   grid-template-columns: auto auto;
   gap: 0.7rem;
@@ -229,17 +247,24 @@ const hasActions = computed(() => Boolean(slots.actions))
 
 .book-card--compact .book-card-media {
   grid-template-columns: minmax(0, 1fr);
-  gap: 0.45rem;
+  gap: 0;
   justify-items: center;
+  width: 100%;
+  padding-top: 0.25rem;
 }
 
 .book-card--compact .book-card-position {
-  width: auto;
-  height: auto;
-  min-width: 0;
-  padding: 0.2rem 0.5rem;
+  position: absolute;
+  top: 0.15rem;
+  left: 0.15rem;
+  z-index: 1;
+  width: 2rem;
+  height: 2rem;
+  min-width: 2rem;
+  padding: 0;
   font-size: 0.82rem;
   line-height: 1.2;
+  box-shadow: 0 8px 18px rgba(36, 51, 43, 0.12);
 }
 
 .book-card--compact .book-card-cover {
@@ -268,8 +293,9 @@ const hasActions = computed(() => Boolean(slots.actions))
 
 .book-card--compact .book-card-actions {
   position: absolute;
-  top: 0.45rem;
-  right: 0.45rem;
+  top: 0.15rem;
+  right: 0.15rem;
+  z-index: 1;
   align-self: auto;
 }
 

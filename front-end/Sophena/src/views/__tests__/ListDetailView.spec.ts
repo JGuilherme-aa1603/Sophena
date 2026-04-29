@@ -80,7 +80,7 @@ describe('ListDetailView', () => {
     expect(bookCards).toHaveLength(2)
     const firstCover = bookCards[0]!.get('[data-testid="book-card-cover-image"]')
     expect(firstCover.attributes('src')).toBe('https://example.com/capas/primeiro-livro.webp')
-    expect(firstCover.attributes('alt')).toBe('Primeiro livro')
+    expect(firstCover.attributes('alt')).toBe('Capa do livro Primeiro livro')
     expect(bookCards[0]!.get('[data-testid="book-card-position"]').text()).toBe('1')
     expect(wrapper.get('[data-testid="books-layout-comfortable"]').attributes('aria-pressed')).toBe('true')
     expect(wrapper.get('[data-testid="books-list"]').classes()).toContain('items-list--comfortable')
@@ -136,7 +136,10 @@ describe('ListDetailView', () => {
     expect(wrapper.get('[data-testid="books-list"]').classes()).toContain('items-list--compact')
     expect(wrapper.findAll('.items-list--compact .item-card')).toHaveLength(2)
     expect(localStorage.getItem('sophena:list-books-layout')).toBe('compact')
-    expect(wrapper.get('[data-testid="book-card"]').classes()).toContain('book-card--compact')
+    const firstCard = wrapper.get('[data-testid="book-card"]')
+    expect(firstCard.classes()).toContain('book-card--compact')
+    expect(firstCard.get('[data-testid="book-card-position"]').attributes('data-placement')).toBe('cover-overlay')
+    expect(firstCard.get('[data-testid="book-card-actions"]').attributes('data-placement')).toBe('cover-overlay')
   })
 
   it('restaura o layout salvo ao abrir a lista novamente', async () => {

@@ -163,6 +163,8 @@ describe('BookCard', () => {
     expect(wrapper.get('[data-testid="book-card-title"]').text()).toBe('Livro compacto')
     expect(wrapper.get('[data-testid="book-card-author"]').text()).toBe('Autora compacta')
     expect(wrapper.get('[data-testid="book-card-position"]').text()).toBe('2')
+    expect(wrapper.get('[data-testid="book-card-position"]').attributes('data-placement')).toBe('cover-overlay')
+    expect(wrapper.get('[data-testid="book-card-actions"]').attributes('data-placement')).toBe('cover-overlay')
   })
 
   it('mantém um fallback amigável no modo compacto quando não há capa', () => {
@@ -178,5 +180,24 @@ describe('BookCard', () => {
     expect(wrapper.get('[data-testid="book-card-cover-fallback"]').text()).toContain('Sem capa')
     expect(wrapper.get('[data-testid="book-card"]').classes()).toContain('book-card--compact')
     expect(wrapper.get('[data-testid="book-card-cover-fallback"]').classes()).toContain('book-card-cover-fallback--centered')
+  })
+
+  it('mantém a ação e a posição fora da capa no layout confortável', () => {
+    const wrapper = mount(BookCard, {
+      props: {
+        title: 'Livro confortável',
+        author: 'Autora confortável',
+        coverUrl: null,
+        position: 4,
+        showPosition: true,
+        layout: 'comfortable',
+      },
+      slots: {
+        actions: '<button type="button" aria-label="Abrir opções">...</button>',
+      },
+    })
+
+    expect(wrapper.get('[data-testid="book-card-position"]').attributes('data-placement')).toBe('inline')
+    expect(wrapper.get('[data-testid="book-card-actions"]').attributes('data-placement')).toBe('inline')
   })
 })
