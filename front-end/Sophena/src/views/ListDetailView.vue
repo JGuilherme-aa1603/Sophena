@@ -204,7 +204,7 @@ async function confirmMove(itemId: string) {
       </IonButton>
     </header>
 
-    <IonCard class="app-card add-flow-card">
+    <IonCard class="app-card add-flow-card app-fade-in">
       <IonCardContent class="add-flow-content">
         <div class="add-flow-copy">
           <p class="hero-kicker">Adicionar livro</p>
@@ -257,6 +257,18 @@ async function confirmMove(itemId: string) {
         >
           <IonSpinner name="crescent" />
           <span>Carregando sua lista...</span>
+          <div class="loading-skeleton-list" aria-hidden="true">
+            <div v-for="index in 3" :key="index" class="item-skeleton app-skeleton-card">
+              <div class="item-skeleton-top">
+                <div class="app-skeleton item-skeleton-position"></div>
+                <div class="app-skeleton item-skeleton-cover"></div>
+                <div class="item-skeleton-copy">
+                  <div class="app-skeleton app-skeleton-text app-skeleton-text--medium"></div>
+                  <div class="app-skeleton app-skeleton-text app-skeleton-text--long"></div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <EmptyStateCard
@@ -268,7 +280,7 @@ async function confirmMove(itemId: string) {
           @action="openAddBookFlow"
         />
 
-        <ol v-else class="items-list">
+        <ol v-else class="items-list app-fade-in">
           <li
             v-for="item in listDetailStore.items"
             :key="item.book_list_item_id"
@@ -338,7 +350,7 @@ async function confirmMove(itemId: string) {
       close-testid="close-add-book-flow"
     >
       <div class="flow-grid">
-        <section class="flow-section">
+        <section class="flow-section app-fade-in">
           <h3>Escolher um livro já existente</h3>
           <p>Se o livro já estiver cadastrado, você pode encontrá-lo pela busca.</p>
 
@@ -396,7 +408,7 @@ async function confirmMove(itemId: string) {
           </ul>
         </section>
 
-        <section class="flow-section">
+        <section class="flow-section app-fade-in">
           <h3>Cadastrar um livro novo</h3>
           <p>Use esta opção quando o livro ainda não aparecer na busca.</p>
 
@@ -511,22 +523,22 @@ async function confirmMove(itemId: string) {
 .back-button {
   --color: var(--color-primary);
   --border-color: var(--color-primary);
-  --border-radius: 999px;
+  --border-radius: var(--radius-lg);
 }
 
 .add-flow-content {
   display: grid;
-  gap: 1rem;
+  gap: var(--space-md);
 }
 
 .add-flow-copy {
   display: grid;
-  gap: 0.35rem;
+  gap: var(--space-xs);
 }
 
 .hero-kicker {
-  color: #58715f;
-  font-size: 0.82rem;
+  color: var(--color-muted);
+  font-size: 14px;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -535,8 +547,8 @@ async function confirmMove(itemId: string) {
 .add-flow-copy h2,
 .section-heading h2 {
   color: var(--color-heading);
-  font-size: 1.25rem;
-  font-weight: 700;
+  font-size: 22px;
+  font-weight: 600;
 }
 
 .add-flow-copy p,
@@ -547,8 +559,9 @@ async function confirmMove(itemId: string) {
 .add-flow-button,
 .flow-button {
   --background: var(--color-primary);
-  --background-hover: var(--color-primary-strong);
-  --border-radius: 999px;
+  --background-hover: var(--color-primary-hover);
+  --border-radius: var(--radius-lg);
+  --box-shadow: var(--shadow-md);
   min-height: 3.2rem;
   font-weight: 700;
 }
@@ -559,26 +572,60 @@ async function confirmMove(itemId: string) {
 .flow-form,
 .move-flow {
   display: grid;
-  gap: 1rem;
+  gap: var(--space-md);
 }
 
 .section-heading {
   display: flex;
   justify-content: space-between;
-  gap: 1rem;
+  gap: var(--space-md);
   align-items: center;
 }
 
 .loading-state {
   display: grid;
   justify-items: start;
-  gap: 0.65rem;
+  gap: var(--space-sm);
   color: var(--color-muted);
+}
+
+.loading-skeleton-list {
+  width: min(100%, 36rem);
+  display: grid;
+  gap: var(--space-sm);
+}
+
+.item-skeleton {
+  gap: var(--space-md);
+}
+
+.item-skeleton-top {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr);
+  gap: var(--space-md);
+  align-items: center;
+}
+
+.item-skeleton-position {
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: 999px;
+}
+
+.item-skeleton-cover {
+  width: 4rem;
+  height: 5.75rem;
+  border-radius: var(--radius-sm);
+}
+
+.item-skeleton-copy {
+  display: grid;
+  gap: var(--space-sm);
 }
 
 .items-list {
   display: grid;
-  gap: 0.85rem;
+  gap: var(--space-sm);
   list-style: none;
   margin: 0;
   padding: 0;
@@ -590,26 +637,27 @@ async function confirmMove(itemId: string) {
 
 .order-button,
 .move-button {
-  --border-radius: 999px;
+  --border-radius: var(--radius-lg);
   font-weight: 700;
 }
 
 .remove-button {
-  --color: #8a4339;
+  --color: #a34e49;
   font-weight: 700;
 }
 
 .flow-section {
-  padding: 1rem;
-  border: 1px solid rgba(215, 222, 207, 0.92);
-  border-radius: 1.1rem;
-  background: rgba(255, 253, 249, 0.86);
+  padding: var(--space-md);
+  border: 1px solid rgba(226, 224, 219, 0.96);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: var(--shadow-sm);
 }
 
 .flow-section h3 {
   color: var(--color-heading);
-  font-size: 1.1rem;
-  font-weight: 700;
+  font-size: 22px;
+  font-weight: 600;
 }
 
 .flow-section p,
@@ -619,7 +667,7 @@ async function confirmMove(itemId: string) {
 
 .search-results {
   display: grid;
-  gap: 0.75rem;
+  gap: var(--space-sm);
   list-style: none;
   padding: 0;
 }
@@ -628,17 +676,18 @@ async function confirmMove(itemId: string) {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
-  padding: 0.9rem 1rem;
-  border: 1px solid rgba(215, 222, 207, 0.92);
-  border-radius: 1rem;
-  background: #fffdf9;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  border: 1px solid rgba(226, 224, 219, 0.96);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: var(--shadow-sm);
 }
 
 .search-result-content {
   display: grid;
-  gap: 0.2rem;
-  color: #22332c;
+  gap: var(--space-xs);
+  color: var(--color-heading);
 }
 
 .search-result-content span {
@@ -646,7 +695,7 @@ async function confirmMove(itemId: string) {
 }
 
 .pick-button {
-  --border-radius: 999px;
+  --border-radius: var(--radius-lg);
   font-weight: 700;
 }
 

@@ -225,6 +225,13 @@ function formatDateTime(value: string) {
         <div v-if="adminLogsStore.isLoadingLogs" class="loading-state" role="status" aria-live="polite">
           <IonSpinner name="crescent" />
           <span>Carregando os registros...</span>
+          <div class="loading-skeleton-list" data-testid="logs-loading-skeleton" aria-hidden="true">
+            <div v-for="index in 4" :key="index" class="app-skeleton-card" data-testid="skeleton-block">
+              <div class="app-skeleton app-skeleton-text app-skeleton-text--short"></div>
+              <div class="app-skeleton app-skeleton-text app-skeleton-text--long"></div>
+              <div class="app-skeleton app-skeleton-text app-skeleton-text--medium"></div>
+            </div>
+          </div>
         </div>
 
         <EmptyStateCard
@@ -233,7 +240,7 @@ function formatDateTime(value: string) {
           description="Tente ajustar os filtros para buscar outro período ou outro tipo de registro."
         />
 
-        <ul v-else class="logs-list">
+        <ul v-else class="logs-list app-fade-in">
           <li v-for="log in adminLogsStore.logs" :key="log.id" class="log-card">
             <div class="log-card-top">
               <span class="log-badge" :class="`log-badge--${log.level.toLowerCase()}`">
@@ -293,16 +300,17 @@ function formatDateTime(value: string) {
 .back-button {
   --color: var(--color-primary);
   --border-color: var(--color-primary);
-  --border-radius: 999px;
+  --border-radius: var(--radius-lg);
 }
 
 .summary-grid {
   display: grid;
-  gap: 0.85rem;
+  gap: var(--space-sm);
 }
 
 .summary-card {
   overflow: hidden;
+  background: rgba(255, 255, 255, 0.92);
 }
 
 .summary-card--info {
@@ -324,40 +332,47 @@ function formatDateTime(value: string) {
 
 .summary-value {
   display: block;
-  margin-top: 0.35rem;
+  margin-top: var(--space-xs);
   color: var(--color-heading);
-  font-size: 1.7rem;
+  font-size: 22px;
   font-weight: 700;
 }
 
 .logs-content {
   display: grid;
-  gap: 1rem;
+  gap: var(--space-md);
 }
 
 .filters-form {
   display: grid;
-  gap: 0.85rem;
+  gap: var(--space-sm);
 }
 
 .filter-button {
   --background: var(--color-primary);
-  --background-hover: var(--color-primary-strong);
-  --border-radius: 999px;
+  --background-hover: var(--color-primary-hover);
+  --border-radius: var(--radius-lg);
+  --box-shadow: var(--shadow-md);
   min-height: 3rem;
   font-weight: 700;
 }
 
 .loading-state {
   display: grid;
-  gap: 0.65rem;
+  gap: var(--space-sm);
   justify-items: start;
   color: var(--color-muted);
 }
 
+.loading-skeleton-list {
+  width: min(100%, 40rem);
+  display: grid;
+  gap: var(--space-sm);
+}
+
 .logs-list {
   display: grid;
-  gap: 0.85rem;
+  gap: var(--space-sm);
   list-style: none;
   padding: 0;
 }

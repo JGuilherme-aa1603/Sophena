@@ -74,7 +74,7 @@ async function focusCreateList() {
       </div>
     </header>
 
-    <IonCard class="app-card hero-card">
+    <IonCard class="app-card hero-card app-fade-in">
       <IonCardContent class="hero-card-content">
         <div class="hero-copy">
           <p class="hero-kicker">Começar</p>
@@ -122,6 +122,12 @@ async function focusCreateList() {
       <div v-if="listsStore.isLoading" class="loading-state" role="status" aria-live="polite">
         <IonSpinner name="crescent" />
         <span>Carregando suas listas...</span>
+        <div class="loading-skeleton-list" data-testid="lists-loading-skeleton" aria-hidden="true">
+          <div v-for="index in 3" :key="index" class="app-skeleton-card" data-testid="skeleton-block">
+            <div class="app-skeleton app-skeleton-text app-skeleton-text--medium"></div>
+            <div class="app-skeleton app-skeleton-text app-skeleton-text--long"></div>
+          </div>
+        </div>
       </div>
 
       <EmptyStateCard
@@ -133,11 +139,11 @@ async function focusCreateList() {
         @action="focusCreateList"
       />
 
-      <ul v-else class="lists-grid">
+      <ul v-else class="lists-grid app-fade-in">
         <li v-for="list in listsStore.items" :key="list.id">
           <button
             type="button"
-            class="list-link"
+            class="list-link app-interactive"
             :data-testid="`list-link-${list.id}`"
             @click="openList(list.id)"
           >
@@ -157,33 +163,34 @@ async function focusCreateList() {
 .header-note {
   width: min(100%, 15rem);
   display: grid;
-  gap: 0.25rem;
-  padding: 0.95rem 1rem;
-  border: 1px solid rgba(88, 113, 95, 0.18);
-  border-radius: 1rem;
-  background: rgba(255, 253, 249, 0.75);
+  gap: var(--space-xs);
+  padding: var(--space-md);
+  border: 1px solid rgba(226, 224, 219, 0.96);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.76);
   color: var(--color-muted);
+  box-shadow: var(--shadow-sm);
 }
 
 .header-note strong {
   color: var(--color-heading);
-  font-size: 0.92rem;
+  font-size: 14px;
   font-weight: 700;
 }
 
 .hero-card-content {
   display: grid;
-  gap: 1rem;
+  gap: var(--space-md);
 }
 
 .hero-copy {
   display: grid;
-  gap: 0.35rem;
+  gap: var(--space-xs);
 }
 
 .hero-kicker {
-  color: #58715f;
-  font-size: 0.82rem;
+  color: var(--color-muted);
+  font-size: 14px;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -192,8 +199,8 @@ async function focusCreateList() {
 .hero-copy h2,
 .section-heading h2 {
   color: var(--color-heading);
-  font-size: 1.25rem;
-  font-weight: 700;
+  font-size: 22px;
+  font-weight: 600;
 }
 
 .hero-copy p {
@@ -202,25 +209,26 @@ async function focusCreateList() {
 
 .create-list-form {
   display: grid;
-  gap: 0.85rem;
+  gap: var(--space-sm);
 }
 
 .create-button {
   --background: var(--color-primary);
-  --background-hover: var(--color-primary-strong);
-  --border-radius: 999px;
+  --background-hover: var(--color-primary-hover);
+  --border-radius: var(--radius-lg);
+  --box-shadow: var(--shadow-md);
   min-height: 3.2rem;
   font-weight: 700;
 }
 
 .lists-section {
   display: grid;
-  gap: 0.85rem;
+  gap: var(--space-md);
 }
 
 .section-heading {
   display: flex;
-  gap: 0.75rem;
+  gap: var(--space-sm);
   align-items: center;
 }
 
@@ -228,7 +236,7 @@ async function focusCreateList() {
   min-width: 2rem;
   padding: 0.2rem 0.6rem;
   border-radius: 999px;
-  background: rgba(51, 92, 71, 0.08);
+  background: var(--color-primary-soft);
   color: var(--color-primary);
   font-weight: 700;
   text-align: center;
@@ -236,14 +244,20 @@ async function focusCreateList() {
 
 .loading-state {
   display: grid;
-  gap: 0.65rem;
+  gap: var(--space-sm);
   justify-items: start;
   color: var(--color-muted);
 }
 
+.loading-skeleton-list {
+  width: min(100%, 32rem);
+  display: grid;
+  gap: var(--space-sm);
+}
+
 .lists-grid {
   display: grid;
-  gap: 0.85rem;
+  gap: var(--space-sm);
   list-style: none;
   padding: 0;
 }
@@ -251,36 +265,32 @@ async function focusCreateList() {
 .list-link {
   width: 100%;
   display: flex;
-  gap: 1rem;
+  gap: var(--space-md);
   align-items: center;
   justify-content: space-between;
-  padding: 1.05rem 1.1rem;
-  border: 1px solid rgba(215, 222, 207, 0.92);
-  border-radius: 1.1rem;
-  background: rgba(255, 253, 249, 0.9);
-  color: #22332c;
+  padding: var(--space-md);
+  border: 1px solid rgba(226, 224, 219, 0.96);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.88);
+  color: var(--color-heading);
   text-align: left;
-  box-shadow: 0 10px 26px rgba(58, 71, 53, 0.06);
-  transition:
-    transform var(--transition-fast),
-    box-shadow var(--transition-fast),
-    border-color var(--transition-fast);
+  box-shadow: var(--shadow-sm);
 }
 
 .list-link:hover {
   transform: translateY(-1px);
-  border-color: rgba(78, 129, 102, 0.26);
-  box-shadow: 0 14px 28px rgba(58, 71, 53, 0.08);
+  border-color: rgba(53, 95, 74, 0.24);
+  box-shadow: var(--shadow-md);
 }
 
 .list-link:focus-visible {
-  outline: 3px solid rgba(78, 129, 102, 0.22);
+  outline: 3px solid rgba(53, 95, 74, 0.2);
   outline-offset: 2px;
 }
 
 .list-link-copy {
   display: grid;
-  gap: 0.2rem;
+  gap: var(--space-xs);
 }
 
 .list-link-copy strong {

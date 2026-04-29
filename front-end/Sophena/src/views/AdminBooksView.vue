@@ -132,6 +132,12 @@ async function goBack() {
         <div v-if="adminBooksStore.isLoading" class="loading-state" role="status" aria-live="polite">
           <IonSpinner name="crescent" />
           <span>Carregando os livros...</span>
+          <div class="loading-skeleton-list" aria-hidden="true">
+            <div v-for="index in 3" :key="index" class="app-skeleton-card">
+              <div class="app-skeleton app-skeleton-text app-skeleton-text--medium"></div>
+              <div class="app-skeleton app-skeleton-text app-skeleton-text--long"></div>
+            </div>
+          </div>
         </div>
 
         <EmptyStateCard
@@ -140,7 +146,7 @@ async function goBack() {
           description="Tente buscar outro nome ou outro autor."
         />
 
-        <ul v-else class="books-list">
+        <ul v-else class="books-list app-fade-in">
           <li v-for="book in adminBooksStore.books" :key="book.id" class="book-item">
             <BookCard
               :title="book.title"
@@ -171,18 +177,18 @@ async function goBack() {
 .back-button {
   --color: var(--color-primary);
   --border-color: var(--color-primary);
-  --border-radius: 999px;
+  --border-radius: var(--radius-lg);
 }
 
 .admin-books-content,
 .search-intro {
   display: grid;
-  gap: 1rem;
+  gap: var(--space-md);
 }
 
 .search-kicker {
-  color: #58715f;
-  font-size: 0.82rem;
+  color: var(--color-muted);
+  font-size: 14px;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -190,8 +196,8 @@ async function goBack() {
 
 .search-intro h2 {
   color: var(--color-heading);
-  font-size: 1.25rem;
-  font-weight: 700;
+  font-size: 22px;
+  font-weight: 600;
 }
 
 .search-intro p {
@@ -200,27 +206,34 @@ async function goBack() {
 
 .search-form {
   display: grid;
-  gap: 0.85rem;
+  gap: var(--space-sm);
 }
 
 .search-button {
   --background: var(--color-primary);
-  --background-hover: var(--color-primary-strong);
-  --border-radius: 999px;
+  --background-hover: var(--color-primary-hover);
+  --border-radius: var(--radius-lg);
+  --box-shadow: var(--shadow-md);
   min-height: 3rem;
   font-weight: 700;
 }
 
 .loading-state {
   display: grid;
-  gap: 0.65rem;
+  gap: var(--space-sm);
   justify-items: start;
   color: var(--color-muted);
 }
 
+.loading-skeleton-list {
+  width: min(100%, 32rem);
+  display: grid;
+  gap: var(--space-sm);
+}
+
 .books-list {
   display: grid;
-  gap: 0.85rem;
+  gap: var(--space-sm);
   list-style: none;
   padding: 0;
 }
@@ -230,7 +243,7 @@ async function goBack() {
 }
 
 .delete-button {
-  --border-radius: 999px;
+  --border-radius: var(--radius-lg);
   flex-shrink: 0;
 }
 </style>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, useSlots } from 'vue'
 
 const props = withDefaults(defineProps<{
   title: string
@@ -14,13 +14,18 @@ const props = withDefaults(defineProps<{
   coverAlt: undefined,
 })
 
+const slots = useSlots()
 const resolvedCoverAlt = computed(() => props.coverAlt ?? `Capa do livro ${props.title}`)
+const hasActions = computed(() => Boolean(slots.actions))
 </script>
 
 <template>
   <article
     class="book-card"
-    :class="{ 'book-card--with-position': showPosition }"
+    :class="{
+      'book-card--with-position': showPosition,
+      'book-card--interactive': hasActions,
+    }"
     data-testid="book-card"
   >
     <div
@@ -55,7 +60,7 @@ const resolvedCoverAlt = computed(() => props.coverAlt ?? `Capa do livro ${props
       <span>{{ author }}</span>
     </div>
 
-    <div v-if="$slots.actions" class="book-card-actions" data-testid="book-card-actions">
+    <div v-if="hasActions" class="book-card-actions" data-testid="book-card-actions">
       <slot name="actions" />
     </div>
   </article>
@@ -64,16 +69,27 @@ const resolvedCoverAlt = computed(() => props.coverAlt ?? `Capa do livro ${props
 <style scoped>
 .book-card {
   display: grid;
-  gap: 0.75rem;
+  gap: var(--space-md);
   align-items: center;
-  padding: 0.95rem 1rem;
-  border: 1px solid #d7dfd4;
-  border-radius: 1rem;
-  background: #fffdf9;
+  padding: var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: var(--shadow-sm);
+  transition:
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast),
+    border-color var(--transition-fast);
 }
 
 .book-card--with-position {
   grid-template-columns: auto auto minmax(0, 1fr);
+}
+
+.book-card--interactive:hover {
+  transform: translateY(-2px);
+  border-color: rgba(53, 95, 74, 0.2);
+  box-shadow: var(--shadow-md);
 }
 
 .book-card-position {
@@ -82,18 +98,19 @@ const resolvedCoverAlt = computed(() => props.coverAlt ?? `Capa do livro ${props
   display: grid;
   place-items: center;
   border-radius: 999px;
-  background: #e3ebdf;
-  color: #244234;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
   font-weight: 700;
 }
 
 .book-card-cover {
   width: 4rem;
   height: 5.75rem;
-  border-radius: 0.85rem;
+  border-radius: var(--radius-sm);
   overflow: hidden;
-  background: #eef3ea;
-  border: 1px solid #d6decf;
+  background: var(--color-surface-soft);
+  border: 1px solid var(--color-border);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
 }
 
 .book-card-cover-image {
@@ -110,17 +127,17 @@ const resolvedCoverAlt = computed(() => props.coverAlt ?? `Capa do livro ${props
   place-items: center;
   padding: 0.5rem;
   text-align: center;
-  color: #58715f;
-  font-size: 0.82rem;
+  color: var(--color-muted);
+  font-size: 14px;
   font-weight: 700;
   line-height: 1.2;
 }
 
 .book-card-content {
   display: grid;
-  gap: 0.2rem;
+  gap: var(--space-xs);
   min-width: 0;
-  color: #22332c;
+  color: var(--color-heading);
 }
 
 .book-card-content strong,
@@ -129,14 +146,14 @@ const resolvedCoverAlt = computed(() => props.coverAlt ?? `Capa do livro ${props
 }
 
 .book-card-content span {
-  color: #51665c;
+  color: var(--color-muted);
 }
 
 .book-card-actions {
   grid-column: 1 / -1;
   display: flex;
   flex-wrap: wrap;
-  gap: 0.55rem;
+  gap: var(--space-sm);
   justify-content: flex-end;
 }
 

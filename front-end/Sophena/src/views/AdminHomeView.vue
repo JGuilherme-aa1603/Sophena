@@ -69,14 +69,14 @@ async function goBack() {
       </IonButton>
     </header>
 
-    <section class="admin-summary">
+    <section class="admin-summary app-fade-in">
       <div class="summary-badge">
         <strong>Admin</strong>
         <span>Atalhos rápidos para cuidar do acesso, acompanhar registros e gerenciar livros.</span>
       </div>
     </section>
 
-    <div class="admin-home-grid">
+    <div class="admin-home-grid app-fade-in">
       <IonCard
         v-for="action in adminActions"
         :key="action.id"
@@ -104,16 +104,17 @@ async function goBack() {
 .back-button {
   --color: var(--color-primary);
   --border-color: var(--color-primary);
-  --border-radius: 999px;
+  --border-radius: var(--radius-lg);
 }
 
 .summary-badge {
   display: grid;
-  gap: 0.35rem;
-  padding: 1rem 1.1rem;
-  border: 1px solid rgba(88, 113, 95, 0.18);
-  border-radius: 1rem;
-  background: rgba(255, 253, 249, 0.75);
+  gap: var(--space-xs);
+  padding: var(--space-md);
+  border: 1px solid rgba(226, 224, 219, 0.96);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.76);
+  box-shadow: var(--shadow-sm);
 }
 
 .summary-badge strong {
@@ -128,30 +129,35 @@ async function goBack() {
 
 .admin-home-grid {
   display: grid;
-  gap: 1rem;
+  gap: var(--space-md);
 }
 
 .card-kicker {
-  margin-bottom: 0.45rem;
-  color: #58715f;
-  font-size: 0.82rem;
+  margin-bottom: var(--space-sm);
+  color: var(--color-muted);
+  font-size: 14px;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
 .admin-home-card h2 {
-  margin-bottom: 0.6rem;
+  margin-bottom: var(--space-sm);
   color: var(--color-heading);
-  font-size: 1.25rem;
-  font-weight: 700;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.admin-home-card {
+  background: rgba(255, 255, 255, 0.92);
 }
 
 .action-button {
-  margin-top: 1rem;
+  margin-top: var(--space-md);
   --background: var(--color-primary);
-  --background-hover: var(--color-primary-strong);
-  --border-radius: 999px;
+  --background-hover: var(--color-primary-hover);
+  --border-radius: var(--radius-lg);
+  --box-shadow: var(--shadow-md);
   min-height: 3rem;
   font-weight: 700;
 }

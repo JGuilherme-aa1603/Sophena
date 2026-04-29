@@ -141,19 +141,19 @@ async function goBack() {
 .back-button {
   --color: var(--color-primary);
   --border-color: var(--color-primary);
-  --border-radius: 999px;
+  --border-radius: var(--radius-lg);
 }
 
 .admin-users-form-wrap,
 .admin-users-form,
 .form-intro {
   display: grid;
-  gap: 1rem;
+  gap: var(--space-md);
 }
 
 .form-kicker {
-  color: #58715f;
-  font-size: 0.82rem;
+  color: var(--color-muted);
+  font-size: 14px;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -161,8 +161,8 @@ async function goBack() {
 
 .form-intro h2 {
   color: var(--color-heading);
-  font-size: 1.25rem;
-  font-weight: 700;
+  font-size: 22px;
+  font-weight: 600;
 }
 
 .form-intro p,
@@ -173,17 +173,17 @@ async function goBack() {
 .checkbox-field {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: var(--space-sm);
   padding: 0.9rem 1rem;
-  border: 1px solid #c7d1c2;
-  border-radius: 1rem;
-  background: #fffdf9;
-  color: #22332c;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--color-heading);
 }
 
 .checkbox-field:focus-within {
-  outline: 3px solid rgba(78, 129, 102, 0.2);
-  border-color: #4e8166;
+  outline: 3px solid rgba(53, 95, 74, 0.18);
+  border-color: rgba(53, 95, 74, 0.5);
 }
 
 .admin-checkbox {
@@ -194,8 +194,9 @@ async function goBack() {
 
 .submit-button {
   --background: var(--color-primary);
-  --background-hover: var(--color-primary-strong);
-  --border-radius: 999px;
+  --background-hover: var(--color-primary-hover);
+  --border-radius: var(--radius-lg);
+  --box-shadow: var(--shadow-md);
   min-height: 3rem;
   font-weight: 700;
 }

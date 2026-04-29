@@ -76,4 +76,19 @@ describe('BookCard', () => {
 
     expect(wrapper.get('[data-testid="book-card-actions"]').text()).toContain('Ação de teste')
   })
+
+  it('expõe estilo interativo quando tem ações disponíveis', () => {
+    const wrapper = mount(BookCard, {
+      props: {
+        title: 'Livro com ação',
+        author: 'Autora',
+        coverUrl: null,
+      },
+      slots: {
+        actions: '<button type="button">Ação de teste</button>',
+      },
+    })
+
+    expect(wrapper.get('[data-testid="book-card"]').classes()).toContain('book-card--interactive')
+  })
 })

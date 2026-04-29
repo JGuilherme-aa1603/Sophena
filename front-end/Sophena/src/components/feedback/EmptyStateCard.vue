@@ -31,18 +31,20 @@ const emit = defineEmits<{
 <style scoped>
 .empty-state-card {
   display: grid;
-  gap: 0.75rem;
+  gap: var(--space-sm);
   justify-items: start;
-  padding: 1.25rem;
-  border: 1px dashed rgba(88, 113, 95, 0.35);
-  border-radius: var(--radius-card);
-  background: rgba(255, 253, 249, 0.76);
+  padding: var(--space-lg);
+  border: 1px dashed rgba(95, 111, 102, 0.28);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: var(--shadow-sm);
 }
 
 .empty-state-card h2 {
   color: var(--color-heading);
-  font-size: 1.1rem;
+  font-size: 22px;
   font-weight: 700;
+  line-height: 1.2;
 }
 
 .empty-state-card p {
@@ -50,26 +52,29 @@ const emit = defineEmits<{
 }
 
 .empty-state-action {
-  min-height: 3rem;
-  padding: 0.85rem 1rem;
+  min-height: 3.1rem;
+  padding: 0.9rem 1.15rem;
   border: 0;
-  border-radius: 999px;
+  border-radius: var(--radius-lg);
   background: var(--color-primary);
-  color: #fffdf9;
+  color: #fff;
   font: inherit;
   font-weight: 700;
+  box-shadow: var(--shadow-md);
   transition:
     transform var(--transition-fast),
-    background var(--transition-fast);
+    background var(--transition-fast),
+    box-shadow var(--transition-fast);
 }
 
 .empty-state-action:hover {
-  background: var(--color-primary-strong);
+  background: var(--color-primary-hover);
   transform: translateY(-1px);
+  box-shadow: var(--shadow-lg);
 }
 
 .empty-state-action:focus-visible {
-  outline: 3px solid rgba(78, 129, 102, 0.28);
+  outline: 3px solid rgba(53, 95, 74, 0.22);
   outline-offset: 2px;
 }
 </style>

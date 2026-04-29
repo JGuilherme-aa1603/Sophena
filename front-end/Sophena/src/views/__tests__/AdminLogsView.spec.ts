@@ -140,6 +140,27 @@ describe('AdminLogsView', () => {
     expect(wrapper.text()).toContain('Não foi possível carregar os registros agora.')
   })
 
+  it('mostra skeleton durante o carregamento dos registros', async () => {
+    const router = createAppRouter(createMemoryHistory())
+    authenticateAdmin()
+    const store = useAdminLogsStore()
+    store.isLoadingLogs = true
+    vi.spyOn(store, 'fetchSummary').mockResolvedValue()
+    vi.spyOn(store, 'fetchLogs').mockResolvedValue()
+
+    await router.push('/app/admin/logs')
+
+    const wrapper = mount(AdminLogsView, {
+      global: {
+        plugins: [router],
+      },
+    })
+
+    await router.isReady()
+    expect(wrapper.text()).toContain('Carregando os registros...')
+    expect(wrapper.get('[data-testid="logs-loading-skeleton"]').findAll('[data-testid="skeleton-block"]')).toHaveLength(4)
+  })
+
   it('volta para a área administrativa', async () => {
     const router = createAppRouter(createMemoryHistory())
     authenticateAdmin()

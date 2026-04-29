@@ -72,33 +72,33 @@ async function logoutFromDock() {
 <style scoped>
 .authenticated-page {
   min-height: 100%;
-  padding: var(--space-page);
-  padding-bottom: calc(var(--dock-height) + 1.5rem);
+  padding: var(--space-lg) var(--space-md);
+  padding-bottom: calc(var(--dock-height) + var(--space-xl));
   background:
-    radial-gradient(circle at top left, rgba(223, 236, 221, 0.9), transparent 28%),
-    radial-gradient(circle at bottom right, rgba(239, 229, 198, 0.8), transparent 28%),
-    linear-gradient(180deg, #f6f2e8 0%, #fcfbf7 100%);
+    radial-gradient(circle at top left, rgba(230, 239, 233, 0.92), transparent 30%),
+    radial-gradient(circle at bottom right, rgba(234, 231, 223, 0.92), transparent 32%),
+    var(--color-background-gradient);
 }
 
 .authenticated-shell {
   width: min(100%, var(--app-shell-width));
   margin: 0 auto;
   display: grid;
-  gap: var(--space-stack);
+  gap: var(--space-lg);
 }
 
 .auth-feedback-banner {
   position: fixed;
   left: 50%;
-  bottom: calc(var(--dock-height) + 1rem);
+  bottom: calc(var(--dock-height) + var(--space-md));
   z-index: 25;
   width: min(calc(100% - 2rem), 36rem);
   padding: 0.85rem 1rem;
-  border: 1px solid rgba(157, 63, 52, 0.2);
-  border-radius: 1rem;
-  background: rgba(255, 247, 245, 0.96);
-  color: #7c3b33;
-  box-shadow: var(--shadow-lifted);
+  border: 1px solid rgba(217, 83, 79, 0.2);
+  border-radius: var(--radius-md);
+  background: rgba(255, 250, 249, 0.96);
+  color: #8f4541;
+  box-shadow: var(--shadow-md);
   transform: translateX(-50%);
 }
 </style>

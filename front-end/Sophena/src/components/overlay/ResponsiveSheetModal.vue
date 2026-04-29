@@ -88,7 +88,7 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  padding: 1rem;
+  padding: var(--space-md);
   background: var(--color-overlay);
 }
 
@@ -96,27 +96,28 @@ onBeforeUnmount(() => {
   width: min(100%, 42rem);
   max-height: min(88vh, 48rem);
   overflow: auto;
-  border-radius: 1.5rem 1.5rem 0 0;
-  background: #fffdf9;
-  box-shadow: 0 28px 56px rgba(32, 51, 43, 0.2);
+  border: 1px solid rgba(226, 224, 219, 0.88);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: var(--shadow-lg);
 }
 
 .sheet-header {
   display: flex;
-  gap: 1rem;
+  gap: var(--space-md);
   align-items: flex-start;
   justify-content: space-between;
-  padding: 1.25rem 1.25rem 0.5rem;
+  padding: var(--space-lg) var(--space-lg) var(--space-sm);
 }
 
 .sheet-title-group {
   display: grid;
-  gap: 0.35rem;
+  gap: var(--space-xs);
 }
 
 .sheet-kicker {
-  color: #58715f;
-  font-size: 0.82rem;
+  color: var(--color-muted);
+  font-size: 14px;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -124,8 +125,8 @@ onBeforeUnmount(() => {
 
 .sheet-title-group h2 {
   color: var(--color-heading);
-  font-size: 1.35rem;
-  font-weight: 700;
+  font-size: 22px;
+  font-weight: 600;
   line-height: 1.2;
 }
 
@@ -137,7 +138,7 @@ onBeforeUnmount(() => {
   min-height: 2.75rem;
   padding: 0.75rem 0.95rem;
   border: 1px solid var(--color-border);
-  border-radius: 999px;
+  border-radius: var(--radius-lg);
   background: transparent;
   color: var(--color-heading);
   font: inherit;
@@ -145,12 +146,12 @@ onBeforeUnmount(() => {
 }
 
 .sheet-close:focus-visible {
-  outline: 3px solid rgba(78, 129, 102, 0.28);
+  outline: 3px solid rgba(53, 95, 74, 0.22);
   outline-offset: 2px;
 }
 
 .sheet-body {
-  padding: 0.5rem 1.25rem 1.25rem;
+  padding: var(--space-sm) var(--space-lg) var(--space-lg);
 }
 
 .sheet-fade-enter-active,
@@ -179,7 +180,7 @@ onBeforeUnmount(() => {
   }
 
   .sheet-panel {
-    border-radius: 1.5rem;
+    border-radius: var(--radius-xl);
   }
 }
 </style>

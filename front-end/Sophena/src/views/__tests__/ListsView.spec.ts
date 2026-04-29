@@ -73,6 +73,7 @@ describe('ListsView', () => {
     })
 
     expect(wrapper.text()).toContain('Carregando suas listas...')
+    expect(wrapper.get('[data-testid="lists-loading-skeleton"]').findAll('[data-testid="skeleton-block"]')).toHaveLength(3)
   })
 
   it('mostra erro em português quando não consegue carregar listas', () => {

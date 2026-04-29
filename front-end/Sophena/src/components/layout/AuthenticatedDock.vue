@@ -54,36 +54,38 @@ const isAdminActive = computed(() => props.activeRoute.startsWith('admin-'))
 <style scoped>
 .authenticated-dock {
   position: fixed;
-  left: 50%;
-  bottom: calc(env(safe-area-inset-bottom, 0px) + 0.75rem);
+  left: 16px;
+  right: 16px;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
   z-index: 30;
-  display: inline-flex;
-  gap: 0.5rem;
+  display: flex;
+  gap: var(--space-sm);
   align-items: center;
-  justify-content: center;
-  padding: 0.5rem;
-  border: 1px solid rgba(215, 222, 207, 0.92);
-  border-radius: 999px;
-  background: rgba(255, 253, 249, 0.94);
-  box-shadow: var(--shadow-lifted);
+  justify-content: space-around;
+  padding: 10px;
+  border: 1px solid rgba(226, 224, 219, 0.92);
+  border-radius: var(--radius-xl);
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 -4px 16px rgba(36, 51, 43, 0.04), var(--shadow-lg);
   backdrop-filter: blur(12px);
-  transform: translateX(-50%);
 }
 
 .dock-link {
-  min-width: 5.5rem;
+  min-width: 5.25rem;
   min-height: 3rem;
-  padding: 0.8rem 1rem;
+  flex: 1;
+  padding: 0.8rem 0.95rem;
   border: 0;
-  border-radius: 999px;
+  border-radius: var(--radius-lg);
   background: transparent;
-  color: var(--color-heading);
+  color: var(--color-text);
   font: inherit;
   font-weight: 700;
   transition:
     background var(--transition-fast),
     color var(--transition-fast),
-    transform var(--transition-fast);
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast);
 }
 
 .dock-link-label {
@@ -92,17 +94,19 @@ const isAdminActive = computed(() => props.activeRoute.startsWith('admin-'))
 }
 
 .dock-link:hover {
-  background: rgba(51, 92, 71, 0.08);
+  background: rgba(53, 95, 74, 0.08);
 }
 
 .dock-link:focus-visible {
-  outline: 3px solid rgba(78, 129, 102, 0.28);
+  outline: 3px solid rgba(53, 95, 74, 0.22);
   outline-offset: 2px;
 }
 
 .dock-link--active {
   background: var(--color-primary);
-  color: #fffdf9;
+  color: #fff;
+  transform: scale(1.05);
+  box-shadow: var(--shadow-md);
 }
 
 .dock-link--danger {
@@ -110,12 +114,15 @@ const isAdminActive = computed(() => props.activeRoute.startsWith('admin-'))
 }
 
 .dock-link--danger:hover {
-  background: rgba(157, 63, 52, 0.08);
+  background: rgba(217, 83, 79, 0.08);
 }
 
 @media (min-width: 768px) {
   .authenticated-dock {
-    bottom: 1rem;
+    left: 50%;
+    right: auto;
+    min-width: 22rem;
+    transform: translateX(-50%);
   }
 }
 </style>
