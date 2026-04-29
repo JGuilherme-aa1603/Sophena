@@ -61,7 +61,7 @@ const useOverlayControls = computed(() => props.layout === 'compact')
             :class="{ 'book-card-cover-fallback--centered': props.layout === 'compact' }"
             data-testid="book-card-cover-fallback"
           >
-            Sem capa
+            {{ title }}
           </div>
         </div>
 

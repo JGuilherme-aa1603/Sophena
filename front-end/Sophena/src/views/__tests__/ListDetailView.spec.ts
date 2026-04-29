@@ -218,7 +218,7 @@ describe('ListDetailView', () => {
     await router.isReady()
 
     const card = wrapper.get('[data-testid="book-card"]')
-    expect(card.get('[data-testid="book-card-cover-fallback"]').text()).toContain('Sem capa')
+    expect(card.get('[data-testid="book-card-cover-fallback"]').text()).toContain('Livro sem capa')
     expect(card.find('[data-testid="book-card-cover-image"]').exists()).toBe(false)
   })
 

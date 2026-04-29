@@ -31,7 +31,7 @@ describe('BookCard', () => {
       },
     })
 
-    expect(wrapper.get('[data-testid="book-card-cover-fallback"]').text()).toContain('Sem capa')
+    expect(wrapper.get('[data-testid="book-card-cover-fallback"]').text()).toContain('Livro sem capa')
     expect(wrapper.find('[data-testid="book-card-cover-image"]').exists()).toBe(false)
     expect(wrapper.get('[data-testid="book-card"]').classes()).toContain('book-card')
   })
@@ -177,7 +177,7 @@ describe('BookCard', () => {
       },
     })
 
-    expect(wrapper.get('[data-testid="book-card-cover-fallback"]').text()).toContain('Sem capa')
+    expect(wrapper.get('[data-testid="book-card-cover-fallback"]').text()).toContain('Livro sem imagem')
     expect(wrapper.get('[data-testid="book-card"]').classes()).toContain('book-card--compact')
     expect(wrapper.get('[data-testid="book-card-cover-fallback"]').classes()).toContain('book-card-cover-fallback--centered')
   })
