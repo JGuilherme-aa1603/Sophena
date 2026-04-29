@@ -5,9 +5,11 @@ import { useRouter } from 'vue-router'
 
 import AuthenticatedScaffold from '@/components/layout/AuthenticatedScaffold.vue'
 import { useAdminUsersStore } from '@/stores/admin-users'
+import { useToastStore } from '@/stores/toast'
 
 const router = useRouter()
 const adminUsersStore = useAdminUsersStore()
+const toastStore = useToastStore()
 
 const form = reactive({
   user_name: '',
@@ -26,8 +28,9 @@ async function submitForm() {
     form.user_name = ''
     form.password = ''
     form.is_admin = false
+    toastStore.showSuccess('Usuário criado.')
   } catch {
-    // A mensagem amigável já é definida no store.
+    toastStore.showError(adminUsersStore.errorMessage || 'Não foi possível criar o usuário agora.')
   }
 }
 
@@ -90,16 +93,32 @@ async function goBack() {
             />
           </label>
 
-          <label class="checkbox-field">
-            <input
-              class="admin-checkbox"
-              name="admin-is-admin"
-              type="checkbox"
-              :checked="form.is_admin"
-              @change="form.is_admin = ($event.target as HTMLInputElement).checked"
-            />
-            <span>Esse novo usuário também será administrador</span>
-          </label>
+          <div class="permission-field">
+            <span class="permission-label">Tipo de acesso</span>
+            <div class="permission-options" role="group" aria-label="Tipo de acesso do novo usuário">
+              <button
+                type="button"
+                class="permission-option"
+                :class="{ 'permission-option--active': !form.is_admin }"
+                :aria-pressed="!form.is_admin"
+                data-testid="admin-permission-reader"
+                @click="form.is_admin = false"
+              >
+                Leitor comum
+              </button>
+
+              <button
+                type="button"
+                class="permission-option"
+                :class="{ 'permission-option--active': form.is_admin }"
+                :aria-pressed="form.is_admin"
+                data-testid="admin-permission-admin"
+                @click="form.is_admin = true"
+              >
+                Administrador
+              </button>
+            </div>
+          </div>
 
           <p class="helper-text">
             Administradores podem criar novos usuários e acessar áreas reservadas.
@@ -170,26 +189,45 @@ async function goBack() {
   color: var(--color-muted);
 }
 
-.checkbox-field {
-  display: flex;
-  align-items: center;
+.permission-field {
+  display: grid;
   gap: var(--space-sm);
-  padding: 0.9rem 1rem;
+}
+
+.permission-label {
+  color: var(--color-heading);
+  font-weight: 700;
+}
+
+.permission-options {
+  display: grid;
+  gap: var(--space-sm);
+  padding: var(--space-xs);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background: rgba(255, 255, 255, 0.92);
+}
+
+.permission-option {
+  min-height: 3rem;
+  padding: 0.8rem 1rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: transparent;
   color: var(--color-heading);
+  font: inherit;
+  font-weight: 700;
 }
 
-.checkbox-field:focus-within {
+.permission-option--active {
+  border-color: rgba(53, 95, 74, 0.26);
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+
+.permission-option:focus-visible {
   outline: 3px solid rgba(53, 95, 74, 0.18);
-  border-color: rgba(53, 95, 74, 0.5);
-}
-
-.admin-checkbox {
-  width: 1.1rem;
-  height: 1.1rem;
-  accent-color: var(--color-primary);
+  outline-offset: 2px;
 }
 
 .submit-button {
@@ -199,5 +237,11 @@ async function goBack() {
   --box-shadow: var(--shadow-md);
   min-height: 3rem;
   font-weight: 700;
+}
+
+@media (min-width: 520px) {
+  .permission-options {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 </style>

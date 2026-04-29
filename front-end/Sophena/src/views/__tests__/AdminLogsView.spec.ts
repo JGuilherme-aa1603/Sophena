@@ -24,7 +24,7 @@ describe('AdminLogsView', () => {
     vi.restoreAllMocks()
   })
 
-  it('mostra resumo, filtros e lista de registros', async () => {
+  it('mostra resumo, atalho de filtros e lista de registros', async () => {
     const router = createAppRouter(createMemoryHistory())
     authenticateAdmin()
     const store = useAdminLogsStore()
@@ -63,6 +63,7 @@ describe('AdminLogsView', () => {
     expect(wrapper.text()).toContain('Informação')
     expect(wrapper.text()).toContain('Aviso')
     expect(wrapper.text()).toContain('Erro')
+    expect(wrapper.get('[data-testid="open-logs-filters"]').text()).toContain('Filtrar registros')
     expect(wrapper.text()).toContain('Acesso negado')
     expect(wrapper.text()).not.toContain('2026-04-20T12:00:00.000Z')
   })
@@ -83,6 +84,11 @@ describe('AdminLogsView', () => {
     })
 
     await router.isReady()
+    expect(wrapper.find('form[data-testid="logs-filters-form"]').exists()).toBe(false)
+
+    await wrapper.get('[data-testid="open-logs-filters"]').trigger('click')
+    expect(wrapper.get('[data-testid="logs-filters-sheet"]').text()).toContain('Filtrar registros')
+
     await wrapper.get('select[name="logs-level"]').setValue('WARN')
     await wrapper.get('select[name="logs-method"]').setValue('POST')
     await wrapper.get('input[name="logs-status-code"]').setValue('401')

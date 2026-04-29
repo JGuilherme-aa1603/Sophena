@@ -77,7 +77,11 @@ describe('AdminUsersView', () => {
     await router.isReady()
     await wrapper.get('input[name="admin-user-name"]').setValue('nova-admin')
     await wrapper.get('input[name="admin-password"]').setValue('SenhaNova#123')
-    await wrapper.get('input[name="admin-is-admin"]').setValue(true)
+    expect(wrapper.find('input[name="admin-is-admin"]').exists()).toBe(false)
+    expect(wrapper.get('[data-testid="admin-permission-reader"]').attributes('aria-pressed')).toBe('true')
+
+    await wrapper.get('[data-testid="admin-permission-admin"]').trigger('click')
+    expect(wrapper.get('[data-testid="admin-permission-admin"]').attributes('aria-pressed')).toBe('true')
     await wrapper.get('form').trigger('submit.prevent')
 
     expect(createUserSpy).toHaveBeenCalledWith({

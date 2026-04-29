@@ -67,7 +67,7 @@ describe('AdminBooksView', () => {
     expect(fetchBooksSpy).toHaveBeenLastCalledWith('Dom')
   })
 
-  it('apaga o livro diretamente quando a confirmação extra não é necessária', async () => {
+  it('isola a ação apagar em opções e confirma antes de apagar', async () => {
     const router = createAppRouter(createMemoryHistory())
     authenticateAdmin()
     const store = useAdminBooksStore()
@@ -98,13 +98,20 @@ describe('AdminBooksView', () => {
     expect(card.text()).toContain('Machado de Assis')
     expect(card.get('[data-testid="book-card-cover-fallback"]').text()).toContain('Sem capa')
     expect(card.find('[data-testid="book-card-position"]').exists()).toBe(false)
-    await wrapper.get('[data-testid="delete-book-book-1"]').trigger('click')
+    expect(wrapper.find('[data-testid="delete-book-book-1"]').exists()).toBe(false)
+
+    await wrapper.get('[data-testid="open-admin-book-options-book-1"]').trigger('click')
+    expect(wrapper.get('[data-testid="admin-book-options-sheet"]').text()).toContain('Opções do livro')
+    await wrapper.get('[data-testid="request-delete-book-book-1"]').trigger('click')
+    expect(wrapper.get('[data-testid="admin-delete-book-confirm-sheet"]').text()).toContain('Apagar livro do sistema?')
+    expect(requestDeleteBookSpy).not.toHaveBeenCalled()
+
+    await wrapper.get('[data-testid="confirm-sheet-confirm"]').trigger('click')
 
     expect(requestDeleteBookSpy).toHaveBeenCalledWith('book-1')
   })
 
   it('pede confirmação e apaga com força quando o admin aceita', async () => {
-    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true)
     const router = createAppRouter(createMemoryHistory())
     authenticateAdmin()
     const store = useAdminBooksStore()
@@ -137,14 +144,18 @@ describe('AdminBooksView', () => {
 
     await router.isReady()
     await flushPromises()
-    await wrapper.get('[data-testid="delete-book-book-1"]').trigger('click')
+    await wrapper.get('[data-testid="open-admin-book-options-book-1"]').trigger('click')
+    await wrapper.get('[data-testid="request-delete-book-book-1"]').trigger('click')
+    await wrapper.get('[data-testid="confirm-sheet-confirm"]').trigger('click')
+    await flushPromises()
 
-    expect(confirmSpy).toHaveBeenCalledWith('Esse livro está em 2 listas. Se continuar, ele será removido dessas listas e apagado do sistema. Deseja continuar?')
+    expect(wrapper.get('[data-testid="admin-delete-book-confirm-sheet"]').text()).toContain('Esse livro está em 2 listas.')
+    await wrapper.get('[data-testid="confirm-sheet-confirm"]').trigger('click')
+
     expect(confirmDeleteBookSpy).toHaveBeenCalledWith('book-1')
   })
 
   it('pede confirmação e não apaga com força quando o admin cancela', async () => {
-    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false)
     const router = createAppRouter(createMemoryHistory())
     authenticateAdmin()
     const store = useAdminBooksStore()
@@ -180,9 +191,14 @@ describe('AdminBooksView', () => {
 
     await router.isReady()
     await flushPromises()
-    await wrapper.get('[data-testid="delete-book-book-1"]').trigger('click')
+    await wrapper.get('[data-testid="open-admin-book-options-book-1"]').trigger('click')
+    await wrapper.get('[data-testid="request-delete-book-book-1"]').trigger('click')
+    await wrapper.get('[data-testid="confirm-sheet-confirm"]').trigger('click')
+    await flushPromises()
 
-    expect(confirmSpy).toHaveBeenCalled()
+    expect(wrapper.get('[data-testid="admin-delete-book-confirm-sheet"]').text()).toContain('Esse livro está em 1 lista.')
+    await wrapper.get('[data-testid="confirm-sheet-cancel"]').trigger('click')
+
     expect(confirmDeleteBookSpy).not.toHaveBeenCalled()
     expect(clearPendingDeletionSpy).toHaveBeenCalledTimes(1)
   })

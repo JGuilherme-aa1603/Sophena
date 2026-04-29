@@ -1,9 +1,12 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { IonContent, IonPage } from '@ionic/vue'
 import { useRoute, useRouter } from 'vue-router'
 
+import AppToast from '@/components/feedback/AppToast.vue'
+import AppConfirmSheet from '@/components/overlay/AppConfirmSheet.vue'
 import { useAuthStore } from '@/stores/auth'
+import { useToastStore } from '@/stores/toast'
 
 import AuthenticatedDock from './AuthenticatedDock.vue'
 
@@ -16,8 +19,10 @@ const props = withDefaults(defineProps<{
 })
 
 const authStore = useAuthStore()
+const toastStore = useToastStore()
 const route = useRoute()
 const router = useRouter()
+const isLogoutConfirmOpen = ref(false)
 
 const shellStyle = computed(() => ({ '--app-shell-width': props.shellWidth }))
 const activeRoute = computed(() => String(route.name ?? ''))
@@ -31,12 +36,18 @@ async function navigateFromDock(target: 'app-home' | 'admin-home') {
   await router.push({ name: target })
 }
 
+function requestLogoutFromDock() {
+  isLogoutConfirmOpen.value = true
+}
+
 async function logoutFromDock() {
   try {
     await authStore.logout()
+    isLogoutConfirmOpen.value = false
     await router.replace('/login')
   } catch {
-    // A mensagem amigável já é definida no store.
+    isLogoutConfirmOpen.value = false
+    toastStore.showError(authStore.errorMessage || 'Não foi possível sair agora.')
   }
 }
 </script>
@@ -50,20 +61,24 @@ async function logoutFromDock() {
         </section>
       </main>
 
-      <div
-        v-if="authStore.errorMessage"
-        class="auth-feedback-banner"
-        role="status"
-        aria-live="polite"
-      >
-        {{ authStore.errorMessage }}
-      </div>
+      <AppToast />
+
+      <AppConfirmSheet
+        v-model="isLogoutConfirmOpen"
+        title="Sair da sessão?"
+        message="Você precisará entrar novamente para usar o Sophena."
+        confirm-label="Sair"
+        cancel-label="Continuar aqui"
+        tone="danger"
+        panel-testid="logout-confirm-sheet"
+        @confirm="logoutFromDock"
+      />
 
       <AuthenticatedDock
         :active-route="activeRoute"
         :show-admin="showAdmin"
         @navigate="navigateFromDock"
-        @logout="logoutFromDock"
+        @logout="requestLogoutFromDock"
       />
     </IonContent>
   </IonPage>
@@ -87,18 +102,4 @@ async function logoutFromDock() {
   gap: var(--space-lg);
 }
 
-.auth-feedback-banner {
-  position: fixed;
-  left: 50%;
-  bottom: calc(var(--dock-height) + var(--space-md));
-  z-index: 25;
-  width: min(calc(100% - 2rem), 36rem);
-  padding: 0.85rem 1rem;
-  border: 1px solid rgba(217, 83, 79, 0.2);
-  border-radius: var(--radius-md);
-  background: rgba(255, 250, 249, 0.96);
-  color: #8f4541;
-  box-shadow: var(--shadow-md);
-  transform: translateX(-50%);
-}
 </style>

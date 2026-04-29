@@ -186,7 +186,7 @@ describe('ListDetailView', () => {
     expect(wrapper.text()).toContain('Não foi possível abrir essa lista agora.')
   })
 
-  it('remove um livro e mostra confirmação em português', async () => {
+  it('abre opções do livro e remove somente depois da confirmação em português', async () => {
     const router = createAppRouter(createMemoryHistory())
     authenticateUser()
     const store = useListDetailStore()
@@ -223,7 +223,20 @@ describe('ListDetailView', () => {
     })
 
     await router.isReady()
-    await wrapper.get('[data-testid="remove-item-item-1"]').trigger('click')
+
+    expect(wrapper.find('[data-testid="move-up-item-1"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="remove-item-item-1"]').exists()).toBe(false)
+
+    await wrapper.get('[data-testid="open-book-options-item-1"]').trigger('click')
+    expect(wrapper.get('[data-testid="book-options-sheet"]').text()).toContain('Opções do livro')
+    expect(wrapper.get('[data-testid="book-options-sheet"]').text()).toContain('Livro removido')
+
+    await wrapper.get('[data-testid="request-remove-item-1"]').trigger('click')
+    expect(wrapper.get('[data-testid="remove-book-confirm-sheet"]').text()).toContain('Remover livro da lista?')
+    expect(wrapper.get('[data-testid="remove-book-confirm-sheet"]').text()).toContain('O livro sairá desta lista, mas continuará cadastrado no Sophena.')
+    expect(store.removeItem).not.toHaveBeenCalled()
+
+    await wrapper.get('[data-testid="confirm-sheet-confirm"]').trigger('click')
     await flushPromises()
 
     expect(store.removeItem).toHaveBeenCalledWith('lista-1', 'item-1')
@@ -284,6 +297,9 @@ describe('ListDetailView', () => {
 
     await router.isReady()
     await wrapper.get('[data-testid="open-add-book-flow"]').trigger('click')
+    expect(wrapper.find('form[data-testid="manual-book-form"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="show-manual-book-form"]').exists()).toBe(false)
+
     await wrapper.get('input[name="book-search"]').setValue('Dom')
     await wrapper.get('form[data-testid="search-books-form"]').trigger('submit.prevent')
     await flushPromises()
@@ -306,6 +322,9 @@ describe('ListDetailView', () => {
       }
       store.items = []
     })
+    vi.spyOn(store, 'searchBooks').mockImplementation(async () => {
+      store.searchResults = []
+    })
     const addManualBookSpy = vi.spyOn(store, 'addManualBook').mockResolvedValue()
 
     await router.push('/app/lists/lista-1')
@@ -318,12 +337,17 @@ describe('ListDetailView', () => {
 
     await router.isReady()
     await wrapper.get('[data-testid="open-add-book-flow"]').trigger('click')
+    await wrapper.get('input[name="book-search"]').setValue('Livro Manual')
+    await wrapper.get('form[data-testid="search-books-form"]').trigger('submit.prevent')
+    await flushPromises()
+    await wrapper.get('[data-testid="show-manual-book-form"]').trigger('click')
+    expect(wrapper.text()).toContain('Cadastrar um livro novo')
+
     await wrapper.get('input[name="manual-title"]').setValue('Livro Manual')
     await wrapper.get('input[name="manual-author"]').setValue('Autora Manual')
     await wrapper.get('input[name="manual-cover-url"]').setValue('https://example.com/manual.jpg')
     await wrapper.get('form[data-testid="manual-book-form"]').trigger('submit.prevent')
 
-    expect(wrapper.text()).toContain('Cadastrar um livro novo')
     expect(addManualBookSpy).toHaveBeenCalledWith('lista-1', {
       title: 'Livro Manual',
       author: 'Autora Manual',
@@ -343,6 +367,9 @@ describe('ListDetailView', () => {
       }
       store.items = []
     })
+    vi.spyOn(store, 'searchBooks').mockImplementation(async () => {
+      store.searchResults = []
+    })
     const addManualBookSpy = vi.spyOn(store, 'addManualBook').mockResolvedValue()
     const coverFile = new File(['capa'], 'capa.png', { type: 'image/png' })
 
@@ -356,6 +383,10 @@ describe('ListDetailView', () => {
 
     await router.isReady()
     await wrapper.get('[data-testid="open-add-book-flow"]').trigger('click')
+    await wrapper.get('input[name="book-search"]').setValue('Livro com Capa')
+    await wrapper.get('form[data-testid="search-books-form"]').trigger('submit.prevent')
+    await flushPromises()
+    await wrapper.get('[data-testid="show-manual-book-form"]').trigger('click')
     await wrapper.get('input[name="manual-title"]').setValue('Livro com Capa')
     await wrapper.get('input[name="manual-author"]').setValue('Autora com Capa')
     const coverFileInput = wrapper.get('input[name="manual-cover-file"]')
@@ -404,7 +435,9 @@ describe('ListDetailView', () => {
     })
 
     await router.isReady()
+    await wrapper.get('[data-testid="open-book-options-item-2"]').trigger('click')
     await wrapper.get('[data-testid="move-up-item-2"]').trigger('click')
+    await wrapper.get('[data-testid="open-book-options-item-1"]').trigger('click')
     await wrapper.get('[data-testid="move-down-item-1"]').trigger('click')
 
     expect(reorderSpy).toHaveBeenNthCalledWith(1, 'lista-1', 'item-2', 1)
@@ -441,6 +474,7 @@ describe('ListDetailView', () => {
     })
 
     await router.isReady()
+    await wrapper.get('[data-testid="open-book-options-item-1"]').trigger('click')
     await wrapper.get('[data-testid="open-move-item-1"]').trigger('click')
     await flushPromises()
     expect(wrapper.get('[data-testid="move-book-flow"]').text()).toContain('Enviar livro para outra lista')
