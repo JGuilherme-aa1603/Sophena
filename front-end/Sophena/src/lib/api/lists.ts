@@ -30,3 +30,23 @@ export async function createListRequest(accessToken: string, input: { name: stri
     body: JSON.stringify(input),
   })
 }
+
+export async function updateListRequest(accessToken: string, listId: string, input: { name: string }) {
+  return requestJson<UserList>(`/lists/${listId}`, {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(input),
+  })
+}
+
+export async function deleteListRequest(accessToken: string, listId: string) {
+  return requestJson<{ message: string }>(`/lists/${listId}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  })
+}

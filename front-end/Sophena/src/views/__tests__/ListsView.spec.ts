@@ -149,6 +149,109 @@ describe('ListsView', () => {
     expect(useToastStore().current?.message).toBe('Lista criada.')
   })
 
+  it('abre as opções de edição da lista sem abrir a lista', async () => {
+    const router = createAppRouter(createMemoryHistory())
+    authenticateUser()
+    const listsStore = useListsStore()
+    vi.spyOn(listsStore, 'fetchLists').mockImplementation(async () => {
+      listsStore.items = [
+        {
+          id: 'lista-1',
+          name: 'Quero ler',
+          created_at: '2026-01-01T10:00:00.000Z',
+          updated_at: '2026-01-01T10:00:00.000Z',
+        },
+      ]
+    })
+    await router.push('/app')
+
+    const wrapper = mount(ListsView, {
+      global: {
+        plugins: [router],
+      },
+    })
+
+    await router.isReady()
+    await wrapper.get('[data-testid="open-list-options-lista-1"]').trigger('click')
+
+    expect(router.currentRoute.value.name).toBe('app-home')
+    expect(wrapper.get('[data-testid="list-options-sheet"]').text()).toContain('Editar lista')
+    expect(wrapper.get('[data-testid="list-options-sheet"]').text()).toContain('Editar nome')
+    expect(wrapper.get('[data-testid="list-options-sheet"]').text()).toContain('Apagar lista')
+  })
+
+  it('renomeia uma lista pelo menu de edição', async () => {
+    const router = createAppRouter(createMemoryHistory())
+    authenticateUser()
+    const listsStore = useListsStore()
+    vi.spyOn(listsStore, 'fetchLists').mockImplementation(async () => {
+      listsStore.items = [
+        {
+          id: 'lista-1',
+          name: 'Quero ler',
+          created_at: '2026-01-01T10:00:00.000Z',
+          updated_at: '2026-01-01T10:00:00.000Z',
+        },
+      ]
+    })
+    const updateListNameSpy = vi.spyOn(listsStore, 'updateListName').mockResolvedValue({
+      id: 'lista-1',
+      name: 'Lidos este ano',
+      created_at: '2026-01-01T10:00:00.000Z',
+      updated_at: '2026-01-02T10:00:00.000Z',
+    })
+
+    const wrapper = mount(ListsView, {
+      global: {
+        plugins: [router],
+      },
+    })
+
+    await router.isReady()
+    await wrapper.get('[data-testid="open-list-options-lista-1"]').trigger('click')
+    await wrapper.get('[data-testid="request-rename-list-lista-1"]').trigger('click')
+    await wrapper.get('input[name="edit-list-name"]').setValue('Lidos este ano')
+    await wrapper.get('[data-testid="edit-list-form"]').trigger('submit.prevent')
+
+    expect(updateListNameSpy).toHaveBeenCalledWith('lista-1', 'Lidos este ano')
+    expect(useToastStore().current?.message).toBe('Lista atualizada.')
+  })
+
+  it('mostra confirmação clara antes de apagar a lista', async () => {
+    const router = createAppRouter(createMemoryHistory())
+    authenticateUser()
+    const listsStore = useListsStore()
+    vi.spyOn(listsStore, 'fetchLists').mockImplementation(async () => {
+      listsStore.items = [
+        {
+          id: 'lista-1',
+          name: 'Quero ler',
+          created_at: '2026-01-01T10:00:00.000Z',
+          updated_at: '2026-01-01T10:00:00.000Z',
+        },
+      ]
+    })
+    const deleteListSpy = vi.spyOn(listsStore, 'deleteList').mockResolvedValue()
+
+    const wrapper = mount(ListsView, {
+      global: {
+        plugins: [router],
+      },
+    })
+
+    await router.isReady()
+    await wrapper.get('[data-testid="open-list-options-lista-1"]').trigger('click')
+    await wrapper.get('[data-testid="request-delete-list-lista-1"]').trigger('click')
+
+    expect(wrapper.get('[data-testid="delete-list-confirm-sheet"]').text()).toContain('Apagar lista?')
+    expect(wrapper.get('[data-testid="delete-list-confirm-sheet"]').text()).toContain('Todos os livros serão removidos desta lista, mas continuarão cadastrados no Sophena.')
+
+    await wrapper.get('[data-testid="confirm-sheet-confirm"]').trigger('click')
+
+    expect(deleteListSpy).toHaveBeenCalledWith('lista-1')
+    expect(useToastStore().current?.message).toBe('Lista apagada.')
+  })
+
   it('mostra entrada da área administrativa para usuário admin', async () => {
     const router = createAppRouter(createMemoryHistory())
     authenticateAdmin()
