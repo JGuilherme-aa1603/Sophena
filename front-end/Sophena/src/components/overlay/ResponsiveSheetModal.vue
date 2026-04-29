@@ -55,8 +55,8 @@ onBeforeUnmount(() => {
         :aria-label="title"
         :data-testid="panelTestid"
       >
-        <header class="sheet-header">
-          <div class="sheet-title-group">
+        <header class="sheet-header" data-testid="sheet-header">
+          <div class="sheet-title-group" data-testid="sheet-title-group">
             <p class="sheet-kicker">Sophena</p>
             <h2>{{ title }}</h2>
             <p v-if="description" class="sheet-description">{{ description }}</p>
@@ -65,7 +65,7 @@ onBeforeUnmount(() => {
           <button
             type="button"
             class="sheet-close"
-            :data-testid="closeTestid"
+            :data-testid="closeTestid ?? 'sheet-close'"
             @click="close"
           >
             Fechar
@@ -75,6 +75,12 @@ onBeforeUnmount(() => {
         <div class="sheet-body">
           <slot />
         </div>
+
+        <div
+          class="sheet-bottom-spacer"
+          aria-hidden="true"
+          data-testid="sheet-bottom-spacer"
+        ></div>
       </section>
     </div>
   </Transition>
@@ -103,16 +109,17 @@ onBeforeUnmount(() => {
 }
 
 .sheet-header {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: var(--space-md);
-  align-items: flex-start;
-  justify-content: space-between;
+  align-items: start;
   padding: var(--space-lg) var(--space-lg) var(--space-sm);
 }
 
 .sheet-title-group {
   display: grid;
   gap: var(--space-xs);
+  min-width: 0;
 }
 
 .sheet-kicker {
@@ -143,6 +150,8 @@ onBeforeUnmount(() => {
   color: var(--color-heading);
   font: inherit;
   font-weight: 700;
+  align-self: start;
+  justify-self: end;
 }
 
 .sheet-close:focus-visible {
@@ -152,6 +161,10 @@ onBeforeUnmount(() => {
 
 .sheet-body {
   padding: var(--space-sm) var(--space-lg) var(--space-lg);
+}
+
+.sheet-bottom-spacer {
+  min-height: calc(var(--space-md) + env(safe-area-inset-bottom, 0px));
 }
 
 .sheet-fade-enter-active,
@@ -177,6 +190,12 @@ onBeforeUnmount(() => {
 @media (min-width: 768px) {
   .sheet-overlay {
     align-items: center;
+  }
+
+  .sheet-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
   }
 
   .sheet-panel {
