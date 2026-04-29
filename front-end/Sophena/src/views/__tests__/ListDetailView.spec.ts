@@ -83,6 +83,8 @@ describe('ListDetailView', () => {
     expect(firstCover.attributes('src')).toBe('https://example.com/capas/primeiro-livro.webp')
     expect(firstCover.attributes('alt')).toBe('Primeiro livro')
     expect(bookCards[0]!.get('[data-testid="book-card-position"]').text()).toBe('1')
+    expect(wrapper.find('[data-testid="books-controls-panel"]').exists()).toBe(false)
+    await wrapper.get('[data-testid="books-controls-toggle"]').trigger('click')
     expect(wrapper.get('[data-testid="books-layout-comfortable"]').attributes('aria-pressed')).toBe('true')
     expect(wrapper.get('[data-testid="books-list"]').classes()).toContain('items-list--comfortable')
   })
@@ -203,6 +205,7 @@ describe('ListDetailView', () => {
     })
 
     await router.isReady()
+    await wrapper.get('[data-testid="books-controls-toggle"]').trigger('click')
     await wrapper.get('[data-testid="books-layout-compact"]').trigger('click')
 
     expect(wrapper.get('[data-testid="books-layout-compact"]').attributes('aria-pressed')).toBe('true')
@@ -250,6 +253,7 @@ describe('ListDetailView', () => {
     })
 
     await router.isReady()
+    await wrapper.get('[data-testid="books-controls-toggle"]').trigger('click')
 
     expect(wrapper.get('[data-testid="books-layout-compact"]').attributes('aria-pressed')).toBe('true')
     expect(wrapper.get('[data-testid="books-list"]').classes()).toContain('items-list--compact')
@@ -319,6 +323,81 @@ describe('ListDetailView', () => {
     expect(wrapper.text()).toContain('Esta lista ainda não tem livros.')
     expect(wrapper.text()).toContain('Quando você adicionar um livro, ele aparecerá aqui.')
     expect(wrapper.get('[data-testid="empty-open-add-book"]').text()).toContain('Adicionar o primeiro livro')
+  })
+
+  it('filtra os livros da lista e restaura a ordenação própria ao limpar filtros', async () => {
+    const router = createAppRouter(createMemoryHistory())
+    authenticateUser()
+    const store = useListDetailStore()
+    vi.spyOn(store, 'fetchListDetail').mockImplementation(async () => {
+      store.list = {
+        id: 'lista-1',
+        name: 'Quero ler',
+      }
+      store.items = [
+        {
+          id: 'item-1',
+          book_list_item_id: 'item-1',
+          position: 1,
+          book: {
+            id: 'book-1',
+            title: 'Primeiro livro',
+            author: 'Autora A',
+            cover_url: null,
+          },
+        },
+        {
+          id: 'item-2',
+          book_list_item_id: 'item-2',
+          position: 2,
+          book: {
+            id: 'book-2',
+            title: 'Segundo livro',
+            author: 'Autora B',
+            cover_url: 'https://example.com/segundo.webp',
+          },
+        },
+        {
+          id: 'item-3',
+          book_list_item_id: 'item-3',
+          position: 3,
+          book: {
+            id: 'book-3',
+            title: 'Terceiro livro',
+            author: 'Autora B',
+            cover_url: null,
+          },
+        },
+      ]
+    })
+
+    await router.push('/app/lists/lista-1')
+
+    const wrapper = mount(ListDetailView, {
+      global: {
+        plugins: [router],
+      },
+    })
+
+    await router.isReady()
+    await wrapper.get('[data-testid="books-controls-toggle"]').trigger('click')
+    await wrapper.get('input[name="book-search"]').setValue('livro')
+    await wrapper.get('input[name="book-author"]').setValue('Autora B')
+    await wrapper.get('select[name="book-cover"]').setValue('without')
+    await wrapper.get('form[data-testid="books-filters-form"]').trigger('submit.prevent')
+
+    expect(wrapper.findAll('[data-testid="book-card-title"]').map((node) => node.text())).toEqual([
+      'Terceiro livro',
+    ])
+
+    await wrapper.get('[data-testid="clear-books-filters"]').trigger('click')
+
+    expect(wrapper.findAll('[data-testid="book-card-title"]').map((node) => node.text())).toEqual([
+      'Primeiro livro',
+      'Segundo livro',
+      'Terceiro livro',
+    ])
+    expect(wrapper.findAll('[data-testid="book-card-position"]').map((node) => node.text())).toEqual(['1', '2', '3'])
   })
 
   it('mostra carregamento ao abrir a lista', async () => {

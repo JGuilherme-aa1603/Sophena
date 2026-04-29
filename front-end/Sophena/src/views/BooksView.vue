@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
-import { IonButton, IonCard, IonCardContent, IonIcon, IonSpinner } from '@ionic/vue'
-import { searchOutline } from 'ionicons/icons'
+import { IonCard, IonCardContent, IonSpinner } from '@ionic/vue'
 
 import BookCard from '@/components/books/BookCard.vue'
+import BookListControlsMenu from '@/components/books/BookListControlsMenu.vue'
 import EmptyStateCard from '@/components/feedback/EmptyStateCard.vue'
 import AuthenticatedScaffold from '@/components/layout/AuthenticatedScaffold.vue'
 import { useBooksStore, type BookCoverFilter } from '@/stores/books'
@@ -29,12 +29,15 @@ onMounted(async () => {
   await booksStore.fetchBooks()
 })
 
-async function submitFilters() {
-  await booksStore.fetchBooks({
-    search: filtersForm.search,
-    author: filtersForm.author,
-    cover: filtersForm.cover,
-  })
+async function submitFilters(filters: {
+  search: string
+  author: string
+  cover: BookCoverFilter
+}) {
+  filtersForm.search = filters.search
+  filtersForm.author = filters.author
+  filtersForm.cover = filters.cover
+  await booksStore.fetchBooks(filters)
 }
 
 async function clearFilters() {
@@ -77,92 +80,14 @@ function readSavedBooksLayout() {
           <p>Use filtros simples para navegar pelos livros cadastrados.</p>
         </div>
 
-        <div class="layout-toggle" aria-label="Escolher visualização dos livros">
-          <span class="layout-toggle-label">Visualização</span>
-          <div class="layout-toggle-actions">
-            <button
-              type="button"
-              class="layout-toggle-button"
-              :class="{ 'layout-toggle-button--active': !isCompactLayout }"
-              data-testid="books-layout-comfortable"
-              :aria-pressed="!isCompactLayout"
-              @click="setBooksLayout('comfortable')"
-            >
-              Linha
-            </button>
-
-            <button
-              type="button"
-              class="layout-toggle-button"
-              :class="{ 'layout-toggle-button--active': isCompactLayout }"
-              data-testid="books-layout-compact"
-              :aria-pressed="isCompactLayout"
-              @click="setBooksLayout('compact')"
-            >
-              Compacta
-            </button>
-          </div>
-        </div>
-
-        <form data-testid="books-filters-form" class="filters-form" @submit.prevent="submitFilters">
-          <label class="app-field">
-            <span>Buscar livro</span>
-            <input
-              name="book-search"
-              type="text"
-              autocomplete="off"
-              placeholder="Digite o título ou o autor"
-              :disabled="booksStore.isLoading"
-              v-model="filtersForm.search"
-            />
-          </label>
-
-          <label class="app-field">
-            <span>Filtrar por autor</span>
-            <input
-              name="book-author"
-              type="text"
-              autocomplete="off"
-              placeholder="Digite o nome do autor"
-              :disabled="booksStore.isLoading"
-              v-model="filtersForm.author"
-            />
-          </label>
-
-          <label class="app-field">
-            <span>Capa</span>
-            <select
-              name="book-cover"
-              :disabled="booksStore.isLoading"
-              v-model="filtersForm.cover"
-            >
-              <option value="all">Todos</option>
-              <option value="with">Com capa</option>
-              <option value="without">Sem capa</option>
-            </select>
-          </label>
-
-          <div class="filters-actions">
-            <IonButton class="search-button" type="submit" :disabled="booksStore.isLoading">
-              <span v-if="!booksStore.isLoading" class="button-inline-content">
-                <IonIcon :icon="searchOutline" aria-hidden="true" />
-                Buscar
-              </span>
-              <IonSpinner v-else name="crescent" />
-            </IonButton>
-
-            <IonButton
-              fill="outline"
-              class="clear-button"
-              type="button"
-              data-testid="clear-books-filters"
-              :disabled="booksStore.isLoading"
-              @click="clearFilters"
-            >
-              Limpar filtros
-            </IonButton>
-          </div>
-        </form>
+        <BookListControlsMenu
+          test-id-prefix="books"
+          :layout="booksLayout"
+          :is-loading="booksStore.isLoading"
+          @search="submitFilters"
+          @clear="clearFilters"
+          @update:layout="setBooksLayout"
+        />
 
         <p
           v-if="booksStore.errorMessage"
@@ -215,8 +140,7 @@ function readSavedBooksLayout() {
 
 <style scoped>
 .books-content,
-.search-intro,
-.layout-toggle {
+.search-intro {
   display: grid;
   gap: var(--space-md);
 }
@@ -237,78 +161,6 @@ function readSavedBooksLayout() {
 
 .search-intro p {
   color: var(--color-muted);
-}
-
-.filters-form {
-  display: grid;
-  gap: var(--space-sm);
-}
-
-.filters-actions {
-  display: grid;
-  gap: var(--space-sm);
-}
-
-.layout-toggle {
-  justify-items: start;
-}
-
-.layout-toggle-label {
-  color: var(--color-muted);
-  font-size: 0.86rem;
-  font-weight: 700;
-}
-
-.layout-toggle-actions {
-  display: inline-flex;
-  gap: 0.35rem;
-  padding: 0.25rem;
-  border: 1px solid rgba(226, 224, 219, 0.96);
-  border-radius: 999px;
-  background: rgba(243, 242, 239, 0.9);
-}
-
-.layout-toggle-button {
-  min-height: 2.4rem;
-  padding: 0.45rem 0.85rem;
-  border: 0;
-  border-radius: 999px;
-  background: transparent;
-  color: var(--color-heading);
-  font: inherit;
-  font-weight: 700;
-}
-
-.layout-toggle-button--active {
-  background: var(--color-primary);
-  color: #fff;
-  box-shadow: var(--shadow-sm);
-}
-
-.search-button,
-.clear-button {
-  --border-radius: var(--radius-lg);
-  min-height: 3rem;
-  font-weight: 700;
-}
-
-.search-button {
-  --background: var(--color-primary);
-  --background-hover: var(--color-primary-hover);
-  --box-shadow: var(--shadow-md);
-}
-
-.clear-button {
-  --color: var(--color-primary);
-  --border-color: var(--color-primary);
-}
-
-.button-inline-content {
-  display: inline-flex;
-  gap: 0.55rem;
-  align-items: center;
-  justify-content: center;
-  line-height: 1.2;
 }
 
 .loading-state {
@@ -342,28 +194,8 @@ function readSavedBooksLayout() {
 }
 
 @media (min-width: 768px) {
-  .filters-actions {
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: end;
-  }
-
   .books-list--compact {
     grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr));
-  }
-}
-
-@media (max-width: 640px) {
-  .layout-toggle {
-    width: 100%;
-  }
-
-  .layout-toggle-actions {
-    width: 100%;
-  }
-
-  .layout-toggle-button {
-    flex: 1;
-    text-align: center;
   }
 }
 </style>

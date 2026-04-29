@@ -5,6 +5,7 @@ import {
   deleteBookRequest,
   fetchBooksRequest,
   type BookSearchResult,
+  type FetchBooksFilters,
 } from '@/lib/api/books'
 import { ApiError } from '@/lib/api/http'
 import { useAuthStore } from './auth'
@@ -70,7 +71,7 @@ export const useAdminBooksStore = defineStore('admin-books', () => {
   const feedbackMessage = ref('')
   const pendingDeletion = ref<PendingDeletion | null>(null)
 
-  async function fetchBooks(search = '') {
+  async function fetchBooks(input: string | FetchBooksFilters = {}) {
     if (!authStore.accessToken) {
       books.value = []
       errorMessage.value = 'Sua sessão expirou. Entre novamente.'
@@ -81,7 +82,7 @@ export const useAdminBooksStore = defineStore('admin-books', () => {
     errorMessage.value = ''
 
     try {
-      const response = await fetchBooksRequest(authStore.accessToken, search)
+      const response = await fetchBooksRequest(authStore.accessToken, input)
       books.value = response.items
     } catch (error) {
       books.value = []

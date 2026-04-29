@@ -47,7 +47,7 @@ describe('AdminBooksView', () => {
     expect(wrapper.text()).toContain('Nenhum livro foi encontrado.')
   })
 
-  it('busca livros pelo termo informado', async () => {
+  it('busca livros pelo termo, autor e capa informados', async () => {
     const router = createAppRouter(createMemoryHistory())
     authenticateAdmin()
     const store = useAdminBooksStore()
@@ -62,10 +62,49 @@ describe('AdminBooksView', () => {
     })
 
     await router.isReady()
+    expect(wrapper.find('input[name="admin-book-search"]').exists()).toBe(false)
+    await wrapper.get('[data-testid="admin-books-controls-toggle"]').trigger('click')
     await wrapper.get('input[name="admin-book-search"]').setValue('Dom')
+    await wrapper.get('input[name="admin-book-author"]').setValue('Machado')
+    await wrapper.get('select[name="admin-book-cover"]').setValue('with')
     await wrapper.get('form[data-testid="admin-books-search-form"]').trigger('submit.prevent')
 
-    expect(fetchBooksSpy).toHaveBeenLastCalledWith('Dom')
+    expect(fetchBooksSpy).toHaveBeenLastCalledWith({
+      search: 'Dom',
+      author: 'Machado',
+      cover: 'with',
+    })
+  })
+
+  it('limpa os filtros do menu de livros do admin', async () => {
+    const router = createAppRouter(createMemoryHistory())
+    authenticateAdmin()
+    const store = useAdminBooksStore()
+    vi.spyOn(store, 'fetchBooks').mockResolvedValue()
+
+    await router.push('/app/admin/books')
+
+    const wrapper = mount(AdminBooksView, {
+      global: {
+        plugins: [router],
+      },
+    })
+
+    await router.isReady()
+    await wrapper.get('[data-testid="admin-books-controls-toggle"]').trigger('click')
+    await wrapper.get('input[name="admin-book-search"]').setValue('Dom')
+    await wrapper.get('input[name="admin-book-author"]').setValue('Machado')
+    await wrapper.get('select[name="admin-book-cover"]').setValue('without')
+    await wrapper.get('[data-testid="clear-admin-books-filters"]').trigger('click')
+
+    expect(store.fetchBooks).toHaveBeenLastCalledWith({
+      search: '',
+      author: '',
+      cover: 'all',
+    })
+    expect((wrapper.get('input[name="admin-book-search"]').element as HTMLInputElement).value).toBe('')
+    expect((wrapper.get('input[name="admin-book-author"]').element as HTMLInputElement).value).toBe('')
+    expect((wrapper.get('select[name="admin-book-cover"]').element as HTMLSelectElement).value).toBe('all')
   })
 
   it('isola a ação apagar em opções e confirma antes de apagar', async () => {
@@ -99,6 +138,7 @@ describe('AdminBooksView', () => {
     expect(card.text()).toContain('Machado de Assis')
     expect(card.get('[data-testid="book-card-cover-fallback"]').text()).toContain('Dom Casmurro')
     expect(card.find('[data-testid="book-card-position"]').exists()).toBe(false)
+    await wrapper.get('[data-testid="admin-books-controls-toggle"]').trigger('click')
     expect(wrapper.get('[data-testid="admin-books-layout-comfortable"]').attributes('aria-pressed')).toBe('true')
     expect(wrapper.get('[data-testid="admin-books-list"]').classes()).toContain('books-list--comfortable')
     expect(wrapper.find('[data-testid="delete-book-book-1"]').exists()).toBe(false)
@@ -185,6 +225,7 @@ describe('AdminBooksView', () => {
 
     await router.isReady()
     await flushPromises()
+    await wrapper.get('[data-testid="admin-books-controls-toggle"]').trigger('click')
     await wrapper.get('[data-testid="admin-books-layout-compact"]').trigger('click')
 
     expect(wrapper.get('[data-testid="admin-books-layout-compact"]').attributes('aria-pressed')).toBe('true')
@@ -220,6 +261,7 @@ describe('AdminBooksView', () => {
 
     await router.isReady()
     await flushPromises()
+    await wrapper.get('[data-testid="admin-books-controls-toggle"]').trigger('click')
 
     expect(wrapper.get('[data-testid="admin-books-layout-compact"]').attributes('aria-pressed')).toBe('true')
     expect(wrapper.get('[data-testid="admin-books-list"]').classes()).toContain('books-list--compact')

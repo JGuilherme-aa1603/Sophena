@@ -13,6 +13,7 @@ import {
 import { useRoute, useRouter } from 'vue-router'
 
 import BookCard from '@/components/books/BookCard.vue'
+import BookListControlsMenu from '@/components/books/BookListControlsMenu.vue'
 import EmptyStateCard from '@/components/feedback/EmptyStateCard.vue'
 import AuthenticatedScaffold from '@/components/layout/AuthenticatedScaffold.vue'
 import AppConfirmSheet from '@/components/overlay/AppConfirmSheet.vue'
@@ -20,6 +21,7 @@ import ResponsiveSheetModal from '@/components/overlay/ResponsiveSheetModal.vue'
 import { useListDetailStore } from '@/stores/list-detail'
 import { useListsStore } from '@/stores/lists'
 import { useToastStore } from '@/stores/toast'
+import type { BookCoverFilter } from '@/lib/api/books'
 
 const router = useRouter()
 const route = useRoute()
@@ -30,6 +32,12 @@ const BOOKS_LAYOUT_STORAGE_KEY = 'sophena:list-books-layout'
 
 const searchForm = reactive({
   term: '',
+})
+
+const listFilters = reactive({
+  search: '',
+  author: '',
+  cover: 'all' as BookCoverFilter,
 })
 
 const manualForm = reactive({
@@ -72,14 +80,48 @@ const pageTitle = computed(() => {
 
   return listsStore.items.find((availableList) => availableList.id === listId.value)?.name ?? 'Sua lista'
 })
+const hasActiveListFilters = computed(() => {
+  return listFilters.search.trim().length > 0
+    || listFilters.author.trim().length > 0
+    || listFilters.cover !== 'all'
+})
+const visibleListItems = computed(() => {
+  const orderedItems = [...listDetailStore.items].sort((left, right) => left.position - right.position)
+
+  if (!hasActiveListFilters.value) {
+    return orderedItems
+  }
+
+  const search = listFilters.search.trim().toLocaleLowerCase('pt-BR')
+  const author = listFilters.author.trim().toLocaleLowerCase('pt-BR')
+
+  return orderedItems.filter((item) => {
+    const titleValue = item.book.title.toLocaleLowerCase('pt-BR')
+    const authorValue = item.book.author.toLocaleLowerCase('pt-BR')
+    const hasCover = Boolean(item.book.cover_url?.trim())
+    const matchesSearch = !search || titleValue.includes(search) || authorValue.includes(search)
+    const matchesAuthor = !author || authorValue.includes(author)
+    const matchesCover = listFilters.cover === 'all'
+      || (listFilters.cover === 'with' && hasCover)
+      || (listFilters.cover === 'without' && !hasCover)
+
+    return matchesSearch && matchesAuthor && matchesCover
+  })
+})
 const bookCountLabel = computed(() => {
-  const total = listDetailStore.items.length
+  const total = visibleListItems.value.length
   return total === 1 ? '1 livro' : `${total} livros`
 })
 
 const showEmptyState = computed(() => {
   return !listDetailStore.isLoading
     && listDetailStore.items.length === 0
+    && !loadErrorMessage.value
+})
+const showFilteredEmptyState = computed(() => {
+  return !listDetailStore.isLoading
+    && listDetailStore.items.length > 0
+    && visibleListItems.value.length === 0
     && !loadErrorMessage.value
 })
 
@@ -297,6 +339,22 @@ function setBooksLayout(layout: 'comfortable' | 'compact') {
   localStorage.setItem(BOOKS_LAYOUT_STORAGE_KEY, layout)
 }
 
+function applyListFilters(filters: {
+  search: string
+  author: string
+  cover: BookCoverFilter
+}) {
+  listFilters.search = filters.search
+  listFilters.author = filters.author
+  listFilters.cover = filters.cover
+}
+
+function clearListFilters() {
+  listFilters.search = ''
+  listFilters.author = ''
+  listFilters.cover = 'all'
+}
+
 function readSavedBooksLayout() {
   const savedLayout = localStorage.getItem(BOOKS_LAYOUT_STORAGE_KEY)
   return savedLayout === 'compact' ? 'compact' : 'comfortable'
@@ -371,34 +429,16 @@ async function confirmMove(itemId: string) {
             <h2>Livros da lista</h2>
             <p>{{ bookCountLabel }}</p>
           </div>
-
-          <div class="layout-toggle" aria-label="Escolher visualização dos livros">
-            <span class="layout-toggle-label">Visualização</span>
-            <div class="layout-toggle-actions">
-              <button
-                type="button"
-                class="layout-toggle-button"
-                :class="{ 'layout-toggle-button--active': !isCompactLayout }"
-                data-testid="books-layout-comfortable"
-                :aria-pressed="!isCompactLayout"
-                @click="setBooksLayout('comfortable')"
-              >
-                Linha
-              </button>
-
-              <button
-                type="button"
-                class="layout-toggle-button"
-                :class="{ 'layout-toggle-button--active': isCompactLayout }"
-                data-testid="books-layout-compact"
-                :aria-pressed="isCompactLayout"
-                @click="setBooksLayout('compact')"
-              >
-                Compacta
-              </button>
-            </div>
-          </div>
         </div>
+
+        <BookListControlsMenu
+          test-id-prefix="books"
+          :layout="booksLayout"
+          :is-loading="listDetailStore.isLoading"
+          @search="applyListFilters"
+          @clear="clearListFilters"
+          @update:layout="setBooksLayout"
+        />
 
         <p
           v-if="loadErrorMessage"
@@ -440,6 +480,12 @@ async function confirmMove(itemId: string) {
           @action="openAddBookFlow"
         />
 
+        <EmptyStateCard
+          v-else-if="showFilteredEmptyState"
+          title="Nenhum livro foi encontrado."
+          description="Tente buscar outro nome, autor ou filtro de capa."
+        />
+
         <ol
           v-else
           class="items-list app-fade-in"
@@ -450,7 +496,7 @@ async function confirmMove(itemId: string) {
           data-testid="books-list"
         >
           <li
-            v-for="item in listDetailStore.items"
+            v-for="item in visibleListItems"
             :key="item.book_list_item_id"
             class="item-card"
           >
@@ -890,44 +936,6 @@ async function confirmMove(itemId: string) {
   display: grid;
 }
 
-.layout-toggle {
-  display: grid;
-  gap: 0.35rem;
-  justify-items: start;
-}
-
-.layout-toggle-label {
-  color: var(--color-muted);
-  font-size: 0.86rem;
-  font-weight: 700;
-}
-
-.layout-toggle-actions {
-  display: inline-flex;
-  gap: 0.35rem;
-  padding: 0.25rem;
-  border: 1px solid rgba(226, 224, 219, 0.96);
-  border-radius: 999px;
-  background: rgba(243, 242, 239, 0.9);
-}
-
-.layout-toggle-button {
-  min-height: 2.4rem;
-  padding: 0.45rem 0.85rem;
-  border: 0;
-  border-radius: 999px;
-  background: transparent;
-  color: var(--color-heading);
-  font: inherit;
-  font-weight: 700;
-}
-
-.layout-toggle-button--active {
-  background: var(--color-primary);
-  color: #fff;
-  box-shadow: var(--shadow-sm);
-}
-
 .options-button,
 .sheet-action-button {
   --border-radius: var(--radius-lg);
@@ -1114,19 +1122,6 @@ async function confirmMove(itemId: string) {
 }
 
 @media (max-width: 640px) {
-  .layout-toggle {
-    width: 100%;
-  }
-
-  .layout-toggle-actions {
-    width: 100%;
-  }
-
-  .layout-toggle-button {
-    flex: 1;
-    text-align: center;
-  }
-
   .search-result-item {
     flex-direction: column;
     align-items: stretch;

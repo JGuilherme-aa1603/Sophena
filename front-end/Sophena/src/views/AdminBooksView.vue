@@ -1,23 +1,27 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
 import { IonButton, IonCard, IonCardContent, IonIcon, IonSpinner } from '@ionic/vue'
-import { ellipsisHorizontalOutline, searchOutline, trashOutline } from 'ionicons/icons'
+import { ellipsisHorizontalOutline, trashOutline } from 'ionicons/icons'
 import { useRouter } from 'vue-router'
 
 import BookCard from '@/components/books/BookCard.vue'
+import BookListControlsMenu from '@/components/books/BookListControlsMenu.vue'
 import EmptyStateCard from '@/components/feedback/EmptyStateCard.vue'
 import AuthenticatedScaffold from '@/components/layout/AuthenticatedScaffold.vue'
 import AppConfirmSheet from '@/components/overlay/AppConfirmSheet.vue'
 import ResponsiveSheetModal from '@/components/overlay/ResponsiveSheetModal.vue'
 import { useAdminBooksStore } from '@/stores/admin-books'
+import type { BookCoverFilter } from '@/stores/books'
 import { useToastStore } from '@/stores/toast'
 
 const router = useRouter()
 const adminBooksStore = useAdminBooksStore()
 const toastStore = useToastStore()
 const ADMIN_BOOKS_LAYOUT_STORAGE_KEY = 'sophena:admin-books-layout'
-const searchForm = reactive({
-  term: '',
+const filtersForm = reactive({
+  search: '',
+  author: '',
+  cover: 'all' as BookCoverFilter,
 })
 const activeOptionsBookId = ref<string | null>(null)
 const pendingDeleteBookId = ref<string | null>(null)
@@ -88,8 +92,26 @@ onMounted(async () => {
   await adminBooksStore.fetchBooks()
 })
 
-async function submitSearch() {
-  await adminBooksStore.fetchBooks(searchForm.term)
+async function submitSearch(filters: {
+  search: string
+  author: string
+  cover: BookCoverFilter
+}) {
+  filtersForm.search = filters.search
+  filtersForm.author = filters.author
+  filtersForm.cover = filters.cover
+  await adminBooksStore.fetchBooks(filters)
+}
+
+async function clearFilters() {
+  filtersForm.search = ''
+  filtersForm.author = ''
+  filtersForm.cover = 'all'
+  await adminBooksStore.fetchBooks({
+    search: '',
+    author: '',
+    cover: 'all',
+  })
 }
 
 function openBookOptions(bookId: string) {
@@ -187,54 +209,18 @@ async function goBack() {
           <p>Use uma busca simples para localizar rapidamente o título que precisa revisar.</p>
         </div>
 
-        <div class="layout-toggle" aria-label="Escolher visualização dos livros">
-          <span class="layout-toggle-label">Visualização</span>
-          <div class="layout-toggle-actions">
-            <button
-              type="button"
-              class="layout-toggle-button"
-              :class="{ 'layout-toggle-button--active': !isCompactLayout }"
-              data-testid="admin-books-layout-comfortable"
-              :aria-pressed="!isCompactLayout"
-              @click="setBooksLayout('comfortable')"
-            >
-              Linha
-            </button>
-
-            <button
-              type="button"
-              class="layout-toggle-button"
-              :class="{ 'layout-toggle-button--active': isCompactLayout }"
-              data-testid="admin-books-layout-compact"
-              :aria-pressed="isCompactLayout"
-              @click="setBooksLayout('compact')"
-            >
-              Compacta
-            </button>
-          </div>
-        </div>
-
-        <form data-testid="admin-books-search-form" class="search-form" @submit.prevent="submitSearch">
-          <label class="app-field">
-            <span>Buscar livro</span>
-            <input
-              name="admin-book-search"
-              type="text"
-              autocomplete="off"
-              placeholder="Digite o título ou o autor"
-              :disabled="adminBooksStore.isLoading"
-              v-model="searchForm.term"
-            />
-          </label>
-
-          <IonButton class="search-button" type="submit" :disabled="adminBooksStore.isLoading">
-            <span v-if="!adminBooksStore.isLoading" class="button-inline-content">
-              <IonIcon :icon="searchOutline" aria-hidden="true" />
-              Buscar
-            </span>
-            <IonSpinner v-else name="crescent" />
-          </IonButton>
-        </form>
+        <BookListControlsMenu
+          test-id-prefix="admin-books"
+          form-testid="admin-books-search-form"
+          search-name="admin-book-search"
+          author-name="admin-book-author"
+          cover-name="admin-book-cover"
+          :layout="booksLayout"
+          :is-loading="adminBooksStore.isLoading"
+          @search="submitSearch"
+          @clear="clearFilters"
+          @update:layout="setBooksLayout"
+        />
 
         <p
           v-if="inlineErrorMessage"
@@ -354,8 +340,7 @@ async function goBack() {
 }
 
 .admin-books-content,
-.search-intro,
-.layout-toggle {
+.search-intro {
   display: grid;
   gap: var(--space-md);
 }
@@ -376,56 +361,6 @@ async function goBack() {
 
 .search-intro p {
   color: var(--color-muted);
-}
-
-.search-form {
-  display: grid;
-  gap: var(--space-sm);
-}
-
-.layout-toggle {
-  justify-items: start;
-}
-
-.layout-toggle-label {
-  color: var(--color-muted);
-  font-size: 0.86rem;
-  font-weight: 700;
-}
-
-.layout-toggle-actions {
-  display: inline-flex;
-  gap: 0.35rem;
-  padding: 0.25rem;
-  border: 1px solid rgba(226, 224, 219, 0.96);
-  border-radius: 999px;
-  background: rgba(243, 242, 239, 0.9);
-}
-
-.layout-toggle-button {
-  min-height: 2.4rem;
-  padding: 0.45rem 0.85rem;
-  border: 0;
-  border-radius: 999px;
-  background: transparent;
-  color: var(--color-heading);
-  font: inherit;
-  font-weight: 700;
-}
-
-.layout-toggle-button--active {
-  background: var(--color-primary);
-  color: #fff;
-  box-shadow: var(--shadow-sm);
-}
-
-.search-button {
-  --background: var(--color-primary);
-  --background-hover: var(--color-primary-hover);
-  --border-radius: var(--radius-lg);
-  --box-shadow: var(--shadow-md);
-  min-height: 3rem;
-  font-weight: 700;
 }
 
 .button-inline-content {
@@ -503,21 +438,6 @@ async function goBack() {
 @media (min-width: 768px) {
   .books-list--compact {
     grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr));
-  }
-}
-
-@media (max-width: 640px) {
-  .layout-toggle {
-    width: 100%;
-  }
-
-  .layout-toggle-actions {
-    width: 100%;
-  }
-
-  .layout-toggle-button {
-    flex: 1;
-    text-align: center;
   }
 }
 </style>

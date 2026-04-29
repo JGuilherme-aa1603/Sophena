@@ -35,7 +35,7 @@ describe('admin books store', () => {
     vi.restoreAllMocks()
   })
 
-  it('carrega livros com busca opcional', async () => {
+  it('carrega livros com busca, autor e filtro de capa opcionais', async () => {
     const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(createJsonResponse({
       status: 200,
       body: {
@@ -54,7 +54,11 @@ describe('admin books store', () => {
     authenticateAdmin()
 
     const store = useAdminBooksStore()
-    await store.fetchBooks('Dom')
+    await store.fetchBooks({
+      search: 'Dom',
+      author: 'Machado',
+      cover: 'without',
+    })
 
     expect(store.books).toEqual([
       {
@@ -65,7 +69,7 @@ describe('admin books store', () => {
       },
     ])
     expect(fetchMock).toHaveBeenCalledWith(
-      expect.stringContaining('/books?search=Dom'),
+      expect.stringContaining('/books?search=Dom&author=Machado&cover=without'),
       expect.objectContaining({
         method: 'GET',
         credentials: 'include',

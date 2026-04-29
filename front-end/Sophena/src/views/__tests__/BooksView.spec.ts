@@ -80,6 +80,8 @@ describe('BooksView', () => {
     })
 
     await router.isReady()
+    expect(wrapper.find('input[name="book-search"]').exists()).toBe(false)
+    await wrapper.get('[data-testid="books-controls-toggle"]').trigger('click')
     await wrapper.get('input[name="book-search"]').setValue('Dom')
     await wrapper.get('input[name="book-author"]').setValue('Machado')
     await wrapper.get('select[name="book-cover"]').setValue('without')
@@ -108,6 +110,7 @@ describe('BooksView', () => {
     })
 
     await router.isReady()
+    await wrapper.get('[data-testid="books-controls-toggle"]').trigger('click')
     await wrapper.get('input[name="book-search"]').setValue('Dom')
     await wrapper.get('input[name="book-author"]').setValue('Machado')
     await wrapper.get('select[name="book-cover"]').setValue('with')
@@ -144,6 +147,7 @@ describe('BooksView', () => {
 
     await router.isReady()
     await flushPromises()
+    await wrapper.get('[data-testid="books-controls-toggle"]').trigger('click')
     await wrapper.get('[data-testid="books-layout-compact"]').trigger('click')
 
     expect(wrapper.get('[data-testid="books-layout-compact"]').attributes('aria-pressed')).toBe('true')
@@ -178,6 +182,7 @@ describe('BooksView', () => {
 
     await router.isReady()
     await flushPromises()
+    await wrapper.get('[data-testid="books-controls-toggle"]').trigger('click')
 
     expect(wrapper.get('[data-testid="books-layout-compact"]').attributes('aria-pressed')).toBe('true')
     expect(wrapper.get('[data-testid="books-list"]').classes()).toContain('books-list--compact')
