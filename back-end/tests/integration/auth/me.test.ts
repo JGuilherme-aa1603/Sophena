@@ -95,6 +95,7 @@ describe("GET /auth/me", () => {
     assert.equal(response.body.user_name, "leitora-autenticada");
     assert.equal(response.body.is_admin, false);
     assert.equal(response.body.id, user.id);
+    assert.equal(response.body.user_picture_url, null);
     assert.equal("password_hash" in response.body, false);
   });
 

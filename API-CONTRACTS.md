@@ -45,6 +45,7 @@ Response:
   "user": {
     "id": "string",
     "user_name": "string",
+    "user_picture_url": "string | null",
     "is_admin": true
   }
 }
@@ -101,6 +102,7 @@ Response:
 {
   "id": "string",
   "user_name": "string",
+  "user_picture_url": "string | null",
   "is_admin": true
 }
 ```
@@ -108,6 +110,51 @@ Response:
 Rules:
 - use access token authentication
 - do not expose sensitive fields
+
+### PATCH `/auth/me/picture`
+
+Authenticated route.
+
+Request:
+- multipart form data
+- `file` required
+- supported image types: JPEG, PNG, WebP
+
+Response:
+```json
+{
+  "id": "string",
+  "user_name": "string",
+  "user_picture_url": "string",
+  "is_admin": false
+}
+```
+
+Rules:
+- compress image before storing it
+- store the image in Cloudflare R2 under `user-pictures/`
+- replace the previous stored user picture when present
+- never expose sensitive fields
+
+### DELETE `/auth/me/picture`
+
+Authenticated route.
+
+Response:
+```json
+{
+  "id": "string",
+  "user_name": "string",
+  "user_picture_url": null,
+  "is_admin": false
+}
+```
+
+Rules:
+- remove the managed picture object from Cloudflare R2 when present
+- set `user_picture_url` to `null`
+- remain successful when the user has no picture
+- never expose sensitive fields
 
 ---
 

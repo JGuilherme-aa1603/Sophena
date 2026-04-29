@@ -27,11 +27,13 @@ export async function createTestUser(input: {
   user_name: string;
   password: string;
   is_admin?: boolean;
+  user_picture_url?: string | null;
 }) {
   const user = await prisma.user.create({
     data: {
       user_name: input.user_name,
       password_hash: hashPassword(input.password),
+      user_picture_url: input.user_picture_url ?? null,
       admin: input.is_admin
         ? {
             create: {},
@@ -47,6 +49,7 @@ export async function createTestUser(input: {
     id: user.id,
     user_name: user.user_name,
     is_admin: Boolean(user.admin),
+    user_picture_url: user.user_picture_url,
   };
 }
 
@@ -158,6 +161,14 @@ export async function findUserWithAdminByUserName(userName: string) {
     },
     include: {
       admin: true,
+    },
+  });
+}
+
+export async function findUserById(userId: string) {
+  return prisma.user.findUnique({
+    where: {
+      id: userId,
     },
   });
 }

@@ -20,6 +20,7 @@ export class PrismaAuthUserRepository {
       id: user.id,
       user_name: user.user_name,
       password_hash: user.password_hash,
+      user_picture_url: user.user_picture_url,
       is_admin: Boolean(user.admin),
     };
   }
@@ -42,6 +43,32 @@ export class PrismaAuthUserRepository {
       id: user.id,
       user_name: user.user_name,
       password_hash: user.password_hash,
+      user_picture_url: user.user_picture_url,
+      is_admin: Boolean(user.admin),
+    };
+  }
+
+  async updateUserPictureUrl(input: {
+    userId: string;
+    user_picture_url: string | null;
+  }): Promise<AuthUser | null> {
+    const user = await prisma.user.update({
+      where: {
+        id: input.userId,
+      },
+      data: {
+        user_picture_url: input.user_picture_url,
+      },
+      include: {
+        admin: true,
+      },
+    });
+
+    return {
+      id: user.id,
+      user_name: user.user_name,
+      password_hash: user.password_hash,
+      user_picture_url: user.user_picture_url,
       is_admin: Boolean(user.admin),
     };
   }

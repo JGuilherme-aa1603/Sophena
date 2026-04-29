@@ -1,5 +1,6 @@
 import { Router } from "express";
 import rateLimit from "express-rate-limit";
+import multer from "multer";
 
 import { AuthService } from "../../application/auth-service.ts";
 import {
@@ -9,11 +10,36 @@ import {
   UnauthorizedError,
   ValidationError,
 } from "../../application/auth-errors.ts";
-import { authService } from "../../composition/auth-module.ts";
+import {
+  authService,
+  createUserPictureService,
+  readImageMaxUploadBytes,
+} from "../../composition/auth-module.ts";
 import { logService } from "../../../logs/composition/log-module.ts";
+import { requireAuthenticatedUser } from "./security-middleware.ts";
+import { type AuthenticatedUserView } from "../../domain/auth-user.ts";
+import type { UserPictureService } from "../../application/user-picture-service.ts";
 
-export function createAuthRouter() {
+type AuthRouterLocals = {
+  authenticatedUser?: AuthenticatedUserView;
+};
+
+const SUPPORTED_IMAGE_TYPES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+]);
+
+export function createAuthRouter(input: {
+  userPictureService?: Pick<UserPictureService, "updatePicture" | "removePicture">;
+} = {}) {
   const router = Router();
+  const multipartUpload = multer({
+    storage: multer.memoryStorage(),
+    limits: {
+      fileSize: readImageMaxUploadBytes(),
+    },
+  });
   const loginRateLimiter = createAuthRateLimiter({
     maxEnvVar: "AUTH_LOGIN_RATE_LIMIT_MAX",
     defaultMax: 5,
@@ -131,7 +157,62 @@ export function createAuthRouter() {
     }
   });
 
+  router.patch("/me/picture", requireAuthenticatedUser, multipartUpload.single("file"), async (request, response) => {
+    try {
+      const authenticatedUser = ensureAuthenticatedUser(response);
+
+      if (!request.file) {
+        throw new ValidationError([
+          {
+            field: "file",
+            message: "file is required",
+          },
+        ]);
+      }
+
+      if (!SUPPORTED_IMAGE_TYPES.has(request.file.mimetype)) {
+        throw new ValidationError([
+          {
+            field: "file",
+            message: "file must be a JPEG, PNG, or WebP image",
+          },
+        ]);
+      }
+
+      const user = await (input.userPictureService ?? createUserPictureService()).updatePicture({
+        userId: authenticatedUser.id,
+        mimeType: request.file.mimetype,
+        bytes: request.file.buffer,
+      });
+
+      response.status(200).json(user);
+    } catch (error) {
+      handleAuthError(error, response);
+    }
+  });
+
+  router.delete("/me/picture", requireAuthenticatedUser, async (_request, response) => {
+    try {
+      const authenticatedUser = ensureAuthenticatedUser(response);
+      const user = await (input.userPictureService ?? createUserPictureService()).removePicture(authenticatedUser.id);
+
+      response.status(200).json(user);
+    } catch (error) {
+      handleAuthError(error, response);
+    }
+  });
+
   return router;
+}
+
+function ensureAuthenticatedUser(response: { locals: AuthRouterLocals }) {
+  const authenticatedUser = response.locals.authenticatedUser;
+
+  if (!authenticatedUser) {
+    throw new UnauthorizedError();
+  }
+
+  return authenticatedUser;
 }
 
 async function writeAuditLogSafely(

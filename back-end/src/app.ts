@@ -3,6 +3,11 @@ import cors from "cors";
 import helmet from "helmet";
 
 import { createAuthRouter } from "./modules/auth/presentation/http/auth-router";
+import {
+  createUserPictureService,
+  type UserPictureImageProcessor,
+  type UserPictureStorage,
+} from "./modules/auth/composition/auth-module";
 import { createAdminUserRouter } from "./modules/admin/presentation/http/admin-user-router";
 import { createBookRouter } from "./modules/books/presentation/http/book-router";
 import { createListRouter } from "./modules/lists/presentation/http/list-router";
@@ -17,6 +22,8 @@ import type { BookCoverStorage } from "./modules/books/application/book-service.
 type AppDependencies = {
   bookCoverUploadService?: BookCoverUploadService;
   bookCoverStorage?: BookCoverStorage;
+  userPictureImageProcessor?: UserPictureImageProcessor;
+  userPictureStorage?: UserPictureStorage;
 };
 
 export function createApp(dependencies: AppDependencies = {}) {
@@ -26,7 +33,7 @@ export function createApp(dependencies: AppDependencies = {}) {
   app.use(helmet());
   app.use(cors(createCorsOptions()));
   app.use(express.json());
-  app.use("/auth", createAuthRouter());
+  app.use("/auth", createAuthRouter(createAuthRouterDependencies(dependencies)));
   app.use("/admin", createAdminUserRouter());
   app.use("/admin", createAdminLogRouter());
   app.use("/books", createBookRouter(createBookService({
@@ -51,5 +58,18 @@ function createCorsOptions(): cors.CorsOptions {
     methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     optionsSuccessStatus: 204,
+  };
+}
+
+function createAuthRouterDependencies(dependencies: AppDependencies) {
+  if (!dependencies.userPictureImageProcessor && !dependencies.userPictureStorage) {
+    return {};
+  }
+
+  return {
+    userPictureService: createUserPictureService({
+      userPictureImageProcessor: dependencies.userPictureImageProcessor,
+      userPictureStorage: dependencies.userPictureStorage,
+    }),
   };
 }

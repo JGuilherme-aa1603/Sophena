@@ -27,15 +27,16 @@ enum HttpMethod {
 }
 
 model User {
-  id            String      @id @default(uuid()) @db.Uuid
-  user_name     String      @unique
-  password_hash String
-  created_at    DateTime    @default(now())
-  updated_at    DateTime    @updatedAt
+  id               String      @id @default(uuid()) @db.Uuid
+  user_name        String      @unique
+  password_hash    String
+  user_picture_url String?
+  created_at       DateTime    @default(now())
+  updated_at       DateTime    @updatedAt
 
-  admin         Admin?
-  book_lists    BookList[]
-  logs          Log[]
+  admin          Admin?
+  book_lists     BookList[]
+  logs           Log[]
   refresh_tokens RefreshToken[]
 
   @@index([user_name])

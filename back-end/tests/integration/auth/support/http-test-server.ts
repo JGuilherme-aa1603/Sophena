@@ -49,7 +49,7 @@ type JsonRequestOptions = {
 };
 
 type MultipartRequestOptions = {
-  method: "POST";
+  method: "POST" | "PATCH";
   path: string;
   headers?: Record<string, string>;
   fields?: Record<string, string>;

@@ -54,6 +54,7 @@ describe("POST /auth/login", () => {
     assert.equal(response.body.user.user_name, "leitora-normal");
     assert.equal(response.body.user.is_admin, false);
     assert.equal(response.body.user.id, user.id);
+    assert.equal(response.body.user.user_picture_url, null);
     assert.equal("refresh_token" in response.body, false);
 
     const setCookieHeader = response.headers.get("set-cookie");
