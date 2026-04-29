@@ -80,7 +80,7 @@ describe('ListDetailView', () => {
     expect(bookCards).toHaveLength(2)
     const firstCover = bookCards[0]!.get('[data-testid="book-card-cover-image"]')
     expect(firstCover.attributes('src')).toBe('https://example.com/capas/primeiro-livro.webp')
-    expect(firstCover.attributes('alt')).toBe('Capa do livro Primeiro livro')
+    expect(firstCover.attributes('alt')).toBe('Primeiro livro')
     expect(bookCards[0]!.get('[data-testid="book-card-position"]').text()).toBe('1')
     expect(wrapper.get('[data-testid="books-layout-comfortable"]').attributes('aria-pressed')).toBe('true')
     expect(wrapper.get('[data-testid="books-list"]').classes()).toContain('items-list--comfortable')

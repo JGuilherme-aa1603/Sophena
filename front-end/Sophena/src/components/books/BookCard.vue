@@ -17,7 +17,7 @@ const props = withDefaults(defineProps<{
 })
 
 const slots = useSlots()
-const resolvedCoverAlt = computed(() => props.coverAlt ?? `Capa do livro ${props.title}`)
+const resolvedCoverAlt = computed(() => props.coverAlt ?? `${props.title}`)
 const hasActions = computed(() => Boolean(slots.actions))
 const useOverlayControls = computed(() => props.layout === 'compact')
 </script>

@@ -18,7 +18,7 @@ describe('BookCard', () => {
     const image = wrapper.get('[data-testid="book-card-cover-image"]')
 
     expect(image.attributes('src')).toBe('https://example.com/capas/dom-casmurro.webp')
-    expect(image.attributes('alt')).toBe('Capa do livro Dom Casmurro')
+    expect(image.attributes('alt')).toBe('Dom Casmurro')
     expect(wrapper.get('[data-testid="book-card"]').classes()).toContain('book-card--comfortable')
   })
 
