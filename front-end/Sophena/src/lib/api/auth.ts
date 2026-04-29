@@ -3,6 +3,7 @@ import { requestJson } from './http'
 export type AuthenticatedUser = {
   id: string
   user_name: string
+  user_picture_url?: string | null
   is_admin: boolean
 }
 
@@ -50,6 +51,28 @@ export async function refreshRequest() {
 export async function logoutRequest(accessToken: string) {
   return requestJson<LogoutResponse>('/auth/logout', {
     method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  })
+}
+
+export async function updateUserPictureRequest(accessToken: string, file: File) {
+  const formData = new FormData()
+  formData.append('file', file)
+
+  return requestJson<AuthenticatedUser>('/auth/me/picture', {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: formData,
+  })
+}
+
+export async function removeUserPictureRequest(accessToken: string) {
+  return requestJson<AuthenticatedUser>('/auth/me/picture', {
+    method: 'DELETE',
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },

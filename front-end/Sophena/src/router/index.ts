@@ -14,6 +14,7 @@ import BooksView from '../views/BooksView.vue'
 import ListsView from '../views/ListsView.vue'
 import ListDetailView from '../views/ListDetailView.vue'
 import LoginView from '../views/LoginView.vue'
+import ProfileView from '../views/ProfileView.vue'
 
 function isGuestOnlyRoute(route: RouteLocationNormalized) {
   return route.matched.some((record) => record.meta.guestOnly === true)
@@ -63,6 +64,14 @@ export function createAppRouter(history: RouterHistory) {
         path: '/app/books',
         name: 'books',
         component: BooksView,
+        meta: {
+          requiresAuth: true,
+        },
+      },
+      {
+        path: '/app/profile',
+        name: 'profile',
+        component: ProfileView,
         meta: {
           requiresAuth: true,
         },

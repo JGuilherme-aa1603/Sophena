@@ -2,7 +2,14 @@ import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 
 import type { AuthenticatedUser } from '@/lib/api/auth'
-import { loginRequest, logoutRequest, meRequest, refreshRequest } from '@/lib/api/auth'
+import {
+  loginRequest,
+  logoutRequest,
+  meRequest,
+  refreshRequest,
+  removeUserPictureRequest,
+  updateUserPictureRequest,
+} from '@/lib/api/auth'
 import { ApiError } from '@/lib/api/http'
 
 function extractFieldNames(body: unknown) {
@@ -52,11 +59,20 @@ function mapLogoutError() {
   return 'Não foi possível sair agora. Tente novamente em instantes.'
 }
 
+function mapUpdatePictureError() {
+  return 'Não foi possível alterar a foto agora. Tente novamente em instantes.'
+}
+
+function mapRemovePictureError() {
+  return 'Não foi possível remover a foto agora. Tente novamente em instantes.'
+}
+
 export const useAuthStore = defineStore('auth', () => {
   const accessToken = ref<string | null>(null)
   const user = ref<AuthenticatedUser | null>(null)
   const errorMessage = ref('')
   const isLoading = ref(false)
+  const isUpdatingPicture = ref(false)
   const hasResolvedSession = ref(false)
 
   const isAuthenticated = computed(() => Boolean(accessToken.value && user.value))
@@ -183,18 +199,65 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  async function updateUserPicture(file: File) {
+    if (!accessToken.value || !user.value) {
+      clearSession()
+      errorMessage.value = 'Sua sessão expirou. Entre novamente.'
+      throw new Error('Authentication required')
+    }
+
+    isUpdatingPicture.value = true
+    errorMessage.value = ''
+
+    try {
+      user.value = await updateUserPictureRequest(accessToken.value, file)
+      errorMessage.value = ''
+      return user.value
+    } catch (error) {
+      errorMessage.value = mapUpdatePictureError()
+      throw error
+    } finally {
+      isUpdatingPicture.value = false
+    }
+  }
+
+  async function removeUserPicture() {
+    if (!accessToken.value || !user.value) {
+      clearSession()
+      errorMessage.value = 'Sua sessão expirou. Entre novamente.'
+      throw new Error('Authentication required')
+    }
+
+    isUpdatingPicture.value = true
+    errorMessage.value = ''
+
+    try {
+      user.value = await removeUserPictureRequest(accessToken.value)
+      errorMessage.value = ''
+      return user.value
+    } catch (error) {
+      errorMessage.value = mapRemovePictureError()
+      throw error
+    } finally {
+      isUpdatingPicture.value = false
+    }
+  }
+
   return {
     accessToken,
     user,
     errorMessage,
     isLoading,
+    isUpdatingPicture,
     isAuthenticated,
     clearSession,
     ensureSession,
     fetchCurrentUser,
     login,
     logout,
+    removeUserPicture,
     restoreSessionFromRefreshCookie,
     setAccessToken,
+    updateUserPicture,
   }
 })

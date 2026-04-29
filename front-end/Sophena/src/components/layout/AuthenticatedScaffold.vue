@@ -1,12 +1,10 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import { IonContent, IonPage } from '@ionic/vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import AppToast from '@/components/feedback/AppToast.vue'
-import AppConfirmSheet from '@/components/overlay/AppConfirmSheet.vue'
 import { useAuthStore } from '@/stores/auth'
-import { useToastStore } from '@/stores/toast'
 
 import AuthenticatedDock from './AuthenticatedDock.vue'
 import { useViewportBottomOffset } from './viewport-bottom-offset'
@@ -20,14 +18,14 @@ const props = withDefaults(defineProps<{
 })
 
 const authStore = useAuthStore()
-const toastStore = useToastStore()
 const route = useRoute()
 const router = useRouter()
-const isLogoutConfirmOpen = ref(false)
 
 const shellStyle = computed(() => ({ '--app-shell-width': props.shellWidth }))
 const activeRoute = computed(() => String(route.name ?? ''))
 const showAdmin = computed(() => Boolean(authStore.user?.is_admin))
+const userName = computed(() => authStore.user?.user_name ?? '')
+const userPictureUrl = computed(() => authStore.user?.user_picture_url ?? null)
 const { viewportStyle } = useViewportBottomOffset()
 
 async function navigateFromDock(target: 'app-home' | 'books' | 'admin-home') {
@@ -38,19 +36,12 @@ async function navigateFromDock(target: 'app-home' | 'books' | 'admin-home') {
   await router.push({ name: target })
 }
 
-function requestLogoutFromDock() {
-  isLogoutConfirmOpen.value = true
-}
-
-async function logoutFromDock() {
-  try {
-    await authStore.logout()
-    isLogoutConfirmOpen.value = false
-    await router.replace('/login')
-  } catch {
-    isLogoutConfirmOpen.value = false
-    toastStore.showError(authStore.errorMessage || 'Não foi possível sair agora.')
+async function openProfileFromDock() {
+  if (activeRoute.value === 'profile') {
+    return
   }
+
+  await router.push({ name: 'profile' })
 }
 </script>
 
@@ -65,22 +56,13 @@ async function logoutFromDock() {
 
       <AppToast />
 
-      <AppConfirmSheet
-        v-model="isLogoutConfirmOpen"
-        title="Sair da sessão?"
-        message="Você precisará entrar novamente para usar o Sophena."
-        confirm-label="Sair"
-        cancel-label="Continuar aqui"
-        tone="danger"
-        panel-testid="logout-confirm-sheet"
-        @confirm="logoutFromDock"
-      />
-
       <AuthenticatedDock
         :active-route="activeRoute"
         :show-admin="showAdmin"
+        :user-name="userName"
+        :user-picture-url="userPictureUrl"
         @navigate="navigateFromDock"
-        @logout="requestLogoutFromDock"
+        @profile="openProfileFromDock"
       />
     </IonContent>
   </IonPage>
@@ -103,5 +85,4 @@ async function logoutFromDock() {
   display: grid;
   gap: var(--space-lg);
 }
-
 </style>

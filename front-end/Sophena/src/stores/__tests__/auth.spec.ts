@@ -36,6 +36,7 @@ describe('auth store', () => {
           user: {
             id: 'user-1',
             user_name: 'leitora',
+            user_picture_url: null,
             is_admin: false,
           },
         },
@@ -53,6 +54,7 @@ describe('auth store', () => {
     expect(authStore.user).toEqual({
       id: 'user-1',
       user_name: 'leitora',
+      user_picture_url: null,
       is_admin: false,
     })
     expect(localStorage.getItem('access_token')).toBeNull()
@@ -74,6 +76,7 @@ describe('auth store', () => {
         body: {
           id: 'user-2',
           user_name: 'admin',
+          user_picture_url: 'https://cdn.sophena.test/user-pictures/admin.webp',
           is_admin: true,
         },
       }))
@@ -89,6 +92,7 @@ describe('auth store', () => {
     expect(authStore.user).toEqual({
       id: 'user-2',
       user_name: 'admin',
+      user_picture_url: 'https://cdn.sophena.test/user-pictures/admin.webp',
       is_admin: true,
     })
     expect(fetchMock).toHaveBeenCalledWith(
@@ -120,6 +124,7 @@ describe('auth store', () => {
     authStore.user = {
       id: 'user-3',
       user_name: 'leitora-expirada',
+      user_picture_url: null,
       is_admin: false,
     }
 
@@ -170,6 +175,7 @@ describe('auth store', () => {
         body: {
           id: 'user-9',
           user_name: 'leitora-persistida',
+          user_picture_url: null,
           is_admin: false,
         },
       }))
@@ -184,6 +190,7 @@ describe('auth store', () => {
     expect(authStore.user).toEqual({
       id: 'user-9',
       user_name: 'leitora-persistida',
+      user_picture_url: null,
       is_admin: false,
     })
     expect(localStorage.getItem('access_token')).toBeNull()
@@ -244,6 +251,7 @@ describe('auth store', () => {
     authStore.user = {
       id: 'user-10',
       user_name: 'leitora-ativa',
+      user_picture_url: null,
       is_admin: false,
     }
 
@@ -281,6 +289,7 @@ describe('auth store', () => {
     authStore.user = {
       id: 'user-11',
       user_name: 'leitora-com-erro',
+      user_picture_url: null,
       is_admin: false,
     }
 
@@ -290,8 +299,137 @@ describe('auth store', () => {
     expect(authStore.user).toEqual({
       id: 'user-11',
       user_name: 'leitora-com-erro',
+      user_picture_url: null,
       is_admin: false,
     })
     expect(authStore.errorMessage).toBe('Não foi possível sair agora. Tente novamente em instantes.')
+  })
+
+  it('altera a foto do usuário autenticado e atualiza a sessão em memória', async () => {
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(createJsonResponse({
+        status: 200,
+        body: {
+          id: 'user-12',
+          user_name: 'leitora-com-foto',
+          user_picture_url: 'https://cdn.sophena.test/user-pictures/nova.webp',
+          is_admin: false,
+        },
+      }))
+
+    vi.stubGlobal('fetch', fetchMock)
+
+    const authStore = useAuthStore()
+    authStore.setAccessToken('token-valido')
+    authStore.user = {
+      id: 'user-12',
+      user_name: 'leitora-com-foto',
+      user_picture_url: null,
+      is_admin: false,
+    }
+
+    await authStore.updateUserPicture(new File(['foto'], 'foto.png', { type: 'image/png' }))
+
+    expect(authStore.user?.user_picture_url).toBe('https://cdn.sophena.test/user-pictures/nova.webp')
+    expect(authStore.errorMessage).toBe('')
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining('/auth/me/picture'),
+      expect.objectContaining({
+        method: 'PATCH',
+      }),
+    )
+  })
+
+  it('remove a foto do usuário autenticado e mantém a sessão ativa', async () => {
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(createJsonResponse({
+        status: 200,
+        body: {
+          id: 'user-13',
+          user_name: 'leitora-sem-foto',
+          user_picture_url: null,
+          is_admin: false,
+        },
+      }))
+
+    vi.stubGlobal('fetch', fetchMock)
+
+    const authStore = useAuthStore()
+    authStore.setAccessToken('token-valido')
+    authStore.user = {
+      id: 'user-13',
+      user_name: 'leitora-sem-foto',
+      user_picture_url: 'https://cdn.sophena.test/user-pictures/atual.webp',
+      is_admin: false,
+    }
+
+    await authStore.removeUserPicture()
+
+    expect(authStore.user?.user_picture_url).toBeNull()
+    expect(authStore.accessToken).toBe('token-valido')
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining('/auth/me/picture'),
+      expect.objectContaining({
+        method: 'DELETE',
+      }),
+    )
+  })
+
+  it('mantém a foto atual e mostra mensagem amigável quando a alteração falha', async () => {
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(createJsonResponse({
+        status: 500,
+        body: {
+          message: 'Internal server error',
+        },
+      }))
+
+    vi.stubGlobal('fetch', fetchMock)
+
+    const authStore = useAuthStore()
+    authStore.setAccessToken('token-valido')
+    authStore.user = {
+      id: 'user-14',
+      user_name: 'leitora-erro-foto',
+      user_picture_url: 'https://cdn.sophena.test/user-pictures/atual.webp',
+      is_admin: false,
+    }
+
+    await expect(
+      authStore.updateUserPicture(new File(['foto'], 'foto.png', { type: 'image/png' })),
+    ).rejects.toThrow()
+
+    expect(authStore.user?.user_picture_url).toBe('https://cdn.sophena.test/user-pictures/atual.webp')
+    expect(authStore.errorMessage).toBe('Não foi possível alterar a foto agora. Tente novamente em instantes.')
+  })
+
+  it('mantém a foto atual e mostra mensagem amigável quando a remoção falha', async () => {
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(createJsonResponse({
+        status: 500,
+        body: {
+          message: 'Internal server error',
+        },
+      }))
+
+    vi.stubGlobal('fetch', fetchMock)
+
+    const authStore = useAuthStore()
+    authStore.setAccessToken('token-valido')
+    authStore.user = {
+      id: 'user-15',
+      user_name: 'leitora-erro-remocao',
+      user_picture_url: 'https://cdn.sophena.test/user-pictures/atual.webp',
+      is_admin: false,
+    }
+
+    await expect(authStore.removeUserPicture()).rejects.toThrow()
+
+    expect(authStore.user?.user_picture_url).toBe('https://cdn.sophena.test/user-pictures/atual.webp')
+    expect(authStore.errorMessage).toBe('Não foi possível remover a foto agora. Tente novamente em instantes.')
   })
 })

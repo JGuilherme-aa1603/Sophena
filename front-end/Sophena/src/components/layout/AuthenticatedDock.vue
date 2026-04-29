@@ -1,21 +1,25 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { IonIcon } from '@ionic/vue'
-import { bookOutline, libraryOutline, logOutOutline, settingsOutline } from 'ionicons/icons'
+import { bookOutline, libraryOutline, settingsOutline } from 'ionicons/icons'
 
 const props = defineProps<{
   activeRoute: string
   showAdmin: boolean
+  userName: string
+  userPictureUrl: string | null
 }>()
 
 const emit = defineEmits<{
   navigate: [target: 'app-home' | 'books' | 'admin-home']
-  logout: []
+  profile: []
 }>()
 
 const isListsActive = computed(() => props.activeRoute === 'app-home' || props.activeRoute === 'list-detail')
 const isBooksActive = computed(() => props.activeRoute === 'books')
 const isAdminActive = computed(() => props.activeRoute.startsWith('admin-'))
+const isProfileActive = computed(() => props.activeRoute === 'profile')
+const profileInitial = computed(() => props.userName.trim().slice(0, 1).toUpperCase() || 'U')
 
 function clearPointerFocus(event: MouseEvent) {
   if (event.detail <= 0) {
@@ -34,9 +38,9 @@ function navigateFromDock(event: MouseEvent, target: 'app-home' | 'books' | 'adm
   emit('navigate', target)
 }
 
-function logoutFromDock(event: MouseEvent) {
+function openProfileFromDock(event: MouseEvent) {
   clearPointerFocus(event)
-  emit('logout')
+  emit('profile')
 }
 
 </script>
@@ -97,17 +101,29 @@ function logoutFromDock(event: MouseEvent) {
 
     <button
       type="button"
-      class="dock-link dock-link--danger"
-      data-testid="dock-action-logout"
-      @click="logoutFromDock"
+      class="dock-link dock-link--profile"
+      :class="{ 'dock-link--active': isProfileActive }"
+      :aria-current="isProfileActive ? 'page' : undefined"
+      data-testid="dock-action-profile"
+      @click="openProfileFromDock"
     >
-      <IonIcon
-        class="dock-link-icon"
-        :icon="logOutOutline"
-        aria-hidden="true"
-        data-testid="dock-icon-logout"
-      />
-      <span class="dock-link-label">Sair</span>
+      <span class="dock-profile-avatar">
+        <img
+          v-if="userPictureUrl"
+          class="dock-profile-image"
+          :src="userPictureUrl"
+          :alt="`Foto de perfil de ${userName}`"
+          data-testid="dock-profile-image"
+        >
+        <span
+          v-else
+          class="dock-profile-fallback"
+          data-testid="dock-profile-fallback"
+        >
+          {{ profileInitial }}
+        </span>
+      </span>
+      <span class="dock-link-label">Perfil</span>
     </button>
   </nav>
 </template>
@@ -184,14 +200,34 @@ function logoutFromDock(event: MouseEvent) {
   box-shadow: var(--shadow-md);
 }
 
-.dock-link--danger {
-  color: var(--color-danger);
+.dock-link--profile {
   flex: 0.78;
   font-weight: 600;
 }
 
-.dock-link--danger:active {
-  background: rgba(217, 83, 79, 0.12);
+.dock-profile-avatar {
+  width: 1.45rem;
+  height: 1.45rem;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid rgba(53, 95, 74, 0.18);
+  border-radius: 999px;
+  background: rgba(53, 95, 74, 0.1);
+  color: var(--color-primary);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.dock-profile-image {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.dock-profile-fallback {
+  line-height: 1;
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -199,8 +235,8 @@ function logoutFromDock(event: MouseEvent) {
     background: rgba(53, 95, 74, 0.08);
   }
 
-  .dock-link--danger:hover {
-    background: rgba(217, 83, 79, 0.08);
+  .dock-link--profile:hover {
+    background: rgba(53, 95, 74, 0.08);
   }
 }
 

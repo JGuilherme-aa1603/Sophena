@@ -20,6 +20,7 @@ describe('AuthenticatedScaffold', () => {
     authStore.user = {
       id: 'user-1',
       user_name: 'leitora',
+      user_picture_url: null,
       is_admin: false,
     }
 
@@ -48,12 +49,9 @@ describe('AuthenticatedScaffold', () => {
     expect(wrapper.find('[data-testid="authenticated-dock"]').exists()).toBe(true)
   })
 
-  it('pede confirmação antes de encerrar a sessão pelo dock', async () => {
+  it('abre a tela de perfil pelo dock', async () => {
     const router = createAppRouter(createMemoryHistory())
-    const authStore = authenticate()
-    const logoutSpy = vi.spyOn(authStore, 'logout').mockImplementation(async () => {
-      authStore.clearSession()
-    })
+    authenticate()
 
     await router.push('/app')
     const wrapper = mount(AuthenticatedScaffold, {
@@ -66,17 +64,10 @@ describe('AuthenticatedScaffold', () => {
     })
 
     await router.isReady()
-    await wrapper.get('[data-testid="dock-action-logout"]').trigger('click')
-
-    expect(wrapper.get('[data-testid="logout-confirm-sheet"]').text()).toContain('Sair da sessão?')
-    expect(wrapper.get('[data-testid="logout-confirm-sheet"]').text()).toContain('Você precisará entrar novamente para usar o Sophena.')
-    expect(logoutSpy).not.toHaveBeenCalled()
-
-    await wrapper.get('[data-testid="confirm-sheet-confirm"]').trigger('click')
+    await wrapper.get('[data-testid="dock-action-profile"]').trigger('click')
     await flushPromises()
 
-    expect(logoutSpy).toHaveBeenCalledTimes(1)
-    expect(router.currentRoute.value.name).toBe('login')
+    expect(router.currentRoute.value.name).toBe('profile')
   })
 
   it('expõe uma folga inferior extra quando a viewport visual do mobile fica reduzida', async () => {

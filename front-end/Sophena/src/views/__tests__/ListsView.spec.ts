@@ -357,14 +357,11 @@ describe('ListsView', () => {
     expect(router.currentRoute.value.name).toBe('admin-home')
   })
 
-  it('faz logout pela API antes de redirecionar para o login', async () => {
+  it('abre a tela de perfil pelo dock', async () => {
     const router = createAppRouter(createMemoryHistory())
-    const authStore = authenticateUser()
+    authenticateUser()
     const listsStore = useListsStore()
     vi.spyOn(listsStore, 'fetchLists').mockResolvedValue()
-    const logoutSpy = vi.spyOn(authStore, 'logout').mockImplementation(async () => {
-      authStore.clearSession()
-    })
     await router.push('/app')
 
     const wrapper = mount(ListsView, {
@@ -374,37 +371,9 @@ describe('ListsView', () => {
     })
 
     await router.isReady()
-    await wrapper.get('[data-testid="dock-action-logout"]').trigger('click')
-    await wrapper.get('[data-testid="confirm-sheet-confirm"]').trigger('click')
+    await wrapper.get('[data-testid="dock-action-profile"]').trigger('click')
     await flushPromises()
 
-    expect(logoutSpy).toHaveBeenCalledTimes(1)
-    expect(router.currentRoute.value.name).toBe('login')
-  })
-
-  it('mostra erro amigável e não redireciona quando o logout falha', async () => {
-    const router = createAppRouter(createMemoryHistory())
-    const authStore = authenticateUser()
-    const listsStore = useListsStore()
-    vi.spyOn(listsStore, 'fetchLists').mockResolvedValue()
-    vi.spyOn(authStore, 'logout').mockImplementation(async () => {
-      authStore.errorMessage = 'Não foi possível sair agora. Tente novamente em instantes.'
-      throw new Error('falha')
-    })
-    await router.push('/app')
-
-    const wrapper = mount(ListsView, {
-      global: {
-        plugins: [router],
-      },
-    })
-
-    await router.isReady()
-    await wrapper.get('[data-testid="dock-action-logout"]').trigger('click')
-    await wrapper.get('[data-testid="confirm-sheet-confirm"]').trigger('click')
-    await flushPromises()
-
-    expect(router.currentRoute.value.name).toBe('app-home')
-    expect(wrapper.text()).toContain('Não foi possível sair agora. Tente novamente em instantes.')
+    expect(router.currentRoute.value.name).toBe('profile')
   })
 })
