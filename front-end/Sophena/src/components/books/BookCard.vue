@@ -139,6 +139,9 @@ const hasActions = computed(() => Boolean(slots.actions))
   height: 6.65rem;
   display: grid;
   place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border-radius: var(--radius-sm);
   overflow: hidden;
   background:

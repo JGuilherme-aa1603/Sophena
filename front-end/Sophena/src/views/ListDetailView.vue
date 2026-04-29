@@ -926,10 +926,10 @@ async function confirmMove(itemId: string) {
 
 .options-button--icon-only {
   --border-radius: 999px;
-  --padding-start: 0.4rem;
-  --padding-end: 0.4rem;
-  min-width: 2.35rem;
-  min-height: 2.35rem;
+  --padding-start: 0.32rem;
+  --padding-end: 0.32rem;
+  min-width: 2.2rem;
+  min-height: 2.2rem;
   border: 1px solid rgba(95, 111, 102, 0.22);
   border-radius: 999px;
   background: rgba(243, 242, 239, 0.68);
