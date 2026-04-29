@@ -7,6 +7,7 @@ import ListDetailView from '../ListDetailView.vue'
 import { createAppRouter } from '@/router'
 import { useAuthStore } from '@/stores/auth'
 import { useListDetailStore } from '@/stores/list-detail'
+import { useListsStore } from '@/stores/lists'
 
 describe('ListDetailView', () => {
   function authenticateUser() {
@@ -84,6 +85,78 @@ describe('ListDetailView', () => {
     expect(bookCards[0]!.get('[data-testid="book-card-position"]').text()).toBe('1')
     expect(wrapper.get('[data-testid="books-layout-comfortable"]').attributes('aria-pressed')).toBe('true')
     expect(wrapper.get('[data-testid="books-list"]').classes()).toContain('items-list--comfortable')
+  })
+
+  it('recarrega os dados quando a pessoa troca para outra lista na mesma tela', async () => {
+    const router = createAppRouter(createMemoryHistory())
+    authenticateUser()
+    const store = useListDetailStore()
+    const fetchListDetailSpy = vi.spyOn(store, 'fetchListDetail').mockImplementation(async (listId) => {
+      store.list = {
+        id: listId,
+        name: listId === 'lista-2' ? 'Lidos' : 'Quero ler',
+      }
+      store.items = []
+    })
+
+    await router.push('/app/lists/lista-1')
+
+    const wrapper = mount(ListDetailView, {
+      global: {
+        plugins: [router],
+      },
+    })
+
+    await router.isReady()
+    await flushPromises()
+    expect(wrapper.text()).toContain('Quero ler')
+
+    await router.push('/app/lists/lista-2')
+    await flushPromises()
+
+    expect(fetchListDetailSpy).toHaveBeenLastCalledWith('lista-2')
+    expect(wrapper.text()).toContain('Lidos')
+    expect(wrapper.text()).not.toContain('Quero ler')
+  })
+
+  it('mostra o nome da nova lista sem esperar o carregamento dos livros terminar', async () => {
+    const router = createAppRouter(createMemoryHistory())
+    authenticateUser()
+    const listsStore = useListsStore()
+    listsStore.items = [
+      {
+        id: 'lista-1',
+        name: 'Quero ler',
+        created_at: '2026-01-01T10:00:00.000Z',
+        updated_at: '2026-01-01T10:00:00.000Z',
+      },
+      {
+        id: 'lista-2',
+        name: 'Lidos',
+        created_at: '2026-01-01T11:00:00.000Z',
+        updated_at: '2026-01-01T11:00:00.000Z',
+      },
+    ]
+    const store = useListDetailStore()
+    store.list = {
+      id: 'lista-1',
+      name: 'Quero ler',
+    }
+    vi.spyOn(store, 'fetchListDetail').mockImplementation(() => new Promise(() => {}))
+
+    await router.push('/app/lists/lista-2')
+
+    const wrapper = mount(ListDetailView, {
+      global: {
+        plugins: [router],
+      },
+    })
+
+    await router.isReady()
+    await flushPromises()
+
+    expect(wrapper.get('.app-page-title').text()).toBe('Lidos')
+    expect(wrapper.text()).not.toContain('Quero ler')
   })
 
   it('permite alternar para o layout compacto e salva a preferência', async () => {

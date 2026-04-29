@@ -118,6 +118,7 @@ function trimOptionalCoverUrl(coverUrl: string | undefined) {
 
 export const useListDetailStore = defineStore('list-detail', () => {
   const authStore = useAuthStore()
+  let fetchListDetailRequestId = 0
   const list = ref<ListDetail | null>(null)
   const items = ref<ListItem[]>([])
   const availableLists = ref<UserList[]>([])
@@ -133,6 +134,8 @@ export const useListDetailStore = defineStore('list-detail', () => {
   const feedbackMessage = ref('')
 
   async function fetchListDetail(listId: string) {
+    const requestId = ++fetchListDetailRequestId
+
     if (!authStore.accessToken || !listId) {
       list.value = null
       items.value = []
@@ -146,14 +149,24 @@ export const useListDetailStore = defineStore('list-detail', () => {
 
     try {
       const response = await fetchListItemsRequest(authStore.accessToken, listId)
+      if (requestId !== fetchListDetailRequestId) {
+        return
+      }
+
       list.value = response.list
       items.value = sortItemsByPosition(response.items)
     } catch (error) {
+      if (requestId !== fetchListDetailRequestId) {
+        return
+      }
+
       list.value = null
       items.value = []
       errorMessage.value = mapFetchListDetailError(error)
     } finally {
-      isLoading.value = false
+      if (requestId === fetchListDetailRequestId) {
+        isLoading.value = false
+      }
     }
   }
 

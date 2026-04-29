@@ -96,6 +96,83 @@ describe('list detail store', () => {
     )
   })
 
+  it('mantém na tela a lista aberta por último quando carregamentos terminam fora de ordem', async () => {
+    let resolveFirstRequest: (response: Response) => void = () => {}
+    let resolveSecondRequest: (response: Response) => void = () => {}
+    const firstRequest = new Promise<Response>((resolve) => {
+      resolveFirstRequest = resolve
+    })
+    const secondRequest = new Promise<Response>((resolve) => {
+      resolveSecondRequest = resolve
+    })
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockReturnValueOnce(firstRequest)
+      .mockReturnValueOnce(secondRequest)
+
+    vi.stubGlobal('fetch', fetchMock)
+    authenticateUser()
+
+    const store = useListDetailStore()
+    const firstLoad = store.fetchListDetail('lista-1')
+    const secondLoad = store.fetchListDetail('lista-2')
+
+    resolveSecondRequest(createJsonResponse({
+      status: 200,
+      body: {
+        list: {
+          id: 'lista-2',
+          name: 'Lidos',
+        },
+        items: [
+          {
+            id: 'item-2',
+            book_list_item_id: 'item-2',
+            position: 1,
+            book: {
+              id: 'book-2',
+              title: 'Livro da segunda lista',
+              author: 'Autora B',
+              cover_url: null,
+            },
+          },
+        ],
+      },
+    }))
+    await secondLoad
+
+    resolveFirstRequest(createJsonResponse({
+      status: 200,
+      body: {
+        list: {
+          id: 'lista-1',
+          name: 'Quero ler',
+        },
+        items: [
+          {
+            id: 'item-1',
+            book_list_item_id: 'item-1',
+            position: 1,
+            book: {
+              id: 'book-1',
+              title: 'Livro antigo',
+              author: 'Autora A',
+              cover_url: null,
+            },
+          },
+        ],
+      },
+    }))
+    await firstLoad
+
+    expect(store.list).toMatchObject({
+      id: 'lista-2',
+      name: 'Lidos',
+    })
+    expect(store.items.map((item) => item.book.title)).toEqual(['Livro da segunda lista'])
+    expect(store.isLoading).toBe(false)
+  })
+
   it('remove um livro da lista e mostra retorno amigável', async () => {
     const fetchMock = vi
       .fn<typeof fetch>()

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { IonButton, IonCard, IonCardContent, IonIcon, IonSpinner } from '@ionic/vue'
 import {
   addCircleOutline,
@@ -18,11 +18,13 @@ import AuthenticatedScaffold from '@/components/layout/AuthenticatedScaffold.vue
 import AppConfirmSheet from '@/components/overlay/AppConfirmSheet.vue'
 import ResponsiveSheetModal from '@/components/overlay/ResponsiveSheetModal.vue'
 import { useListDetailStore } from '@/stores/list-detail'
+import { useListsStore } from '@/stores/lists'
 import { useToastStore } from '@/stores/toast'
 
 const router = useRouter()
 const route = useRoute()
 const listDetailStore = useListDetailStore()
+const listsStore = useListsStore()
 const toastStore = useToastStore()
 const BOOKS_LAYOUT_STORAGE_KEY = 'sophena:list-books-layout'
 
@@ -57,7 +59,13 @@ const listId = computed(() => {
   return ''
 })
 
-const pageTitle = computed(() => listDetailStore.list?.name ?? 'Sua lista')
+const pageTitle = computed(() => {
+  if (listDetailStore.list?.id === listId.value) {
+    return listDetailStore.list.name
+  }
+
+  return listsStore.items.find((availableList) => availableList.id === listId.value)?.name ?? 'Sua lista'
+})
 const bookCountLabel = computed(() => {
   const total = listDetailStore.items.length
   return total === 1 ? '1 livro' : `${total} livros`
@@ -141,8 +149,15 @@ const manualCoverStatus = computed(() => {
 
 onMounted(async () => {
   booksLayout.value = readSavedBooksLayout()
-  await listDetailStore.fetchListDetail(listId.value)
 })
+
+watch(
+  listId,
+  async (nextListId) => {
+    await listDetailStore.fetchListDetail(nextListId)
+  },
+  { immediate: true },
+)
 
 async function goBack() {
   await router.push('/app')
