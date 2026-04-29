@@ -7,6 +7,9 @@ const toastStore = useToastStore()
 
 const currentToast = computed(() => toastStore.current)
 const toastRole = computed(() => currentToast.value?.tone === 'error' ? 'alert' : 'status')
+const toastStyle = computed(() => ({
+  zIndex: '45',
+}))
 const toastLabel = computed(() => {
   const tone = currentToast.value?.tone
 
@@ -27,6 +30,7 @@ function toneClass(tone: ToastTone) {
       class="app-toast"
       :class="toneClass(currentToast.tone)"
       :role="toastRole"
+      :style="toastStyle"
       aria-live="polite"
       data-testid="app-toast"
     >
@@ -52,8 +56,7 @@ function toneClass(tone: ToastTone) {
 .app-toast {
   position: fixed;
   left: 50%;
-  bottom: calc(var(--dock-height) + env(safe-area-inset-bottom, 0px) + var(--space-lg));
-  z-index: 35;
+  bottom: calc(var(--dock-height) + env(safe-area-inset-bottom, 0px) + var(--viewport-bottom-offset, 0px) + var(--space-lg));
   width: min(calc(100% - 2rem), 34rem);
   display: flex;
   gap: var(--space-md);

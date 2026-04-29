@@ -15,6 +15,29 @@ const emit = defineEmits<{
 
 const isListsActive = computed(() => props.activeRoute === 'app-home' || props.activeRoute === 'list-detail')
 const isAdminActive = computed(() => props.activeRoute.startsWith('admin-'))
+
+function clearPointerFocus(event: MouseEvent) {
+  if (event.detail <= 0) {
+    return
+  }
+
+  const target = event.currentTarget
+
+  if (target instanceof HTMLButtonElement) {
+    target.blur()
+  }
+}
+
+function navigateFromDock(event: MouseEvent, target: 'app-home' | 'admin-home') {
+  clearPointerFocus(event)
+  emit('navigate', target)
+}
+
+function logoutFromDock(event: MouseEvent) {
+  clearPointerFocus(event)
+  emit('logout')
+}
+
 </script>
 
 <template>
@@ -25,7 +48,7 @@ const isAdminActive = computed(() => props.activeRoute.startsWith('admin-'))
       :class="{ 'dock-link--active': isListsActive }"
       :aria-current="isListsActive ? 'page' : undefined"
       data-testid="dock-link-lists"
-      @click="emit('navigate', 'app-home')"
+      @click="navigateFromDock($event, 'app-home')"
     >
       <IonIcon
         class="dock-link-icon"
@@ -43,7 +66,7 @@ const isAdminActive = computed(() => props.activeRoute.startsWith('admin-'))
       :class="{ 'dock-link--active': isAdminActive }"
       :aria-current="isAdminActive ? 'page' : undefined"
       data-testid="dock-link-admin"
-      @click="emit('navigate', 'admin-home')"
+      @click="navigateFromDock($event, 'admin-home')"
     >
       <IonIcon
         class="dock-link-icon"
@@ -58,7 +81,7 @@ const isAdminActive = computed(() => props.activeRoute.startsWith('admin-'))
       type="button"
       class="dock-link dock-link--danger"
       data-testid="dock-action-logout"
-      @click="emit('logout')"
+      @click="logoutFromDock"
     >
       <IonIcon
         class="dock-link-icon"
@@ -76,7 +99,7 @@ const isAdminActive = computed(() => props.activeRoute.startsWith('admin-'))
   position: fixed;
   left: 16px;
   right: 16px;
-  bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
+  bottom: calc(env(safe-area-inset-bottom, 0px) + var(--viewport-bottom-offset, 0px) + 16px);
   z-index: 30;
   display: flex;
   gap: var(--space-sm);
@@ -102,10 +125,13 @@ const isAdminActive = computed(() => props.activeRoute.startsWith('admin-'))
   padding: 0.8rem 0.95rem;
   border: 0;
   border-radius: var(--radius-lg);
+  appearance: none;
+  -webkit-appearance: none;
   background: transparent;
   color: var(--color-text);
   font: inherit;
   font-weight: 700;
+  -webkit-tap-highlight-color: transparent;
   transition:
     background var(--transition-fast),
     color var(--transition-fast),
@@ -124,13 +150,13 @@ const isAdminActive = computed(() => props.activeRoute.startsWith('admin-'))
   height: 1.2rem;
 }
 
-.dock-link:hover {
-  background: rgba(53, 95, 74, 0.08);
-}
-
 .dock-link:focus-visible {
   outline: 3px solid rgba(53, 95, 74, 0.22);
   outline-offset: 2px;
+}
+
+.dock-link:active {
+  background: rgba(53, 95, 74, 0.12);
 }
 
 .dock-link--active {
@@ -146,8 +172,18 @@ const isAdminActive = computed(() => props.activeRoute.startsWith('admin-'))
   font-weight: 600;
 }
 
-.dock-link--danger:hover {
-  background: rgba(217, 83, 79, 0.08);
+.dock-link--danger:active {
+  background: rgba(217, 83, 79, 0.12);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .dock-link:hover {
+    background: rgba(53, 95, 74, 0.08);
+  }
+
+  .dock-link--danger:hover {
+    background: rgba(217, 83, 79, 0.08);
+  }
 }
 
 @media (min-width: 768px) {

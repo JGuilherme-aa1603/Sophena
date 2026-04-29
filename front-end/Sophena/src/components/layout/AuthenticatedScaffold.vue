@@ -9,6 +9,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useToastStore } from '@/stores/toast'
 
 import AuthenticatedDock from './AuthenticatedDock.vue'
+import { useViewportBottomOffset } from './viewport-bottom-offset'
 
 const props = withDefaults(defineProps<{
   pageClass?: string
@@ -27,6 +28,7 @@ const isLogoutConfirmOpen = ref(false)
 const shellStyle = computed(() => ({ '--app-shell-width': props.shellWidth }))
 const activeRoute = computed(() => String(route.name ?? ''))
 const showAdmin = computed(() => Boolean(authStore.user?.is_admin))
+const { viewportStyle } = useViewportBottomOffset()
 
 async function navigateFromDock(target: 'app-home' | 'admin-home') {
   if (activeRoute.value === target) {
@@ -54,7 +56,7 @@ async function logoutFromDock() {
 
 <template>
   <IonPage>
-    <IonContent :fullscreen="true">
+    <IonContent :fullscreen="true" :style="viewportStyle">
       <main class="authenticated-page" :class="pageClass">
         <section class="authenticated-shell" :style="shellStyle">
           <slot />
@@ -88,7 +90,7 @@ async function logoutFromDock() {
 .authenticated-page {
   min-height: 100%;
   padding: var(--space-lg) var(--space-md);
-  padding-bottom: calc(var(--dock-height) + var(--space-xl));
+  padding-bottom: calc(var(--dock-height) + var(--space-xl) + var(--viewport-bottom-offset, 0px));
   background:
     radial-gradient(circle at top left, rgba(230, 239, 233, 0.92), transparent 30%),
     radial-gradient(circle at bottom right, rgba(234, 231, 223, 0.92), transparent 32%),

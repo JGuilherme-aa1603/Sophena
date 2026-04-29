@@ -78,4 +78,41 @@ describe('AuthenticatedScaffold', () => {
     expect(logoutSpy).toHaveBeenCalledTimes(1)
     expect(router.currentRoute.value.name).toBe('login')
   })
+
+  it('expõe uma folga inferior extra quando a viewport visual do mobile fica reduzida', async () => {
+    Object.defineProperty(window, 'innerWidth', {
+      configurable: true,
+      value: 390,
+    })
+    Object.defineProperty(window, 'innerHeight', {
+      configurable: true,
+      value: 844,
+    })
+    Object.defineProperty(window, 'visualViewport', {
+      configurable: true,
+      value: {
+        height: 760,
+        offsetTop: 0,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+      },
+    })
+
+    const router = createAppRouter(createMemoryHistory())
+    authenticate()
+
+    await router.push('/app')
+    const wrapper = mount(AuthenticatedScaffold, {
+      global: {
+        plugins: [router],
+      },
+      slots: {
+        default: '<p>Conteúdo</p>',
+      },
+    })
+
+    await router.isReady()
+
+    expect(wrapper.find('ion-content').attributes('style')).toContain('--viewport-bottom-offset: 84px;')
+  })
 })

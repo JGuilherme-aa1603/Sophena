@@ -1,5 +1,5 @@
 import { mount } from '@vue/test-utils'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import AuthenticatedDock from '../layout/AuthenticatedDock.vue'
 
@@ -42,5 +42,50 @@ describe('AuthenticatedDock', () => {
       ['app-home'],
       ['admin-home'],
     ])
+  })
+
+  it('remove o foco visual depois do clique por toque ou mouse', async () => {
+    const wrapper = mount(AuthenticatedDock, {
+      props: {
+        activeRoute: 'app-home',
+        showAdmin: true,
+      },
+    })
+
+    const button = wrapper.get('[data-testid="dock-link-admin"]').element as HTMLButtonElement
+    const blurSpy = vi.spyOn(button, 'blur')
+
+    button.dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 1 }))
+
+    expect(blurSpy).toHaveBeenCalledTimes(1)
+  })
+
+  it('mantém o foco quando a ação vem do teclado', async () => {
+    const wrapper = mount(AuthenticatedDock, {
+      props: {
+        activeRoute: 'app-home',
+        showAdmin: true,
+      },
+    })
+
+    const button = wrapper.get('[data-testid="dock-link-admin"]').element as HTMLButtonElement
+    const blurSpy = vi.spyOn(button, 'blur')
+
+    button.dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 0 }))
+
+    expect(blurSpy).not.toHaveBeenCalled()
+  })
+
+  it('mantém classes estáveis para o estilo base e o destaque da rota ativa', () => {
+    const wrapper = mount(AuthenticatedDock, {
+      props: {
+        activeRoute: 'app-home',
+        showAdmin: true,
+      },
+    })
+
+    expect(wrapper.get('[data-testid="dock-link-lists"]').classes()).toContain('dock-link--active')
+    expect(wrapper.get('[data-testid="dock-link-admin"]').classes()).not.toContain('dock-link--active')
+    expect(wrapper.get('[data-testid="dock-action-logout"]').classes()).toContain('dock-link--danger')
   })
 })

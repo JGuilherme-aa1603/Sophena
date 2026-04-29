@@ -24,6 +24,7 @@ describe('AppToast', () => {
     expect(wrapper.get('[data-testid="app-toast"]').text()).toContain('Lista criada.')
     expect(wrapper.get('[data-testid="app-toast"]').classes()).toContain('app-toast--success')
     expect(wrapper.get('[data-testid="app-toast"]').attributes('role')).toBe('status')
+    expect(wrapper.get('[data-testid="app-toast"]').attributes('style')).toContain('z-index: 45;')
   })
 
   it('mostra erro com alerta e permite fechar manualmente', async () => {
