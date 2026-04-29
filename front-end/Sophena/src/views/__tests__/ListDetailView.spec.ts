@@ -442,6 +442,7 @@ describe('ListDetailView', () => {
 
     expect(store.removeItem).toHaveBeenCalledWith('lista-1', 'item-1')
     expect(wrapper.text()).toContain('Livro removido da lista.')
+    expect(wrapper.find('.app-feedback--success').exists()).toBe(false)
   })
 
   it('volta para a tela de listas', async () => {

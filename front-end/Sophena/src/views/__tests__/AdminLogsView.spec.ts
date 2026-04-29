@@ -104,6 +104,31 @@ describe('AdminLogsView', () => {
     expect(fetchLogsSpy).toHaveBeenCalled()
   })
 
+  it('usa somente toast para avisar erro ao aplicar filtros', async () => {
+    const router = createAppRouter(createMemoryHistory())
+    authenticateAdmin()
+    const store = useAdminLogsStore()
+    vi.spyOn(store, 'fetchSummary').mockResolvedValue()
+    vi.spyOn(store, 'fetchLogs').mockImplementation(async () => {
+      store.errorMessage = 'Confira os filtros e tente novamente.'
+    })
+
+    await router.push('/app/admin/logs')
+
+    const wrapper = mount(AdminLogsView, {
+      global: {
+        plugins: [router],
+      },
+    })
+
+    await router.isReady()
+    await wrapper.get('[data-testid="open-logs-filters"]').trigger('click')
+    await wrapper.get('form[data-testid="logs-filters-form"]').trigger('submit.prevent')
+
+    expect(wrapper.text()).toContain('Confira os filtros e tente novamente.')
+    expect(wrapper.find('.app-feedback--error').exists()).toBe(false)
+  })
+
   it('mostra estado vazio quando não há registros', async () => {
     const router = createAppRouter(createMemoryHistory())
     authenticateAdmin()

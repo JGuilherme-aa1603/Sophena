@@ -149,6 +149,31 @@ describe('ListsView', () => {
     expect(useToastStore().current?.message).toBe('Lista criada.')
   })
 
+  it('usa somente toast para avisar falhas ao criar lista', async () => {
+    const router = createAppRouter(createMemoryHistory())
+    authenticateUser()
+
+    const listsStore = useListsStore()
+    vi.spyOn(listsStore, 'fetchLists').mockResolvedValue()
+    vi.spyOn(listsStore, 'createList').mockImplementation(async () => {
+      listsStore.errorMessage = 'Você já tem uma lista com esse nome.'
+      throw new Error('falha')
+    })
+
+    const wrapper = mount(ListsView, {
+      global: {
+        plugins: [router],
+      },
+    })
+
+    await router.isReady()
+    await wrapper.get('input[name="list-name"]').setValue('Quero ler')
+    await wrapper.get('form').trigger('submit.prevent')
+
+    expect(wrapper.text()).toContain('Você já tem uma lista com esse nome.')
+    expect(wrapper.find('.app-feedback--error').exists()).toBe(false)
+  })
+
   it('abre as opções de edição da lista sem abrir a lista', async () => {
     const router = createAppRouter(createMemoryHistory())
     authenticateUser()

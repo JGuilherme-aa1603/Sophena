@@ -14,6 +14,7 @@ const router = useRouter()
 const adminLogsStore = useAdminLogsStore()
 const toastStore = useToastStore()
 const isFilterSheetOpen = ref(false)
+const inlineErrorMessage = ref(adminLogsStore.errorMessage)
 const filtersForm = reactive({
   from: '',
   to: '',
@@ -43,9 +44,11 @@ onMounted(async () => {
     adminLogsStore.fetchSummary(),
     adminLogsStore.fetchLogs(),
   ])
+  inlineErrorMessage.value = adminLogsStore.errorMessage
 })
 
 async function submitFilters() {
+  inlineErrorMessage.value = ''
   adminLogsStore.filters.from = localDateTimeToUtcIso(filtersForm.from)
   adminLogsStore.filters.to = localDateTimeToUtcIso(filtersForm.to)
   adminLogsStore.pagination.page = 1
@@ -61,13 +64,17 @@ async function submitFilters() {
 }
 
 async function goToNextPage() {
+  inlineErrorMessage.value = ''
   adminLogsStore.goToNextPage()
   await adminLogsStore.fetchLogs()
+  inlineErrorMessage.value = adminLogsStore.errorMessage
 }
 
 async function goToPreviousPage() {
+  inlineErrorMessage.value = ''
   adminLogsStore.goToPreviousPage()
   await adminLogsStore.fetchLogs()
+  inlineErrorMessage.value = adminLogsStore.errorMessage
 }
 
 async function goBack() {
@@ -188,12 +195,12 @@ function formatDateTime(value: string) {
         </div>
 
         <p
-          v-if="adminLogsStore.errorMessage"
+          v-if="inlineErrorMessage"
           class="app-feedback app-feedback--error"
           role="status"
           aria-live="polite"
         >
-          {{ adminLogsStore.errorMessage }}
+          {{ inlineErrorMessage }}
         </p>
 
         <div v-if="adminLogsStore.isLoadingLogs" class="loading-state" role="status" aria-live="polite">

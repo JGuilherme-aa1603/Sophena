@@ -106,7 +106,33 @@ describe('AdminUsersView', () => {
     })
 
     await router.isReady()
-    expect(wrapper.text()).toContain('Preencha usuário e senha com pelo menos 8 caracteres.')
+    expect(wrapper.text()).not.toContain('Preencha usuário e senha com pelo menos 8 caracteres.')
+  })
+
+  it('usa somente toast para avisar falhas ao criar usuário', async () => {
+    const router = createAppRouter(createMemoryHistory())
+    authenticateAdmin()
+    const store = useAdminUsersStore()
+    vi.spyOn(store, 'createUser').mockImplementation(async () => {
+      store.errorMessage = 'Já existe um usuário com esse nome.'
+      throw new Error('falha')
+    })
+
+    await router.push('/app/admin/users')
+
+    const wrapper = mount(AdminUsersView, {
+      global: {
+        plugins: [router],
+      },
+    })
+
+    await router.isReady()
+    await wrapper.get('input[name="admin-user-name"]').setValue('usuario-existente')
+    await wrapper.get('input[name="admin-password"]').setValue('SenhaNova#123')
+    await wrapper.get('form').trigger('submit.prevent')
+
+    expect(wrapper.text()).toContain('Já existe um usuário com esse nome.')
+    expect(wrapper.find('.app-feedback--error').exists()).toBe(false)
   })
 
   it('volta para a área administrativa', async () => {

@@ -117,6 +117,43 @@ describe('AdminBooksView', () => {
     expect(requestDeleteBookSpy).toHaveBeenCalledWith('book-1')
   })
 
+  it('usa somente toast para avisar que o livro foi apagado', async () => {
+    const router = createAppRouter(createMemoryHistory())
+    authenticateAdmin()
+    const store = useAdminBooksStore()
+    vi.spyOn(store, 'fetchBooks').mockImplementation(async () => {
+      store.books = [
+        {
+          id: 'book-1',
+          title: 'Dom Casmurro',
+          author: 'Machado de Assis',
+          cover_url: null,
+        },
+      ]
+    })
+    vi.spyOn(store, 'requestDeleteBook').mockImplementation(async () => {
+      store.feedbackMessage = 'Livro apagado com sucesso.'
+    })
+
+    await router.push('/app/admin/books')
+
+    const wrapper = mount(AdminBooksView, {
+      global: {
+        plugins: [router],
+      },
+    })
+
+    await router.isReady()
+    await flushPromises()
+    await wrapper.get('[data-testid="open-admin-book-options-book-1"]').trigger('click')
+    await wrapper.get('[data-testid="request-delete-book-book-1"]').trigger('click')
+    await wrapper.get('[data-testid="confirm-sheet-confirm"]').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('Livro apagado com sucesso.')
+    expect(wrapper.find('.app-feedback--success').exists()).toBe(false)
+  })
+
   it('permite alternar para o layout compacto e salva a preferência', async () => {
     const router = createAppRouter(createMemoryHistory())
     authenticateAdmin()

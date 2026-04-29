@@ -30,6 +30,13 @@ const showEmptyState = computed(() => {
     && !adminBooksStore.errorMessage
 })
 const isCompactLayout = computed(() => booksLayout.value === 'compact')
+const inlineErrorMessage = computed(() => {
+  if (pendingDeleteBookId.value) {
+    return ''
+  }
+
+  return adminBooksStore.errorMessage
+})
 
 const optionsBook = computed(() => {
   if (!activeOptionsBookId.value) {
@@ -230,21 +237,12 @@ async function goBack() {
         </form>
 
         <p
-          v-if="adminBooksStore.errorMessage"
+          v-if="inlineErrorMessage"
           class="app-feedback app-feedback--error"
           role="status"
           aria-live="polite"
         >
-          {{ adminBooksStore.errorMessage }}
-        </p>
-
-        <p
-          v-if="adminBooksStore.feedbackMessage"
-          class="app-feedback app-feedback--success"
-          role="status"
-          aria-live="polite"
-        >
-          {{ adminBooksStore.feedbackMessage }}
+          {{ inlineErrorMessage }}
         </p>
 
         <div v-if="adminBooksStore.isLoading" class="loading-state" role="status" aria-live="polite">

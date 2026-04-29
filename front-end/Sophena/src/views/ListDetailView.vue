@@ -44,6 +44,12 @@ const showManualBookForm = ref(false)
 const activeOptionsItemId = ref<string | null>(null)
 const activeMoveItemId = ref<string | null>(null)
 const pendingRemoveItemId = ref<string | null>(null)
+const actionOnlyErrorMessages = new Set([
+  'Esse livro já está nesta lista.',
+  'Esse livro já está na lista de destino.',
+  'Escolha a lista para onde deseja enviar o livro.',
+])
+const loadErrorMessage = ref(toLoadErrorMessage(listDetailStore.errorMessage))
 const moveTargets = reactive<Record<string, string>>({})
 const booksLayout = ref<'comfortable' | 'compact'>('comfortable')
 
@@ -74,7 +80,7 @@ const bookCountLabel = computed(() => {
 const showEmptyState = computed(() => {
   return !listDetailStore.isLoading
     && listDetailStore.items.length === 0
-    && !listDetailStore.errorMessage
+    && !loadErrorMessage.value
 })
 
 const movableLists = computed(() => {
@@ -131,21 +137,18 @@ const canShowManualBookPath = computed(() => {
     && listDetailStore.searchResults.length === 0
 })
 
-const inlineErrorMessage = computed(() => {
-  if (
-    listDetailStore.errorMessage === 'Esse livro já está nesta lista.'
-    || listDetailStore.errorMessage === 'Esse livro já está na lista de destino.'
-  ) {
-    return ''
-  }
-
-  return listDetailStore.errorMessage
-})
-
 const isCompactLayout = computed(() => booksLayout.value === 'compact')
 const manualCoverStatus = computed(() => {
   return manualForm.cover_file?.name ?? 'Nenhuma imagem escolhida'
 })
+
+function toLoadErrorMessage(message: string) {
+  if (actionOnlyErrorMessages.has(message)) {
+    return ''
+  }
+
+  return message
+}
 
 onMounted(async () => {
   booksLayout.value = readSavedBooksLayout()
@@ -155,6 +158,7 @@ watch(
   listId,
   async (nextListId) => {
     await listDetailStore.fetchListDetail(nextListId)
+    loadErrorMessage.value = toLoadErrorMessage(listDetailStore.errorMessage)
   },
   { immediate: true },
 )
@@ -397,21 +401,12 @@ async function confirmMove(itemId: string) {
         </div>
 
         <p
-          v-if="inlineErrorMessage"
+          v-if="loadErrorMessage"
           class="app-feedback app-feedback--error"
           role="status"
           aria-live="polite"
         >
-          {{ inlineErrorMessage }}
-        </p>
-
-        <p
-          v-if="listDetailStore.feedbackMessage"
-          class="app-feedback app-feedback--success"
-          role="status"
-          aria-live="polite"
-        >
-          {{ listDetailStore.feedbackMessage }}
+          {{ loadErrorMessage }}
         </p>
 
         <div

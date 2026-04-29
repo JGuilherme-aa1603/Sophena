@@ -20,6 +20,7 @@ const listNameInput = ref<HTMLInputElement | null>(null)
 const activeOptionsListId = ref<string | null>(null)
 const editingListId = ref<string | null>(null)
 const pendingDeleteListId = ref<string | null>(null)
+const loadErrorMessage = ref(listsStore.errorMessage)
 
 const form = reactive({
   name: '',
@@ -37,7 +38,7 @@ const greeting = computed(() => {
 })
 
 const showEmptyState = computed(() => {
-  return !listsStore.isLoading && listsStore.items.length === 0 && !listsStore.errorMessage
+  return !listsStore.isLoading && listsStore.items.length === 0 && !loadErrorMessage.value
 })
 const optionsList = computed(() => {
   if (!activeOptionsListId.value) {
@@ -81,6 +82,7 @@ const isDeleteConfirmOpen = computed({
 
 onMounted(async () => {
   await listsStore.fetchLists()
+  loadErrorMessage.value = listsStore.errorMessage
 })
 
 async function submitCreateList() {
@@ -201,12 +203,12 @@ async function focusCreateList() {
     </IonCard>
 
     <p
-      v-if="listsStore.errorMessage"
+      v-if="loadErrorMessage"
       class="app-feedback app-feedback--error"
       role="status"
       aria-live="polite"
     >
-      {{ listsStore.errorMessage }}
+      {{ loadErrorMessage }}
     </p>
 
     <section class="lists-section">

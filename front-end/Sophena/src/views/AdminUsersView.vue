@@ -124,24 +124,6 @@ async function goBack() {
             Administradores podem criar novos usuários e acessar áreas reservadas.
           </p>
 
-          <p
-            v-if="adminUsersStore.errorMessage"
-            class="app-feedback app-feedback--error"
-            role="status"
-            aria-live="polite"
-          >
-            {{ adminUsersStore.errorMessage }}
-          </p>
-
-          <p
-            v-if="adminUsersStore.feedbackMessage"
-            class="app-feedback app-feedback--success"
-            role="status"
-            aria-live="polite"
-          >
-            {{ adminUsersStore.feedbackMessage }}
-          </p>
-
           <IonButton
             type="submit"
             class="submit-button"
