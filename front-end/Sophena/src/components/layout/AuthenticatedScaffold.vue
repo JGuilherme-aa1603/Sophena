@@ -30,7 +30,7 @@ const activeRoute = computed(() => String(route.name ?? ''))
 const showAdmin = computed(() => Boolean(authStore.user?.is_admin))
 const { viewportStyle } = useViewportBottomOffset()
 
-async function navigateFromDock(target: 'app-home' | 'admin-home') {
+async function navigateFromDock(target: 'app-home' | 'books' | 'admin-home') {
   if (activeRoute.value === target) {
     return
   }

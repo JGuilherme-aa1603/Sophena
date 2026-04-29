@@ -6,7 +6,7 @@ import { type Book, toBookView } from "../domain/book.ts";
 import { BookDeletionConfirmationRequiredError } from "./book-errors.ts";
 
 export type BookRepository = {
-  findAll(search?: string): Promise<Book[]>;
+  findAll(filters?: BookFilters): Promise<Book[]>;
   findById(bookId: string): Promise<Book | null>;
   findByTitleAndAuthor(input: { title: string; author: string }): Promise<Book | null>;
   createOrReuse(input: { title: string; author: string; cover_url?: string | null }): Promise<Book>;
@@ -24,18 +24,34 @@ type CreateBookInput = {
   cover_url?: unknown;
 };
 
+export type BookCoverFilter = "with" | "without";
+
+export type BookFilters = {
+  search?: string;
+  author?: string;
+  cover?: BookCoverFilter;
+};
+
 export class BookService {
   constructor(
     private readonly bookRepository: BookRepository,
     private readonly bookCoverStorage: BookCoverStorage,
   ) {}
 
-  async readBooks(input: { search?: unknown }) {
+  async readBooks(input: { search?: unknown; author?: unknown; cover?: unknown }) {
     const search = typeof input.search === "string" && input.search.trim().length > 0
       ? input.search.trim()
       : undefined;
+    const author = typeof input.author === "string" && input.author.trim().length > 0
+      ? input.author.trim()
+      : undefined;
+    const cover = parseCoverFilter(input.cover);
 
-    const books = await this.bookRepository.findAll(search);
+    const books = await this.bookRepository.findAll({
+      search,
+      author,
+      cover,
+    });
 
     return {
       items: books.map(toBookView),
@@ -79,6 +95,20 @@ export class BookService {
     const deletionPreview = await this.bookRepository.deleteBookAndRemoveListReferencesPreview(bookId);
     return deletionPreview.removed_from_lists_count;
   }
+}
+
+function parseCoverFilter(cover: unknown): BookCoverFilter | undefined {
+  if (cover === undefined || cover === null || cover === "") {
+    return undefined;
+  }
+
+  if (cover === "with" || cover === "without") {
+    return cover;
+  }
+
+  throw new ValidationError([
+    { field: "cover", message: "cover must be with or without" },
+  ]);
 }
 
 function validateCreateBookInput(input: CreateBookInput) {

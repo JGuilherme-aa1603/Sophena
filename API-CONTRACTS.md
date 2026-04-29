@@ -150,6 +150,8 @@ Rules:
 
 Query params:
 - `search` optional
+- `author` optional
+- `cover` optional (`with | without`)
 
 Response:
 ```json
@@ -167,6 +169,9 @@ Response:
 
 Rules:
 - lightweight search by title and author
+- `author` filters by partial author match
+- `cover=with` returns only books with a cover URL
+- `cover=without` returns only books without a cover URL
 - do not return unnecessary data
 
 ---

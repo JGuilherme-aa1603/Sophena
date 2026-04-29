@@ -13,9 +13,11 @@ describe('AuthenticatedDock', () => {
     })
 
     expect(wrapper.text()).toContain('Listas')
+    expect(wrapper.text()).toContain('Livros')
     expect(wrapper.text()).toContain('Sair')
     expect(wrapper.text()).not.toContain('Admin')
     expect(wrapper.get('[data-testid="dock-link-lists"]').attributes('aria-current')).toBe('page')
+    expect(wrapper.find('[data-testid="dock-icon-books"]').exists()).toBe(true)
     expect(wrapper.find('[data-testid="dock-icon-lists"]').exists()).toBe(true)
     expect(wrapper.find('[data-testid="dock-icon-logout"]').exists()).toBe(true)
 
@@ -36,12 +38,27 @@ describe('AuthenticatedDock', () => {
     expect(wrapper.find('[data-testid="dock-icon-admin"]').exists()).toBe(true)
 
     await wrapper.get('[data-testid="dock-link-lists"]').trigger('click')
+    await wrapper.get('[data-testid="dock-link-books"]').trigger('click')
     await wrapper.get('[data-testid="dock-link-admin"]').trigger('click')
 
     expect(wrapper.emitted('navigate')).toEqual([
       ['app-home'],
+      ['books'],
       ['admin-home'],
     ])
+  })
+
+  it('destaca a tela de livros quando ela está ativa', () => {
+    const wrapper = mount(AuthenticatedDock, {
+      props: {
+        activeRoute: 'books',
+        showAdmin: false,
+      },
+    })
+
+    expect(wrapper.get('[data-testid="dock-link-books"]').attributes('aria-current')).toBe('page')
+    expect(wrapper.get('[data-testid="dock-link-books"]').classes()).toContain('dock-link--active')
+    expect(wrapper.get('[data-testid="dock-link-lists"]').classes()).not.toContain('dock-link--active')
   })
 
   it('remove o foco visual depois do clique por toque ou mouse', async () => {

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { IonIcon } from '@ionic/vue'
-import { bookOutline, libraryOutline, logOutOutline } from 'ionicons/icons'
+import { bookOutline, libraryOutline, logOutOutline, settingsOutline } from 'ionicons/icons'
 
 const props = defineProps<{
   activeRoute: string
@@ -9,11 +9,12 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  navigate: [target: 'app-home' | 'admin-home']
+  navigate: [target: 'app-home' | 'books' | 'admin-home']
   logout: []
 }>()
 
 const isListsActive = computed(() => props.activeRoute === 'app-home' || props.activeRoute === 'list-detail')
+const isBooksActive = computed(() => props.activeRoute === 'books')
 const isAdminActive = computed(() => props.activeRoute.startsWith('admin-'))
 
 function clearPointerFocus(event: MouseEvent) {
@@ -28,7 +29,7 @@ function clearPointerFocus(event: MouseEvent) {
   }
 }
 
-function navigateFromDock(event: MouseEvent, target: 'app-home' | 'admin-home') {
+function navigateFromDock(event: MouseEvent, target: 'app-home' | 'books' | 'admin-home') {
   clearPointerFocus(event)
   emit('navigate', target)
 }
@@ -60,6 +61,23 @@ function logoutFromDock(event: MouseEvent) {
     </button>
 
     <button
+      type="button"
+      class="dock-link"
+      :class="{ 'dock-link--active': isBooksActive }"
+      :aria-current="isBooksActive ? 'page' : undefined"
+      data-testid="dock-link-books"
+      @click="navigateFromDock($event, 'books')"
+    >
+      <IonIcon
+        class="dock-link-icon"
+        :icon="bookOutline"
+        aria-hidden="true"
+        data-testid="dock-icon-books"
+      />
+      <span class="dock-link-label">Livros</span>
+    </button>
+
+    <button
       v-if="showAdmin"
       type="button"
       class="dock-link"
@@ -70,7 +88,7 @@ function logoutFromDock(event: MouseEvent) {
     >
       <IonIcon
         class="dock-link-icon"
-        :icon="bookOutline"
+        :icon="settingsOutline"
         aria-hidden="true"
         data-testid="dock-icon-admin"
       />
@@ -114,7 +132,7 @@ function logoutFromDock(event: MouseEvent) {
 }
 
 .dock-link {
-  min-width: 5.25rem;
+  min-width: 4.35rem;
   min-height: 3rem;
   flex: 1;
   display: flex;
@@ -190,7 +208,7 @@ function logoutFromDock(event: MouseEvent) {
   .authenticated-dock {
     left: 50%;
     right: auto;
-    min-width: 22rem;
+    min-width: 26rem;
     transform: translateX(-50%);
   }
 }

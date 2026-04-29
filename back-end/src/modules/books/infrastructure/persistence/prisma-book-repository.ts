@@ -1,29 +1,12 @@
 import { Prisma } from "../../../../../generated/prisma/client.ts";
 import { prisma } from "../../../../infrastructure/prisma/prisma-client.ts";
 import { type Book } from "../../domain/book.ts";
-import { type BookRepository } from "../../application/book-service.ts";
+import { type BookFilters, type BookRepository } from "../../application/book-service.ts";
 
 export class PrismaBookRepository implements BookRepository {
-  async findAll(search?: string): Promise<Book[]> {
+  async findAll(filters: BookFilters = {}): Promise<Book[]> {
     const books = await prisma.book.findMany({
-      where: search
-        ? {
-            OR: [
-              {
-                title: {
-                  contains: search,
-                  mode: "insensitive",
-                },
-              },
-              {
-                author: {
-                  contains: search,
-                  mode: "insensitive",
-                },
-              },
-            ],
-          }
-        : undefined,
+      where: buildBookWhere(filters),
       orderBy: [
         { title: "asc" },
         { author: "asc" },
@@ -141,6 +124,58 @@ export class PrismaBookRepository implements BookRepository {
       removed_from_lists_count: listItems.length,
     };
   }
+}
+
+function buildBookWhere(filters: BookFilters): Prisma.BookWhereInput | undefined {
+  const conditions: Prisma.BookWhereInput[] = [];
+
+  if (filters.search) {
+    conditions.push({
+      OR: [
+        {
+          title: {
+            contains: filters.search,
+            mode: "insensitive",
+          },
+        },
+        {
+          author: {
+            contains: filters.search,
+            mode: "insensitive",
+          },
+        },
+      ],
+    });
+  }
+
+  if (filters.author) {
+    conditions.push({
+      author: {
+        contains: filters.author,
+        mode: "insensitive",
+      },
+    });
+  }
+
+  if (filters.cover === "with") {
+    conditions.push({
+      cover_url: {
+        notIn: [""],
+        not: null,
+      },
+    });
+  }
+
+  if (filters.cover === "without") {
+    conditions.push({
+      OR: [
+        { cover_url: null },
+        { cover_url: "" },
+      ],
+    });
+  }
+
+  return conditions.length > 0 ? { AND: conditions } : undefined;
 }
 
 function mapBook(book: {

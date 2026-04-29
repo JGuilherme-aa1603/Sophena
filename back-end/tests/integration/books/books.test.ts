@@ -167,6 +167,178 @@ describe("Books", () => {
     assert.equal(response.body.items[0].author, "Clarice Lispector");
   });
 
+  test("filters books by author with a partial case-insensitive match", async () => {
+    await createTestUser({
+      user_name: "books-reader-author-filter",
+      password: "BooksSenha#224",
+    });
+    const accessToken = await loginAs({
+      user_name: "books-reader-author-filter",
+      password: "BooksSenha#224",
+    });
+
+    await createTestBook({
+      title: "Dom Casmurro",
+      author: "Machado de Assis",
+    });
+    await createTestBook({
+      title: "A Hora da Estrela",
+      author: "Clarice Lispector",
+    });
+
+    const response = await requestJson(server!, {
+      method: "GET",
+      path: "/books?author=clarice",
+      headers: {
+        authorization: accessToken,
+      },
+    });
+
+    assert.equal(response.status, 200);
+    assert.equal(response.body.items.length, 1);
+    assert.equal(response.body.items[0].title, "A Hora da Estrela");
+  });
+
+  test("filters books that have a cover", async () => {
+    await createTestUser({
+      user_name: "books-reader-cover-with",
+      password: "BooksSenha#225",
+    });
+    const accessToken = await loginAs({
+      user_name: "books-reader-cover-with",
+      password: "BooksSenha#225",
+    });
+
+    await createTestBook({
+      title: "Livro com Capa",
+      author: "Autora",
+      cover_url: "https://example.com/capa.jpg",
+    });
+    await createTestBook({
+      title: "Livro sem Capa",
+      author: "Autora",
+      cover_url: null,
+    });
+
+    const response = await requestJson(server!, {
+      method: "GET",
+      path: "/books?cover=with",
+      headers: {
+        authorization: accessToken,
+      },
+    });
+
+    assert.equal(response.status, 200);
+    assert.deepEqual(response.body.items.map((book: { title: string }) => book.title), ["Livro com Capa"]);
+  });
+
+  test("filters books that do not have a cover", async () => {
+    await createTestUser({
+      user_name: "books-reader-cover-without",
+      password: "BooksSenha#226",
+    });
+    const accessToken = await loginAs({
+      user_name: "books-reader-cover-without",
+      password: "BooksSenha#226",
+    });
+
+    await createTestBook({
+      title: "Livro com Capa",
+      author: "Autora",
+      cover_url: "https://example.com/capa.jpg",
+    });
+    await createTestBook({
+      title: "Livro sem Capa",
+      author: "Autora",
+      cover_url: null,
+    });
+    await createTestBook({
+      title: "Livro com Capa Vazia",
+      author: "Autora",
+      cover_url: "",
+    });
+
+    const response = await requestJson(server!, {
+      method: "GET",
+      path: "/books?cover=without",
+      headers: {
+        authorization: accessToken,
+      },
+    });
+
+    assert.equal(response.status, 200);
+    assert.deepEqual(
+      response.body.items.map((book: { title: string }) => book.title).sort(),
+      ["Livro com Capa Vazia", "Livro sem Capa"],
+    );
+  });
+
+  test("combines search, author, and cover filters", async () => {
+    await createTestUser({
+      user_name: "books-reader-combined-filter",
+      password: "BooksSenha#227",
+    });
+    const accessToken = await loginAs({
+      user_name: "books-reader-combined-filter",
+      password: "BooksSenha#227",
+    });
+
+    await createTestBook({
+      title: "A Hora da Estrela",
+      author: "Clarice Lispector",
+      cover_url: "https://example.com/estrela.jpg",
+    });
+    await createTestBook({
+      title: "Perto do Coracao Selvagem",
+      author: "Clarice Lispector",
+      cover_url: "https://example.com/perto.jpg",
+    });
+    await createTestBook({
+      title: "Estrela Solitaria",
+      author: "Autor Diferente",
+      cover_url: "https://example.com/solitaria.jpg",
+    });
+    await createTestBook({
+      title: "Uma Aprendizagem",
+      author: "Clarice Lispector",
+      cover_url: null,
+    });
+
+    const response = await requestJson(server!, {
+      method: "GET",
+      path: "/books?search=estrela&author=clarice&cover=with",
+      headers: {
+        authorization: accessToken,
+      },
+    });
+
+    assert.equal(response.status, 200);
+    assert.deepEqual(response.body.items.map((book: { title: string }) => book.title), ["A Hora da Estrela"]);
+  });
+
+  test("returns 400 when cover filter has an invalid value", async () => {
+    await createTestUser({
+      user_name: "books-reader-invalid-cover-filter",
+      password: "BooksSenha#228",
+    });
+    const accessToken = await loginAs({
+      user_name: "books-reader-invalid-cover-filter",
+      password: "BooksSenha#228",
+    });
+
+    const response = await requestJson(server!, {
+      method: "GET",
+      path: "/books?cover=maybe",
+      headers: {
+        authorization: accessToken,
+      },
+    });
+
+    assert.equal(response.status, 400);
+    assert.equal(response.body.message, "Validation failed");
+    assert.deepEqual(response.body.errors.map((error: { field: string }) => error.field), ["cover"]);
+  });
+
   test("creates a new global book with minimal response data", async () => {
     await createTestUser({
       user_name: "books-create-user",

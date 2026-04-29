@@ -23,6 +23,8 @@ export function createBookRouter(currentBookService: BookService = bookService) 
     try {
       const result = await currentBookService.readBooks({
         search: request.query.search,
+        author: request.query.author,
+        cover: request.query.cover,
       });
 
       response.status(200).json(result);
