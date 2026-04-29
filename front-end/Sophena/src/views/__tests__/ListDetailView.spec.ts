@@ -22,6 +22,7 @@ describe('ListDetailView', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.restoreAllMocks()
+    localStorage.clear()
   })
 
   it('mostra os livros da lista em ordem de posição', async () => {
@@ -79,8 +80,104 @@ describe('ListDetailView', () => {
     expect(bookCards).toHaveLength(2)
     const firstCover = bookCards[0]!.get('[data-testid="book-card-cover-image"]')
     expect(firstCover.attributes('src')).toBe('https://example.com/capas/primeiro-livro.webp')
-    expect(firstCover.attributes('alt')).toBe('Capa do livro Primeiro livro')
+    expect(firstCover.attributes('alt')).toBe('Primeiro livro')
     expect(bookCards[0]!.get('[data-testid="book-card-position"]').text()).toBe('1')
+    expect(wrapper.get('[data-testid="books-layout-comfortable"]').attributes('aria-pressed')).toBe('true')
+    expect(wrapper.get('[data-testid="books-list"]').classes()).toContain('items-list--comfortable')
+  })
+
+  it('permite alternar para o layout compacto e salva a preferência', async () => {
+    const router = createAppRouter(createMemoryHistory())
+    authenticateUser()
+    const store = useListDetailStore()
+    vi.spyOn(store, 'fetchListDetail').mockImplementation(async () => {
+      store.list = {
+        id: 'lista-1',
+        name: 'Quero ler',
+      }
+      store.items = [
+        {
+          id: 'item-1',
+          book_list_item_id: 'item-1',
+          position: 1,
+          book: {
+            id: 'book-1',
+            title: 'Primeiro livro',
+            author: 'Autora A',
+            cover_url: null,
+          },
+        },
+        {
+          id: 'item-2',
+          book_list_item_id: 'item-2',
+          position: 2,
+          book: {
+            id: 'book-2',
+            title: 'Segundo livro',
+            author: 'Autora B',
+            cover_url: null,
+          },
+        },
+      ]
+    })
+
+    await router.push('/app/lists/lista-1')
+
+    const wrapper = mount(ListDetailView, {
+      global: {
+        plugins: [router],
+      },
+    })
+
+    await router.isReady()
+    await wrapper.get('[data-testid="books-layout-compact"]').trigger('click')
+
+    expect(wrapper.get('[data-testid="books-layout-compact"]').attributes('aria-pressed')).toBe('true')
+    expect(wrapper.get('[data-testid="books-list"]').classes()).toContain('items-list--compact')
+    expect(wrapper.findAll('.items-list--compact .item-card')).toHaveLength(2)
+    expect(localStorage.getItem('sophena:list-books-layout')).toBe('compact')
+    expect(wrapper.get('[data-testid="book-card"]').classes()).toContain('book-card--compact')
+  })
+
+  it('restaura o layout salvo ao abrir a lista novamente', async () => {
+    localStorage.setItem('sophena:list-books-layout', 'compact')
+
+    const router = createAppRouter(createMemoryHistory())
+    authenticateUser()
+    const store = useListDetailStore()
+    vi.spyOn(store, 'fetchListDetail').mockImplementation(async () => {
+      store.list = {
+        id: 'lista-1',
+        name: 'Quero ler',
+      }
+      store.items = [
+        {
+          id: 'item-1',
+          book_list_item_id: 'item-1',
+          position: 1,
+          book: {
+            id: 'book-1',
+            title: 'Livro salvo',
+            author: 'Autora salva',
+            cover_url: null,
+          },
+        },
+      ]
+    })
+
+    await router.push('/app/lists/lista-1')
+
+    const wrapper = mount(ListDetailView, {
+      global: {
+        plugins: [router],
+      },
+    })
+
+    await router.isReady()
+
+    expect(wrapper.get('[data-testid="books-layout-compact"]').attributes('aria-pressed')).toBe('true')
+    expect(wrapper.get('[data-testid="books-list"]').classes()).toContain('items-list--compact')
+    expect(wrapper.get('[data-testid="book-card"]').classes()).toContain('book-card--compact')
   })
 
   it('mostra um espaço de capa quando o livro não tem imagem', async () => {
@@ -252,6 +349,7 @@ describe('ListDetailView', () => {
 
     expect(wrapper.find('[data-testid="move-up-item-1"]').exists()).toBe(false)
     expect(wrapper.find('[data-testid="remove-item-item-1"]').exists()).toBe(false)
+    expect(wrapper.get('[data-testid="open-book-options-item-1"]').attributes('aria-label')).toBe('Ver opções do livro Livro removido')
 
     await wrapper.get('[data-testid="open-book-options-item-1"]').trigger('click')
     expect(wrapper.get('[data-testid="book-options-sheet"]').text()).toContain('Opções do livro')
@@ -366,18 +464,21 @@ describe('ListDetailView', () => {
     await wrapper.get('input[name="book-search"]').setValue('Livro Manual')
     await wrapper.get('form[data-testid="search-books-form"]').trigger('submit.prevent')
     await flushPromises()
+    expect(wrapper.get('[data-testid="manual-path-message"]').text()).toContain('Não encontramos esse livro por aqui.')
+    expect(wrapper.get('[data-testid="show-manual-book-form"]').text()).toContain('Cadastrar livro manualmente')
     await wrapper.get('[data-testid="show-manual-book-form"]').trigger('click')
     expect(wrapper.text()).toContain('Cadastrar um livro novo')
+    expect(wrapper.find('input[name="manual-cover-url"]').exists()).toBe(false)
+    expect(wrapper.get('[data-testid="manual-cover-picker-trigger"]').text()).toContain('Escolher imagem')
+    expect(wrapper.get('[data-testid="manual-cover-picker-status"]').text()).toContain('Nenhuma imagem escolhida')
 
     await wrapper.get('input[name="manual-title"]').setValue('Livro Manual')
     await wrapper.get('input[name="manual-author"]').setValue('Autora Manual')
-    await wrapper.get('input[name="manual-cover-url"]').setValue('https://example.com/manual.jpg')
     await wrapper.get('form[data-testid="manual-book-form"]').trigger('submit.prevent')
 
     expect(addManualBookSpy).toHaveBeenCalledWith('lista-1', {
       title: 'Livro Manual',
       author: 'Autora Manual',
-      cover_url: 'https://example.com/manual.jpg',
       cover_file: undefined,
     })
   })
@@ -415,18 +516,20 @@ describe('ListDetailView', () => {
     await wrapper.get('[data-testid="show-manual-book-form"]').trigger('click')
     await wrapper.get('input[name="manual-title"]').setValue('Livro com Capa')
     await wrapper.get('input[name="manual-author"]').setValue('Autora com Capa')
+    expect(wrapper.find('input[name="manual-cover-url"]').exists()).toBe(false)
+    expect(wrapper.get('[data-testid="manual-cover-picker-status"]').text()).toContain('Nenhuma imagem escolhida')
     const coverFileInput = wrapper.get('input[name="manual-cover-file"]')
     Object.defineProperty(coverFileInput.element, 'files', {
       value: [coverFile],
       configurable: true,
     })
     await coverFileInput.trigger('change')
+    expect(wrapper.get('[data-testid="manual-cover-picker-status"]').text()).toContain('capa.png')
     await wrapper.get('form[data-testid="manual-book-form"]').trigger('submit.prevent')
 
     expect(addManualBookSpy).toHaveBeenCalledWith('lista-1', {
       title: 'Livro com Capa',
       author: 'Autora com Capa',
-      cover_url: '',
       cover_file: coverFile,
     })
   })

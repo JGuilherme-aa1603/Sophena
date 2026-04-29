@@ -24,6 +24,7 @@ const router = useRouter()
 const route = useRoute()
 const listDetailStore = useListDetailStore()
 const toastStore = useToastStore()
+const BOOKS_LAYOUT_STORAGE_KEY = 'sophena:list-books-layout'
 
 const searchForm = reactive({
   term: '',
@@ -32,7 +33,6 @@ const searchForm = reactive({
 const manualForm = reactive({
   title: '',
   author: '',
-  cover_url: '',
   cover_file: undefined as File | undefined,
 })
 
@@ -43,6 +43,7 @@ const activeOptionsItemId = ref<string | null>(null)
 const activeMoveItemId = ref<string | null>(null)
 const pendingRemoveItemId = ref<string | null>(null)
 const moveTargets = reactive<Record<string, string>>({})
+const booksLayout = ref<'comfortable' | 'compact'>('comfortable')
 
 const listId = computed(() => {
   if (typeof route.params.listId === 'string') {
@@ -133,7 +134,13 @@ const inlineErrorMessage = computed(() => {
   return listDetailStore.errorMessage
 })
 
+const isCompactLayout = computed(() => booksLayout.value === 'compact')
+const manualCoverStatus = computed(() => {
+  return manualForm.cover_file?.name ?? 'Nenhuma imagem escolhida'
+})
+
 onMounted(async () => {
+  booksLayout.value = readSavedBooksLayout()
   await listDetailStore.fetchListDetail(listId.value)
 })
 
@@ -204,12 +211,10 @@ async function submitManualBook() {
     await listDetailStore.addManualBook(listId.value, {
       title: manualForm.title,
       author: manualForm.author,
-      cover_url: manualForm.cover_url,
       cover_file: manualForm.cover_file,
     })
     manualForm.title = ''
     manualForm.author = ''
-    manualForm.cover_url = ''
     manualForm.cover_file = undefined
     searchForm.term = ''
     hasSearchedBooks.value = false
@@ -266,6 +271,16 @@ async function openMoveMenu(itemId: string) {
 
 function closeMoveFlow() {
   activeMoveItemId.value = null
+}
+
+function setBooksLayout(layout: 'comfortable' | 'compact') {
+  booksLayout.value = layout
+  localStorage.setItem(BOOKS_LAYOUT_STORAGE_KEY, layout)
+}
+
+function readSavedBooksLayout() {
+  const savedLayout = localStorage.getItem(BOOKS_LAYOUT_STORAGE_KEY)
+  return savedLayout === 'compact' ? 'compact' : 'comfortable'
 }
 
 async function confirmMove(itemId: string) {
@@ -337,6 +352,33 @@ async function confirmMove(itemId: string) {
             <h2>Livros da lista</h2>
             <p>{{ bookCountLabel }}</p>
           </div>
+
+          <div class="layout-toggle" aria-label="Escolher visualização dos livros">
+            <span class="layout-toggle-label">Visualização</span>
+            <div class="layout-toggle-actions">
+              <button
+                type="button"
+                class="layout-toggle-button"
+                :class="{ 'layout-toggle-button--active': !isCompactLayout }"
+                data-testid="books-layout-comfortable"
+                :aria-pressed="!isCompactLayout"
+                @click="setBooksLayout('comfortable')"
+              >
+                Linha
+              </button>
+
+              <button
+                type="button"
+                class="layout-toggle-button"
+                :class="{ 'layout-toggle-button--active': isCompactLayout }"
+                data-testid="books-layout-compact"
+                :aria-pressed="isCompactLayout"
+                @click="setBooksLayout('compact')"
+              >
+                Compacta
+              </button>
+            </div>
+          </div>
         </div>
 
         <p
@@ -388,7 +430,15 @@ async function confirmMove(itemId: string) {
           @action="openAddBookFlow"
         />
 
-        <ol v-else class="items-list app-fade-in">
+        <ol
+          v-else
+          class="items-list app-fade-in"
+          :class="{
+            'items-list--comfortable': !isCompactLayout,
+            'items-list--compact': isCompactLayout,
+          }"
+          data-testid="books-list"
+        >
           <li
             v-for="item in listDetailStore.items"
             :key="item.book_list_item_id"
@@ -400,18 +450,18 @@ async function confirmMove(itemId: string) {
               :cover-url="item.book.cover_url"
               :position="item.position"
               :show-position="true"
+              :layout="booksLayout"
             >
               <template #actions>
                 <IonButton
-                  fill="outline"
-                  class="options-button"
+                  fill="clear"
+                  class="options-button options-button--icon-only"
                   :data-testid="`open-book-options-${item.book_list_item_id}`"
+                  :aria-label="`Ver opções do livro ${item.book.title}`"
+                  :title="`Ver opções do livro ${item.book.title}`"
                   @click="openBookOptions(item.book_list_item_id)"
                 >
-                  <span class="button-inline-content">
-                    <IonIcon :icon="ellipsisHorizontalOutline" aria-hidden="true" />
-                    Opções
-                  </span>
+                  <IonIcon :icon="ellipsisHorizontalOutline" aria-hidden="true" />
                 </IonButton>
               </template>
             </BookCard>
@@ -459,8 +509,11 @@ async function confirmMove(itemId: string) {
           </form>
 
           <div v-if="canShowManualBookPath && !showManualBookForm" class="manual-path">
-            <p class="secondary-feedback">
-              Nenhum livro apareceu na busca.
+            <p class="secondary-feedback" data-testid="manual-path-message">
+              Não encontramos esse livro por aqui.
+            </p>
+            <p class="manual-path-helper">
+              Se preferir, você pode preencher os dados e cadastrar o livro manualmente agora.
             </p>
             <button
               type="button"
@@ -468,7 +521,7 @@ async function confirmMove(itemId: string) {
               data-testid="show-manual-book-form"
               @click="showManualForm"
             >
-              Cadastrar este livro
+              Cadastrar livro manualmente
             </button>
           </div>
 
@@ -525,28 +578,25 @@ async function confirmMove(itemId: string) {
               />
             </label>
 
-            <label class="app-field">
-              <span>Link da capa (opcional)</span>
-              <input
-                name="manual-cover-url"
-                type="url"
-                autocomplete="off"
-                placeholder="Cole o link da imagem, se quiser"
-                :disabled="listDetailStore.isAddingBook"
-                v-model="manualForm.cover_url"
-              />
-            </label>
-
-            <label class="app-field">
+            <div class="app-field">
               <span>Imagem da capa (opcional)</span>
-              <input
-                name="manual-cover-file"
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                :disabled="listDetailStore.isAddingBook"
-                @change="updateManualCoverFile"
-              />
-            </label>
+              <label class="file-picker" :class="{ 'file-picker--disabled': listDetailStore.isAddingBook }">
+                <input
+                  name="manual-cover-file"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  class="file-picker-input"
+                  :disabled="listDetailStore.isAddingBook"
+                  @change="updateManualCoverFile"
+                />
+                <span class="file-picker-trigger" data-testid="manual-cover-picker-trigger">
+                  Escolher imagem
+                </span>
+                <span class="file-picker-status" data-testid="manual-cover-picker-status">
+                  {{ manualCoverStatus }}
+                </span>
+              </label>
+            </div>
 
             <IonButton
               type="submit"
@@ -763,6 +813,7 @@ async function confirmMove(itemId: string) {
   justify-content: space-between;
   gap: var(--space-md);
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .loading-state {
@@ -814,14 +865,74 @@ async function confirmMove(itemId: string) {
   padding: 0;
 }
 
+.items-list--compact {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
 .item-card {
   display: grid;
+}
+
+.layout-toggle {
+  display: grid;
+  gap: 0.35rem;
+  justify-items: start;
+}
+
+.layout-toggle-label {
+  color: var(--color-muted);
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.layout-toggle-actions {
+  display: inline-flex;
+  gap: 0.35rem;
+  padding: 0.25rem;
+  border: 1px solid rgba(226, 224, 219, 0.96);
+  border-radius: 999px;
+  background: rgba(243, 242, 239, 0.9);
+}
+
+.layout-toggle-button {
+  min-height: 2.4rem;
+  padding: 0.45rem 0.85rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--color-heading);
+  font: inherit;
+  font-weight: 700;
+}
+
+.layout-toggle-button--active {
+  background: var(--color-primary);
+  color: #fff;
+  box-shadow: var(--shadow-sm);
 }
 
 .options-button,
 .sheet-action-button {
   --border-radius: var(--radius-lg);
   font-weight: 700;
+}
+
+.options-button {
+  --color: var(--color-muted);
+  --box-shadow: none;
+  margin: 0;
+}
+
+.options-button--icon-only {
+  --border-radius: 999px;
+  --padding-start: 0.4rem;
+  --padding-end: 0.4rem;
+  min-width: 2.35rem;
+  min-height: 2.35rem;
+  border: 1px solid rgba(95, 111, 102, 0.22);
+  border-radius: 999px;
+  background: rgba(243, 242, 239, 0.68);
 }
 
 .sheet-action-button {
@@ -835,20 +946,24 @@ async function confirmMove(itemId: string) {
 .manual-path {
   gap: var(--space-sm);
   padding: var(--space-md);
-  border: 1px dashed rgba(53, 95, 74, 0.32);
-  border-radius: var(--radius-md);
-  background: rgba(230, 239, 233, 0.36);
+  border: 1px solid rgba(53, 95, 74, 0.14);
+  border-radius: var(--radius-lg);
+  background:
+    linear-gradient(180deg, rgba(246, 245, 242, 0.98), rgba(230, 239, 233, 0.72));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
 .manual-path-button {
   min-height: 3rem;
-  padding: 0.8rem 1rem;
-  border: 1px solid var(--color-primary);
+  padding: 0.85rem 1rem;
+  border: 1px solid rgba(53, 95, 74, 0.18);
   border-radius: var(--radius-lg);
-  background: transparent;
-  color: var(--color-primary);
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--color-heading);
   font: inherit;
   font-weight: 700;
+  text-align: left;
+  box-shadow: var(--shadow-sm);
 }
 
 .flow-section {
@@ -868,6 +983,16 @@ async function confirmMove(itemId: string) {
 .flow-section p,
 .secondary-feedback {
   color: var(--color-muted);
+}
+
+.secondary-feedback {
+  color: var(--color-heading);
+  font-weight: 700;
+}
+
+.manual-path-helper {
+  color: var(--color-muted);
+  line-height: 1.45;
 }
 
 .search-results {
@@ -899,6 +1024,54 @@ async function confirmMove(itemId: string) {
   color: var(--color-muted);
 }
 
+.file-picker {
+  display: grid;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  border: 1px solid rgba(226, 224, 219, 0.96);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+}
+
+.file-picker-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.file-picker-trigger {
+  min-height: 3rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.85rem 1rem;
+  border: 1px solid rgba(53, 95, 74, 0.18);
+  border-radius: var(--radius-lg);
+  background: rgba(243, 242, 239, 0.92);
+  color: var(--color-heading);
+  font-weight: 700;
+  text-align: center;
+}
+
+.file-picker-status {
+  color: var(--color-muted);
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.file-picker--disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
 .pick-button {
   --border-radius: var(--radius-lg);
   font-weight: 700;
@@ -910,6 +1083,10 @@ async function confirmMove(itemId: string) {
     align-items: end;
   }
 
+  .items-list--compact {
+    grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr));
+  }
+
   .flow-grid {
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr));
     align-items: start;
@@ -917,6 +1094,19 @@ async function confirmMove(itemId: string) {
 }
 
 @media (max-width: 640px) {
+  .layout-toggle {
+    width: 100%;
+  }
+
+  .layout-toggle-actions {
+    width: 100%;
+  }
+
+  .layout-toggle-button {
+    flex: 1;
+    text-align: center;
+  }
+
   .search-result-item {
     flex-direction: column;
     align-items: stretch;

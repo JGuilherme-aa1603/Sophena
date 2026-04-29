@@ -8,14 +8,16 @@ const props = withDefaults(defineProps<{
   position?: number
   showPosition?: boolean
   coverAlt?: string
+  layout?: 'comfortable' | 'compact'
 }>(), {
   position: undefined,
   showPosition: false,
   coverAlt: undefined,
+  layout: 'comfortable',
 })
 
 const slots = useSlots()
-const resolvedCoverAlt = computed(() => props.coverAlt ?? `Capa do livro ${props.title}`)
+const resolvedCoverAlt = computed(() => props.coverAlt ?? `${props.title}`)
 const hasActions = computed(() => Boolean(slots.actions))
 </script>
 
@@ -23,54 +25,61 @@ const hasActions = computed(() => Boolean(slots.actions))
   <article
     class="book-card"
     :class="{
-      'book-card--with-position': showPosition,
+      'book-card--comfortable': props.layout === 'comfortable',
+      'book-card--compact': props.layout === 'compact',
+      'book-card--with-actions': hasActions,
       'book-card--interactive': hasActions,
     }"
     data-testid="book-card"
   >
-    <div
-      v-if="showPosition"
-      class="book-card-position"
-      data-testid="book-card-position"
-      aria-hidden="true"
-    >
-      {{ position }}
-    </div>
+    <div class="book-card-main" data-testid="book-card-main">
+      <div class="book-card-media" data-testid="book-card-media">
+        <div
+          v-if="showPosition"
+          class="book-card-position"
+          data-testid="book-card-position"
+          aria-hidden="true"
+        >
+          {{ position }}
+        </div>
 
-    <div class="book-card-cover">
-      <img
-        v-if="coverUrl"
-        :src="coverUrl"
-        :alt="resolvedCoverAlt"
-        class="book-card-cover-image"
-        data-testid="book-card-cover-image"
-      />
+        <div class="book-card-cover">
+          <img
+            v-if="coverUrl"
+            :src="coverUrl"
+            :alt="resolvedCoverAlt"
+            class="book-card-cover-image"
+            data-testid="book-card-cover-image"
+          />
 
-      <div
-        v-else
-        class="book-card-cover-fallback"
-        data-testid="book-card-cover-fallback"
-      >
-        Sem capa
+          <div
+            v-else
+            class="book-card-cover-fallback"
+            :class="{ 'book-card-cover-fallback--centered': props.layout === 'compact' }"
+            data-testid="book-card-cover-fallback"
+          >
+            Sem capa
+          </div>
+        </div>
       </div>
-    </div>
 
-    <div class="book-card-content">
-      <strong data-testid="book-card-title">{{ title }}</strong>
-      <span>{{ author }}</span>
-    </div>
+      <div class="book-card-details" data-testid="book-card-details">
+        <div class="book-card-content">
+          <strong data-testid="book-card-title">{{ title }}</strong>
+          <span data-testid="book-card-author">{{ author }}</span>
+        </div>
+      </div>
 
-    <div v-if="hasActions" class="book-card-actions" data-testid="book-card-actions">
-      <slot name="actions" />
+      <div v-if="hasActions" class="book-card-actions" data-testid="book-card-actions">
+        <slot name="actions" />
+      </div>
     </div>
   </article>
 </template>
 
 <style scoped>
 .book-card {
-  display: grid;
-  gap: var(--space-md);
-  align-items: center;
+  display: block;
   padding: var(--space-md);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
@@ -82,8 +91,9 @@ const hasActions = computed(() => Boolean(slots.actions))
     border-color var(--transition-fast);
 }
 
-.book-card--with-position {
-  grid-template-columns: auto auto minmax(0, 1fr);
+.book-card--compact {
+  position: relative;
+  padding: 0.9rem 0.75rem 0.85rem;
 }
 
 .book-card--interactive:hover {
@@ -92,20 +102,41 @@ const hasActions = computed(() => Boolean(slots.actions))
   box-shadow: var(--shadow-md);
 }
 
+.book-card-main {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--space-md);
+  align-items: center;
+}
+
+.book-card--with-actions .book-card-main {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+}
+
+.book-card-media {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 0.7rem;
+  align-items: center;
+  justify-content: start;
+}
+
 .book-card-position {
-  width: 2.1rem;
-  height: 2.1rem;
+  width: 2rem;
+  height: 2rem;
   display: grid;
   place-items: center;
   border-radius: 999px;
-  background: var(--color-primary-soft);
+  border: 1px solid rgba(53, 95, 74, 0.08);
+  background: rgba(230, 239, 233, 0.9);
   color: var(--color-primary);
   font-weight: 700;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
 .book-card-cover {
-  width: 4.85rem;
-  height: 7rem;
+  width: 4.55rem;
+  height: 6.65rem;
   display: grid;
   place-items: center;
   border-radius: var(--radius-sm);
@@ -141,11 +172,22 @@ const hasActions = computed(() => Boolean(slots.actions))
     linear-gradient(180deg, rgba(248, 246, 240, 0.98), rgba(233, 238, 230, 0.9));
 }
 
+.book-card-cover-fallback--centered {
+  justify-items: center;
+  align-content: center;
+}
+
+.book-card-details {
+  min-width: 0;
+  align-self: center;
+}
+
 .book-card-content {
   display: grid;
-  gap: var(--space-xs);
+  gap: 0.35rem;
   min-width: 0;
   color: var(--color-heading);
+  align-content: start;
 }
 
 .book-card-content strong,
@@ -153,21 +195,89 @@ const hasActions = computed(() => Boolean(slots.actions))
   overflow-wrap: anywhere;
 }
 
+.book-card-content strong {
+  font-size: 1.08rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
 .book-card-content span {
   color: var(--color-muted);
+  font-size: 0.96rem;
+  line-height: 1.4;
 }
 
 .book-card-actions {
-  grid-column: 1 / -1;
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-sm);
+  align-items: center;
   justify-content: flex-end;
+  align-self: start;
 }
 
-@media (max-width: 640px) {
-  .book-card--with-position {
-    grid-template-columns: auto 4.85rem 1fr;
+.book-card--compact .book-card-main {
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-sm);
+  justify-items: stretch;
+}
+
+.book-card--compact.book-card--with-actions .book-card-main {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.book-card--compact .book-card-media {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.45rem;
+  justify-items: center;
+}
+
+.book-card--compact .book-card-position {
+  width: auto;
+  height: auto;
+  min-width: 0;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.82rem;
+  line-height: 1.2;
+}
+
+.book-card--compact .book-card-cover {
+  width: min(100%, 7rem);
+  height: auto;
+  aspect-ratio: 0.69;
+}
+
+.book-card--compact .book-card-details {
+  text-align: center;
+}
+
+.book-card--compact .book-card-content {
+  gap: 0.28rem;
+}
+
+.book-card--compact .book-card-content strong {
+  font-size: 0.98rem;
+  line-height: 1.3;
+}
+
+.book-card--compact .book-card-content span {
+  font-size: 0.88rem;
+  line-height: 1.35;
+}
+
+.book-card--compact .book-card-actions {
+  position: absolute;
+  top: 0.45rem;
+  right: 0.45rem;
+  align-self: auto;
+}
+
+@media (min-width: 641px) {
+  .book-card-cover {
+    width: 4.85rem;
+    height: 7rem;
+  }
+
+  .book-card--compact .book-card-cover {
+    width: min(100%, 7.4rem);
   }
 }
 </style>
