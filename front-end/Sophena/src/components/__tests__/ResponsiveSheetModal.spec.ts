@@ -31,4 +31,18 @@ describe('ResponsiveSheetModal', () => {
     expect(wrapper.get('[data-testid="sheet-close"]').text()).toContain('Fechar')
     expect(wrapper.get('[data-testid="sheet-header"]').classes()).toContain('sheet-header')
   })
+
+  it('renderiza a descrição em uma linha própria para aproveitar melhor a largura do sheet', () => {
+    const wrapper = mount(ResponsiveSheetModal, {
+      props: {
+        modelValue: true,
+        title: 'Opções do livro',
+        description: 'Escolha o que deseja fazer com este livro.',
+      },
+    })
+
+    expect(wrapper.get('[data-testid="sheet-header-description"]').text()).toBe(
+      'Escolha o que deseja fazer com este livro.',
+    )
+  })
 })

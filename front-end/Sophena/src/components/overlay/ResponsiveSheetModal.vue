@@ -59,7 +59,6 @@ onBeforeUnmount(() => {
           <div class="sheet-title-group" data-testid="sheet-title-group">
             <p class="sheet-kicker">Sophena</p>
             <h2>{{ title }}</h2>
-            <p v-if="description" class="sheet-description">{{ description }}</p>
           </div>
 
           <button
@@ -70,6 +69,14 @@ onBeforeUnmount(() => {
           >
             Fechar
           </button>
+
+          <p
+            v-if="description"
+            class="sheet-description"
+            data-testid="sheet-header-description"
+          >
+            {{ description }}
+          </p>
         </header>
 
         <div class="sheet-body">
@@ -111,6 +118,9 @@ onBeforeUnmount(() => {
 .sheet-header {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'title close'
+    'description description';
   gap: var(--space-md);
   align-items: start;
   padding: var(--space-lg) var(--space-lg) var(--space-sm);
@@ -120,6 +130,7 @@ onBeforeUnmount(() => {
   display: grid;
   gap: var(--space-xs);
   min-width: 0;
+  grid-area: title;
 }
 
 .sheet-kicker {
@@ -139,6 +150,8 @@ onBeforeUnmount(() => {
 
 .sheet-description {
   color: var(--color-muted);
+  grid-area: description;
+  min-width: 0;
 }
 
 .sheet-close {
@@ -152,6 +165,7 @@ onBeforeUnmount(() => {
   font-weight: 700;
   align-self: start;
   justify-self: end;
+  grid-area: close;
 }
 
 .sheet-close:focus-visible {
@@ -194,8 +208,18 @@ onBeforeUnmount(() => {
 
   .sheet-header {
     display: flex;
+    gap: var(--space-md);
     align-items: flex-start;
     justify-content: space-between;
+    flex-wrap: wrap;
+  }
+
+  .sheet-title-group {
+    flex: 1 1 18rem;
+  }
+
+  .sheet-description {
+    flex-basis: 100%;
   }
 
   .sheet-panel {
