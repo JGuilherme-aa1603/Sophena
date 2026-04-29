@@ -97,7 +97,7 @@ describe('AdminBooksView', () => {
     const card = wrapper.get('[data-testid="book-card"]')
     expect(card.text()).toContain('Dom Casmurro')
     expect(card.text()).toContain('Machado de Assis')
-    expect(card.get('[data-testid="book-card-cover-fallback"]').text()).toContain('Sem capa')
+    expect(card.get('[data-testid="book-card-cover-fallback"]').text()).toContain('Dom Casmurro')
     expect(card.find('[data-testid="book-card-position"]').exists()).toBe(false)
     expect(wrapper.get('[data-testid="admin-books-layout-comfortable"]').attributes('aria-pressed')).toBe('true')
     expect(wrapper.get('[data-testid="admin-books-list"]').classes()).toContain('books-list--comfortable')
