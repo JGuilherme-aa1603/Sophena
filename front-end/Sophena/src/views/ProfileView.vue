@@ -191,7 +191,7 @@ async function logoutFromProfile() {
       <div class="profile-summary-copy">
         <span class="profile-field-label">Usuário</span>
         <strong data-testid="profile-user-name">{{ userName }}</strong>
-        <span data-testid="profile-account-type">{{ accountTypeLabel }}</span>
+        <span class="profile-account-type" data-testid="profile-account-type">{{ accountTypeLabel }}</span>
       </div>
     </section>
 
@@ -475,6 +475,12 @@ async function logoutFromProfile() {
   font-size: 22px;
   line-height: 1.2;
   overflow-wrap: anywhere;
+}
+
+.profile-account-type {
+  color: var(--color-heading);
+  font-weight: 550;
+  line-height: 1.2;
 }
 
 .profile-options {
