@@ -65,7 +65,7 @@ function toneClass(tone: ToastTone) {
   padding: 0.85rem 0.9rem 0.85rem 1rem;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.98);
+  background: var(--color-panel-bg-strong);
   color: var(--color-heading);
   box-shadow: var(--shadow-lg);
   transform: translateX(-50%);
@@ -122,7 +122,7 @@ function toneClass(tone: ToastTone) {
 }
 
 .app-toast-close:focus-visible {
-  outline: 3px solid rgba(53, 95, 74, 0.22);
+  outline: 3px solid var(--color-primary-focus);
   outline-offset: 2px;
 }
 

@@ -805,7 +805,7 @@ async function confirmMove(itemId: string) {
 
 <style scoped>
 .back-button {
-  --color: var(--color-primary);
+  --color: var(--color-primary-readable);
   --border-color: var(--color-primary);
   --border-radius: var(--radius-lg);
 }
@@ -954,9 +954,9 @@ async function confirmMove(itemId: string) {
   --padding-end: 0.32rem;
   min-width: 2.2rem;
   min-height: 2.2rem;
-  border: 1px solid rgba(95, 111, 102, 0.22);
+  border: 1px solid var(--color-muted-border);
   border-radius: 999px;
-  background: rgba(243, 242, 239, 0.68);
+  background: var(--color-control-bg);
 }
 
 .sheet-action-button {
@@ -974,19 +974,19 @@ async function confirmMove(itemId: string) {
 .manual-path {
   gap: var(--space-sm);
   padding: var(--space-md);
-  border: 1px solid rgba(53, 95, 74, 0.14);
+  border: 1px solid var(--color-primary-border-soft);
   border-radius: var(--radius-lg);
   background:
-    linear-gradient(180deg, rgba(246, 245, 242, 0.98), rgba(230, 239, 233, 0.72));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    linear-gradient(180deg, var(--color-cover-fallback-start), var(--color-primary-gradient-muted));
+  box-shadow: inset 0 1px 0 var(--color-inset-highlight);
 }
 
 .manual-path-button {
   min-height: 3rem;
   padding: 0.85rem 1rem;
-  border: 1px solid rgba(53, 95, 74, 0.18);
+  border: 1px solid var(--color-primary-border);
   border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.92);
+  background: var(--color-card);
   color: var(--color-heading);
   font: inherit;
   font-weight: 700;
@@ -996,9 +996,9 @@ async function confirmMove(itemId: string) {
 
 .flow-section {
   padding: var(--space-md);
-  border: 1px solid rgba(226, 224, 219, 0.96);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--color-panel-bg);
   box-shadow: var(--shadow-sm);
 }
 
@@ -1036,9 +1036,9 @@ async function confirmMove(itemId: string) {
   justify-content: space-between;
   gap: var(--space-sm);
   padding: var(--space-md);
-  border: 1px solid rgba(226, 224, 219, 0.96);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.92);
+  background: var(--color-card);
   box-shadow: var(--shadow-sm);
 }
 
@@ -1056,9 +1056,9 @@ async function confirmMove(itemId: string) {
   display: grid;
   gap: var(--space-sm);
   padding: var(--space-md);
-  border: 1px solid rgba(226, 224, 219, 0.96);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.92);
+  background: var(--color-card);
   box-shadow: var(--shadow-sm);
   cursor: pointer;
 }
@@ -1081,9 +1081,9 @@ async function confirmMove(itemId: string) {
   align-items: center;
   justify-content: center;
   padding: 0.85rem 1rem;
-  border: 1px solid rgba(53, 95, 74, 0.18);
+  border: 1px solid var(--color-primary-border);
   border-radius: var(--radius-lg);
-  background: rgba(243, 242, 239, 0.92);
+  background: var(--color-control-bg);
   color: var(--color-heading);
   font-weight: 700;
   text-align: center;

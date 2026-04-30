@@ -194,7 +194,7 @@ function updateLayout(layout: 'comfortable' | 'compact') {
   padding: 0.85rem 1rem;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.92);
+  background: var(--color-card);
   color: var(--color-heading);
   font: inherit;
   font-weight: 700;
@@ -203,15 +203,15 @@ function updateLayout(layout: 'comfortable' | 'compact') {
 
 .book-controls-toggle:focus-visible,
 .layout-toggle-button:focus-visible {
-  outline: 3px solid rgba(53, 95, 74, 0.22);
+  outline: 3px solid var(--color-primary-focus);
   outline-offset: 2px;
 }
 
 .book-controls-panel {
   padding: var(--space-md);
-  border: 1px solid rgba(226, 224, 219, 0.96);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.88);
+  background: var(--color-panel-bg);
   box-shadow: var(--shadow-sm);
 }
 
@@ -237,9 +237,9 @@ function updateLayout(layout: 'comfortable' | 'compact') {
   display: inline-flex;
   gap: 0.35rem;
   padding: 0.25rem;
-  border: 1px solid rgba(226, 224, 219, 0.96);
+  border: 1px solid var(--color-border);
   border-radius: 999px;
-  background: rgba(243, 242, 239, 0.9);
+  background: var(--color-control-bg);
 }
 
 .layout-toggle-button {
@@ -255,7 +255,7 @@ function updateLayout(layout: 'comfortable' | 'compact') {
 
 .layout-toggle-button--active {
   background: var(--color-primary);
-  color: #fff;
+  color: var(--color-on-primary);
   box-shadow: var(--shadow-sm);
 }
 
@@ -273,7 +273,7 @@ function updateLayout(layout: 'comfortable' | 'compact') {
 }
 
 .clear-button {
-  --color: var(--color-primary);
+  --color: var(--color-primary-readable);
   --border-color: var(--color-primary);
 }
 

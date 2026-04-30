@@ -34,9 +34,9 @@ const emit = defineEmits<{
   gap: var(--space-sm);
   justify-items: start;
   padding: var(--space-lg);
-  border: 1px dashed rgba(95, 111, 102, 0.28);
+  border: 1px dashed var(--color-muted-border-strong);
   border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.82);
+  background: var(--color-card);
   box-shadow: var(--shadow-sm);
 }
 
@@ -57,7 +57,7 @@ const emit = defineEmits<{
   border: 0;
   border-radius: var(--radius-lg);
   background: var(--color-primary);
-  color: #fff;
+  color: var(--color-on-primary);
   font: inherit;
   font-weight: 700;
   box-shadow: var(--shadow-md);
@@ -74,7 +74,7 @@ const emit = defineEmits<{
 }
 
 .empty-state-action:focus-visible {
-  outline: 3px solid rgba(53, 95, 74, 0.22);
+  outline: 3px solid var(--color-primary-focus);
   outline-offset: 2px;
 }
 </style>

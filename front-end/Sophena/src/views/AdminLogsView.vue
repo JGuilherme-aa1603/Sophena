@@ -345,7 +345,7 @@ function formatDateTime(value: string) {
 
 <style scoped>
 .back-button {
-  --color: var(--color-primary);
+  --color: var(--color-primary-readable);
   --border-color: var(--color-primary);
   --border-radius: var(--radius-lg);
 }
@@ -357,7 +357,7 @@ function formatDateTime(value: string) {
 
 .summary-card {
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.92);
+  background: var(--color-card);
 }
 
 .summary-card--info {
@@ -408,7 +408,7 @@ function formatDateTime(value: string) {
 .open-filters-button {
   --border-color: var(--color-primary);
   --border-radius: var(--radius-lg);
-  --color: var(--color-primary);
+  --color: var(--color-primary-readable);
   font-weight: 700;
 }
 
@@ -458,9 +458,9 @@ function formatDateTime(value: string) {
   display: grid;
   gap: 0.75rem;
   padding: 1rem 1.1rem;
-  border: 1px solid rgba(215, 222, 207, 0.92);
+  border: 1px solid var(--color-border);
   border-radius: 1rem;
-  background: rgba(255, 253, 249, 0.9);
+  background: var(--color-card);
 }
 
 .log-card-top {
@@ -478,13 +478,13 @@ function formatDateTime(value: string) {
 }
 
 .log-badge--info {
-  background: rgba(47, 93, 66, 0.12);
-  color: var(--color-success);
+  background: var(--color-primary-surface);
+  color: var(--color-primary-readable);
 }
 
 .log-badge--warn {
   background: rgba(143, 106, 37, 0.14);
-  color: #825c18;
+  color: var(--color-warning-text);
 }
 
 .log-badge--error {

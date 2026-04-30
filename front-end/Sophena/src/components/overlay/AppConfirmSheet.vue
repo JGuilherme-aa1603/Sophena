@@ -88,7 +88,7 @@ function confirm() {
   border: 1px solid var(--color-primary);
   border-radius: var(--radius-lg);
   background: var(--color-primary);
-  color: #fff;
+  color: var(--color-on-primary);
   font: inherit;
   font-weight: 700;
   box-shadow: var(--shadow-md);
@@ -107,7 +107,7 @@ function confirm() {
 }
 
 .confirm-sheet-button:focus-visible {
-  outline: 3px solid rgba(53, 95, 74, 0.22);
+  outline: 3px solid var(--color-primary-focus);
   outline-offset: 2px;
 }
 

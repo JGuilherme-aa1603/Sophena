@@ -12,6 +12,7 @@ import { IonicVue } from '@ionic/vue'
 
 import App from './App.vue'
 import router from './router'
+import { useThemePreferencesStore } from './stores/theme-preferences'
 
 const app = createApp(App)
 const pinia = createPinia()
@@ -19,6 +20,9 @@ const pinia = createPinia()
 app.use(IonicVue)
 app.use(pinia)
 app.use(router)
+
+const themePreferencesStore = useThemePreferencesStore(pinia)
+themePreferencesStore.restoreThemePreferences()
 
 router.isReady().then(() => {
   app.mount('#app')

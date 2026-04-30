@@ -101,8 +101,8 @@ async function submitLogin() {
   align-items: center;
   padding: var(--space-lg) var(--space-md);
   background:
-    radial-gradient(circle at top left, rgba(230, 239, 233, 0.94), transparent 36%),
-    radial-gradient(circle at bottom right, rgba(234, 231, 223, 0.9), transparent 32%),
+    radial-gradient(circle at top left, var(--color-primary-gradient-strong), transparent 36%),
+    radial-gradient(circle at bottom right, var(--color-page-gradient-corner), transparent 32%),
     var(--color-background-gradient);
 }
 
@@ -143,7 +143,7 @@ async function submitLogin() {
   margin: 0;
   border-radius: var(--radius-md);
   border: 1px solid var(--color-border);
-  background: rgba(255, 255, 255, 0.94);
+  background: var(--color-card);
   box-shadow: var(--shadow-md);
 }
 
@@ -157,7 +157,7 @@ async function submitLogin() {
   display: grid;
   gap: var(--space-xs);
   padding: var(--space-md);
-  border: 1px solid rgba(226, 224, 219, 0.96);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-surface-soft);
   color: var(--color-muted);

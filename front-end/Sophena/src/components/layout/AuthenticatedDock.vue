@@ -145,10 +145,10 @@ function openProfileFromDock(event: MouseEvent) {
   align-items: center;
   justify-content: space-around;
   padding: 10px;
-  border: 1px solid rgba(226, 224, 219, 0.92);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-xl);
-  background: rgba(255, 255, 255, 0.8);
-  box-shadow: 0 -4px 16px rgba(36, 51, 43, 0.04), var(--shadow-lg);
+  background: var(--color-panel-bg-strong);
+  box-shadow: 0 -4px 16px var(--color-shadow-accent-faint), var(--shadow-lg);
   backdrop-filter: blur(12px);
 }
 
@@ -193,17 +193,17 @@ function openProfileFromDock(event: MouseEvent) {
 }
 
 .dock-link:focus-visible {
-  outline: 3px solid rgba(53, 95, 74, 0.22);
+  outline: 3px solid var(--color-primary-focus);
   outline-offset: 2px;
 }
 
 .dock-link:active {
-  background: rgba(53, 95, 74, 0.12);
+  background: var(--color-primary-surface-active);
 }
 
 .dock-link--active {
   background: var(--color-primary);
-  color: #fff;
+  color: var(--color-on-primary);
   transform: scale(1.05);
   box-shadow: var(--shadow-md);
 }
@@ -216,17 +216,17 @@ function openProfileFromDock(event: MouseEvent) {
   display: grid;
   place-items: center;
   overflow: hidden;
-  border: 1px solid rgba(53, 95, 74, 0.18);
+  border: 1px solid var(--color-primary-border);
   border-radius: 999px;
-  background: rgba(53, 95, 74, 0.1);
-  color: var(--color-primary);
+  background: var(--color-primary-surface);
+  color: var(--color-primary-readable);
   font-size: 0.78rem;
   font-weight: 800;
 }
 
 .dock-profile-avatar--active {
-  border-color: rgba(255, 255, 255, 0.92);
-  background: #fff;
+  border-color: var(--color-on-primary);
+  background: var(--color-surface);
 }
 
 .dock-profile-image {
@@ -241,16 +241,16 @@ function openProfileFromDock(event: MouseEvent) {
 }
 
 .dock-profile-fallback--active {
-  color: var(--color-primary);
+  color: var(--color-primary-readable);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .dock-link:hover {
-    background: rgba(53, 95, 74, 0.08);
+    background: var(--color-primary-surface-hover);
   }
 
   .dock-link--profile:hover {
-    background: rgba(53, 95, 74, 0.08);
+    background: var(--color-primary-surface-hover);
   }
 }
 

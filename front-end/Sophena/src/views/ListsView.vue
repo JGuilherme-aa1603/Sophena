@@ -457,15 +457,15 @@ async function focusCreateList() {
   display: flex;
   gap: var(--space-md);
   align-items: center;
-  border: 1px solid rgba(226, 224, 219, 0.96);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.88);
+  background: var(--color-card);
   box-shadow: var(--shadow-sm);
 }
 
 .list-card:hover {
   transform: translateY(-1px);
-  border-color: rgba(53, 95, 74, 0.24);
+  border-color: var(--color-primary-border-strong);
   box-shadow: var(--shadow-md);
 }
 
@@ -484,7 +484,7 @@ async function focusCreateList() {
 }
 
 .list-options-button {
-  --color: var(--color-primary);
+  --color: var(--color-primary-readable);
   --border-radius: var(--radius-md);
   align-self: center;
   width: 3rem;
@@ -495,7 +495,7 @@ async function focusCreateList() {
 
 .list-link:focus-visible,
 .list-options-button:focus-visible {
-  outline: 3px solid rgba(53, 95, 74, 0.2);
+  outline: 3px solid var(--color-primary-focus);
   outline-offset: 2px;
 }
 
@@ -514,7 +514,7 @@ async function focusCreateList() {
 }
 
 .list-link-action {
-  color: var(--color-primary);
+  color: var(--color-primary-readable);
   font-weight: 700;
 }
 

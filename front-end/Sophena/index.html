@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-theme="green" data-appearance="light">
 
 <head>
   <meta charset="UTF-8">
@@ -10,6 +10,28 @@
 
 <body>
   <div id="app"></div>
+  <script>
+    (function () {
+      var defaultPreferences = {
+        accentColor: 'green',
+        appearance: 'light',
+      }
+
+      try {
+        var savedValue = localStorage.getItem('sophena:theme-preferences')
+        var savedPreferences = savedValue ? JSON.parse(savedValue) : defaultPreferences
+        var isValidAccent = savedPreferences.accentColor === 'green' || savedPreferences.accentColor === 'purple'
+        var isValidAppearance = savedPreferences.appearance === 'light' || savedPreferences.appearance === 'dark'
+        var preferences = isValidAccent && isValidAppearance ? savedPreferences : defaultPreferences
+
+        document.documentElement.dataset.theme = preferences.accentColor
+        document.documentElement.dataset.appearance = preferences.appearance
+      } catch (_error) {
+        document.documentElement.dataset.theme = defaultPreferences.accentColor
+        document.documentElement.dataset.appearance = defaultPreferences.appearance
+      }
+    })()
+  </script>
   <script type="module" src="/src/main.ts"></script>
 </body>
 

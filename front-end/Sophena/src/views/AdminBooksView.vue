@@ -334,7 +334,7 @@ async function goBack() {
 
 <style scoped>
 .back-button {
-  --color: var(--color-primary);
+  --color: var(--color-primary-readable);
   --border-color: var(--color-primary);
   --border-radius: var(--radius-lg);
 }
@@ -422,9 +422,9 @@ async function goBack() {
   --padding-end: 0.32rem;
   min-width: 2.2rem;
   min-height: 2.2rem;
-  border: 1px solid rgba(95, 111, 102, 0.22);
+  border: 1px solid var(--color-muted-border);
   border-radius: 999px;
-  background: rgba(243, 242, 239, 0.68);
+  background: var(--color-control-bg);
   font-weight: 700;
 }
 

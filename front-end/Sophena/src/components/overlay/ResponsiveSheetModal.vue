@@ -109,9 +109,9 @@ onBeforeUnmount(() => {
   width: min(100%, 42rem);
   max-height: min(88vh, 48rem);
   overflow: auto;
-  border: 1px solid rgba(226, 224, 219, 0.88);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-xl) var(--radius-xl) 0 0;
-  background: rgba(255, 255, 255, 0.98);
+  background: var(--color-panel-bg-strong);
   box-shadow: var(--shadow-lg);
 }
 
@@ -169,7 +169,7 @@ onBeforeUnmount(() => {
 }
 
 .sheet-close:focus-visible {
-  outline: 3px solid rgba(53, 95, 74, 0.22);
+  outline: 3px solid var(--color-primary-focus);
   outline-offset: 2px;
 }
 

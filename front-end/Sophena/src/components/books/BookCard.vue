@@ -100,12 +100,14 @@ const useOverlayControls = computed(() => props.layout === 'compact')
   padding: var(--space-md);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.92);
+  background: var(--color-card);
   box-shadow: var(--shadow-sm);
   transition:
     transform var(--transition-fast),
     box-shadow var(--transition-fast),
-    border-color var(--transition-fast);
+    background-color 0.25s ease,
+    color 0.25s ease,
+    border-color 0.25s ease;
 }
 
 .book-card--compact {
@@ -115,7 +117,7 @@ const useOverlayControls = computed(() => props.layout === 'compact')
 
 .book-card--interactive:hover {
   transform: translateY(-2px);
-  border-color: rgba(53, 95, 74, 0.2);
+  border-color: var(--color-primary-border);
   box-shadow: var(--shadow-md);
 }
 
@@ -145,11 +147,11 @@ const useOverlayControls = computed(() => props.layout === 'compact')
   display: grid;
   place-items: center;
   border-radius: 999px;
-  border: 1px solid rgba(53, 95, 74, 0.08);
-  background: rgba(230, 239, 233, 0.9);
+  border: 1px solid var(--color-primary-border-soft);
+  background: var(--color-primary-soft);
   color: var(--color-primary);
   font-weight: 700;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  box-shadow: inset 0 1px 0 var(--color-inset-highlight);
 }
 
 .book-card-cover {
@@ -163,12 +165,12 @@ const useOverlayControls = computed(() => props.layout === 'compact')
   border-radius: var(--radius-sm);
   overflow: hidden;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(233, 238, 230, 0.84)),
+    linear-gradient(180deg, var(--color-cover-highlight), var(--color-primary-cover-gradient)),
     var(--color-surface-soft);
-  border: 1px solid rgba(173, 184, 165, 0.82);
+  border: 1px solid var(--color-primary-cover-border);
   box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.42),
-    0 10px 20px rgba(36, 51, 43, 0.08);
+    inset 0 0 0 1px var(--color-cover-inner-border),
+    0 10px 20px var(--color-shadow-accent-soft);
 }
 
 .book-card-cover-image {
@@ -191,7 +193,7 @@ const useOverlayControls = computed(() => props.layout === 'compact')
   font-weight: 700;
   line-height: 1.3;
   background:
-    linear-gradient(180deg, rgba(248, 246, 240, 0.98), rgba(233, 238, 230, 0.9));
+    linear-gradient(180deg, var(--color-cover-fallback-start), var(--color-primary-cover-fallback));
 }
 
 .book-card--with-overlay-controls .book-card-cover-fallback {
@@ -269,7 +271,7 @@ const useOverlayControls = computed(() => props.layout === 'compact')
   padding: 0;
   font-size: 0.82rem;
   line-height: 1.2;
-  box-shadow: 0 8px 18px rgba(36, 51, 43, 0.12);
+  box-shadow: 0 8px 18px var(--color-shadow-accent-medium);
 }
 
 .book-card--compact .book-card-cover {

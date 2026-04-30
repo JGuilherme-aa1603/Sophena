@@ -140,7 +140,7 @@ async function goBack() {
 
 <style scoped>
 .back-button {
-  --color: var(--color-primary);
+  --color: var(--color-primary-readable);
   --border-color: var(--color-primary);
   --border-radius: var(--radius-lg);
 }
@@ -187,7 +187,7 @@ async function goBack() {
   padding: var(--space-xs);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.92);
+  background: var(--color-card);
 }
 
 .permission-option {
@@ -202,13 +202,13 @@ async function goBack() {
 }
 
 .permission-option--active {
-  border-color: rgba(53, 95, 74, 0.26);
+  border-color: var(--color-primary-border-strong);
   background: var(--color-primary-soft);
   color: var(--color-primary);
 }
 
 .permission-option:focus-visible {
-  outline: 3px solid rgba(53, 95, 74, 0.18);
+  outline: 3px solid var(--color-primary-focus-soft);
   outline-offset: 2px;
 }
 

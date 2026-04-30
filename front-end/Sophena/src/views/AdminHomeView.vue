@@ -108,9 +108,9 @@ async function openAdminBooks() {
   display: grid;
   gap: var(--space-xs);
   padding: var(--space-md);
-  border: 1px solid rgba(226, 224, 219, 0.96);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.76);
+  background: var(--color-panel-bg);
   box-shadow: var(--shadow-sm);
 }
 
@@ -137,7 +137,7 @@ async function openAdminBooks() {
   padding: var(--space-md);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.92);
+  background: var(--color-card);
   box-shadow: var(--shadow-sm);
 }
 

@@ -6,11 +6,16 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import ProfileView from '../ProfileView.vue'
 import { createAppRouter } from '@/router'
 import { useAuthStore } from '@/stores/auth'
+import { useThemePreferencesStore } from '@/stores/theme-preferences'
 import { useToastStore } from '@/stores/toast'
 
 describe('ProfileView', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
+    localStorage.clear()
+    sessionStorage.clear()
+    document.documentElement.removeAttribute('data-theme')
+    document.documentElement.removeAttribute('data-appearance')
     vi.restoreAllMocks()
   })
 
@@ -76,6 +81,82 @@ describe('ProfileView', () => {
 
     expect(wrapper.get('[data-testid="profile-picture-options-sheet"]').text()).toContain('Alterar foto')
     expect(wrapper.get('[data-testid="profile-picture-options-sheet"]').text()).toContain('Remover foto')
+  })
+
+  it('mostra a opção Temas acima de Sair e abre o painel de temas', async () => {
+    authenticate()
+
+    const { wrapper } = await mountProfile()
+    const themeOption = wrapper.get('[data-testid="profile-action-themes"]')
+    const logoutOption = wrapper.get('[data-testid="profile-action-logout"]')
+
+    expect(themeOption.text()).toContain('Temas')
+    expect(themeOption.element.compareDocumentPosition(logoutOption.element) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+
+    await themeOption.trigger('click')
+
+    const themeSheet = wrapper.get('[data-testid="profile-theme-options-sheet"]')
+    expect(themeSheet.attributes('aria-modal')).toBe('true')
+    expect(themeSheet.text()).toContain('Cor do tema')
+    expect(themeSheet.text()).toContain('Clássico')
+    expect(themeSheet.text()).toContain('Moderno')
+    expect(themeSheet.text()).toContain('Aparência')
+    expect(themeSheet.text()).toContain('Claro')
+    expect(themeSheet.text()).toContain('Escuro')
+  })
+
+  it('troca para o tema moderno sem limpar a sessão atual', async () => {
+    const authStore = authenticate()
+    const themeStore = useThemePreferencesStore()
+    const clearSessionSpy = vi.spyOn(authStore, 'clearSession')
+    const logoutSpy = vi.spyOn(authStore, 'logout')
+
+    const { wrapper } = await mountProfile()
+
+    await wrapper.get('[data-testid="profile-action-themes"]').trigger('click')
+    await wrapper.get('[data-testid="profile-theme-purple"]').trigger('click')
+
+    expect(themeStore.accentColor).toBe('purple')
+    expect(document.documentElement.dataset.theme).toBe('purple')
+    expect(authStore.accessToken).toBe('token-valido')
+    expect(authStore.user?.user_name).toBe('leitora')
+    expect(clearSessionSpy).not.toHaveBeenCalled()
+    expect(logoutSpy).not.toHaveBeenCalled()
+  })
+
+  it('troca a aparência entre escuro e claro mantendo a cor de destaque e a sessão atual', async () => {
+    const authStore = authenticate()
+    const themeStore = useThemePreferencesStore()
+    const clearSessionSpy = vi.spyOn(authStore, 'clearSession')
+    const logoutSpy = vi.spyOn(authStore, 'logout')
+
+    const { router, wrapper } = await mountProfile()
+
+    await wrapper.get('[data-testid="profile-action-themes"]').trigger('click')
+    await wrapper.get('[data-testid="profile-theme-purple"]').trigger('click')
+    await wrapper.get('[data-testid="profile-appearance-dark"]').trigger('click')
+
+    expect(themeStore.accentColor).toBe('purple')
+    expect(themeStore.appearance).toBe('dark')
+    expect(document.documentElement.dataset.theme).toBe('purple')
+    expect(document.documentElement.dataset.appearance).toBe('dark')
+    expect(authStore.accessToken).toBe('token-valido')
+    expect(authStore.user?.user_name).toBe('leitora')
+    expect(router.currentRoute.value.name).toBe('profile')
+    expect(clearSessionSpy).not.toHaveBeenCalled()
+    expect(logoutSpy).not.toHaveBeenCalled()
+
+    await wrapper.get('[data-testid="profile-appearance-light"]').trigger('click')
+
+    expect(themeStore.accentColor).toBe('purple')
+    expect(themeStore.appearance).toBe('light')
+    expect(document.documentElement.dataset.theme).toBe('purple')
+    expect(document.documentElement.dataset.appearance).toBe('light')
+    expect(authStore.accessToken).toBe('token-valido')
+    expect(authStore.user?.user_name).toBe('leitora')
+    expect(router.currentRoute.value.name).toBe('profile')
+    expect(clearSessionSpy).not.toHaveBeenCalled()
+    expect(logoutSpy).not.toHaveBeenCalled()
   })
 
   it('amplia a foto de perfil ao tocar na foto cadastrada', async () => {
