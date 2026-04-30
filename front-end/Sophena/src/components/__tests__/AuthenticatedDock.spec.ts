@@ -45,6 +45,21 @@ describe('AuthenticatedDock', () => {
     expect(wrapper.find('[data-testid="dock-profile-fallback"]').exists()).toBe(false)
   })
 
+  it('mantém o indicador de perfil visível quando não há foto e a tela de perfil está ativa', () => {
+    const wrapper = mount(AuthenticatedDock, {
+      props: {
+        activeRoute: 'profile',
+        showAdmin: false,
+        userName: 'leitora',
+        userPictureUrl: null,
+      },
+    })
+
+    expect(wrapper.get('[data-testid="dock-action-profile"]').classes()).toContain('dock-link--active')
+    expect(wrapper.get('[data-testid="dock-profile-fallback"]').classes()).toContain('dock-profile-fallback--active')
+    expect(wrapper.find('[data-testid="dock-profile-image"]').exists()).toBe(false)
+  })
+
   it('mostra atalho admin para administradores', async () => {
     const wrapper = mount(AuthenticatedDock, {
       props: {

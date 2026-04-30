@@ -107,7 +107,10 @@ function openProfileFromDock(event: MouseEvent) {
       data-testid="dock-action-profile"
       @click="openProfileFromDock"
     >
-      <span class="dock-profile-avatar">
+      <span
+        class="dock-profile-avatar"
+        :class="{ 'dock-profile-avatar--active': isProfileActive && !userPictureUrl }"
+      >
         <img
           v-if="userPictureUrl"
           class="dock-profile-image"
@@ -118,6 +121,7 @@ function openProfileFromDock(event: MouseEvent) {
         <span
           v-else
           class="dock-profile-fallback"
+          :class="{ 'dock-profile-fallback--active': isProfileActive }"
           data-testid="dock-profile-fallback"
         >
           {{ profileInitial }}
@@ -219,6 +223,11 @@ function openProfileFromDock(event: MouseEvent) {
   font-weight: 800;
 }
 
+.dock-profile-avatar--active {
+  border-color: rgba(255, 255, 255, 0.92);
+  background: #fff;
+}
+
 .dock-profile-image {
   width: 100%;
   height: 100%;
@@ -228,6 +237,10 @@ function openProfileFromDock(event: MouseEvent) {
 
 .dock-profile-fallback {
   line-height: 1;
+}
+
+.dock-profile-fallback--active {
+  color: var(--color-primary);
 }
 
 @media (hover: hover) and (pointer: fine) {
