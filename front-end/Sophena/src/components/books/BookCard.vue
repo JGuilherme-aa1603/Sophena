@@ -179,6 +179,7 @@ const useOverlayControls = computed(() => props.layout === 'compact')
 }
 
 .book-card-cover-fallback {
+  --book-card-cover-fallback-font-size: clamp(0.56rem, 0.45rem + 0.6vw, 0.65rem);
   width: 100%;
   height: 100%;
   display: grid;
@@ -186,11 +187,15 @@ const useOverlayControls = computed(() => props.layout === 'compact')
   padding: 0.85rem 0.7rem;
   text-align: center;
   color: var(--color-heading);
-  font-size: 0.95rem;
+  font-size: var(--book-card-cover-fallback-font-size);
   font-weight: 700;
   line-height: 1.3;
   background:
     linear-gradient(180deg, rgba(248, 246, 240, 0.98), rgba(233, 238, 230, 0.9));
+}
+
+.book-card--with-overlay-controls .book-card-cover-fallback {
+  --book-card-cover-fallback-font-size: 0.58rem;
 }
 
 .book-card-cover-fallback--centered {
@@ -303,6 +308,14 @@ const useOverlayControls = computed(() => props.layout === 'compact')
   .book-card-cover {
     width: 4.85rem;
     height: 7rem;
+  }
+
+  .book-card-cover-fallback {
+    --book-card-cover-fallback-font-size: clamp(0.58rem, 0.4rem + 0.45vw, 0.68rem);
+  }
+
+  .book-card--with-overlay-controls .book-card-cover-fallback {
+    --book-card-cover-fallback-font-size: 0.54rem;
   }
 
   .book-card--compact .book-card-cover {
