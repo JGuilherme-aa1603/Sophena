@@ -19,6 +19,8 @@ const previousCorsOrigin = process.env.CORS_ORIGIN;
 const previousRateLimitWindowMs = process.env.AUTH_RATE_LIMIT_WINDOW_MS;
 const previousLoginRateLimitMax = process.env.AUTH_LOGIN_RATE_LIMIT_MAX;
 const previousRefreshRateLimitMax = process.env.AUTH_REFRESH_RATE_LIMIT_MAX;
+const previousNodeEnv = process.env.NODE_ENV;
+const previousTrustProxy = process.env.TRUST_PROXY;
 
 async function login(credentials: {
   user_name: string;
@@ -36,6 +38,8 @@ beforeEach(async () => {
   process.env.AUTH_RATE_LIMIT_WINDOW_MS = "60000";
   process.env.AUTH_LOGIN_RATE_LIMIT_MAX = "2";
   process.env.AUTH_REFRESH_RATE_LIMIT_MAX = "2";
+  process.env.NODE_ENV = "test";
+  delete process.env.TRUST_PROXY;
 
   await resetDatabase();
   server = await startHttpServer(createApp());
@@ -50,11 +54,22 @@ afterEach(async () => {
 
 afterEach(async () => {
   await disconnectDatabase();
-  process.env.CORS_ORIGIN = previousCorsOrigin;
-  process.env.AUTH_RATE_LIMIT_WINDOW_MS = previousRateLimitWindowMs;
-  process.env.AUTH_LOGIN_RATE_LIMIT_MAX = previousLoginRateLimitMax;
-  process.env.AUTH_REFRESH_RATE_LIMIT_MAX = previousRefreshRateLimitMax;
+  restoreEnv("CORS_ORIGIN", previousCorsOrigin);
+  restoreEnv("AUTH_RATE_LIMIT_WINDOW_MS", previousRateLimitWindowMs);
+  restoreEnv("AUTH_LOGIN_RATE_LIMIT_MAX", previousLoginRateLimitMax);
+  restoreEnv("AUTH_REFRESH_RATE_LIMIT_MAX", previousRefreshRateLimitMax);
+  restoreEnv("NODE_ENV", previousNodeEnv);
+  restoreEnv("TRUST_PROXY", previousTrustProxy);
 });
+
+function restoreEnv(name: string, value: string | undefined) {
+  if (value === undefined) {
+    delete process.env[name];
+    return;
+  }
+
+  process.env[name] = value;
+}
 
 describe("HTTP hardening", () => {
   test("disables x-powered-by and sets helmet security headers", async () => {
@@ -82,6 +97,33 @@ describe("HTTP hardening", () => {
     assert.equal(response.status, 204);
     assert.equal(response.headers.get("access-control-allow-origin"), "http://localhost:5173");
     assert.ok(response.headers.get("access-control-allow-methods")?.includes("POST"));
+  });
+
+  test("trusts one proxy in production so hosted rate limiting can read forwarded IPs", () => {
+    process.env.NODE_ENV = "production";
+    delete process.env.TRUST_PROXY;
+
+    const app = createApp();
+
+    assert.equal(app.get("trust proxy"), 1);
+  });
+
+  test("does not trust proxies by default outside production", () => {
+    process.env.NODE_ENV = "test";
+    delete process.env.TRUST_PROXY;
+
+    const app = createApp();
+
+    assert.equal(app.get("trust proxy"), false);
+  });
+
+  test("allows the trust proxy value to be configured by environment", () => {
+    process.env.NODE_ENV = "test";
+    process.env.TRUST_PROXY = "2";
+
+    const app = createApp();
+
+    assert.equal(app.get("trust proxy"), 2);
   });
 
   test("rate limits repeated login attempts", async () => {

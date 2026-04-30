@@ -29,6 +29,7 @@ type AppDependencies = {
 export function createApp(dependencies: AppDependencies = {}) {
   const app = express();
 
+  configureTrustProxy(app);
   app.disable("x-powered-by");
   app.use(helmet());
   app.use(cors(createCorsOptions()));
@@ -59,6 +60,38 @@ function createCorsOptions(): cors.CorsOptions {
     allowedHeaders: ["Content-Type", "Authorization"],
     optionsSuccessStatus: 204,
   };
+}
+
+function configureTrustProxy(app: express.Express) {
+  const trustProxy = readTrustProxySetting();
+
+  if (trustProxy !== undefined) {
+    app.set("trust proxy", trustProxy);
+  }
+}
+
+function readTrustProxySetting() {
+  const configuredValue = process.env.TRUST_PROXY?.trim();
+
+  if (!configuredValue) {
+    return process.env.NODE_ENV === "production" ? 1 : undefined;
+  }
+
+  if (configuredValue === "true") {
+    return true;
+  }
+
+  if (configuredValue === "false") {
+    return false;
+  }
+
+  const numericValue = Number(configuredValue);
+
+  if (Number.isInteger(numericValue) && numericValue >= 0) {
+    return numericValue;
+  }
+
+  return configuredValue;
 }
 
 function createAuthRouterDependencies(dependencies: AppDependencies) {
