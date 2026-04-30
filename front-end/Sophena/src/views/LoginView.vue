@@ -101,7 +101,7 @@ async function submitLogin() {
   align-items: center;
   padding: var(--space-lg) var(--space-md);
   background:
-    radial-gradient(circle at top left, var(--color-primary-gradient-strong), transparent 36%),
+    radial-gradient(circle at top left, var(--color-page-accent-gradient-strong), transparent 36%),
     radial-gradient(circle at bottom right, var(--color-page-gradient-corner), transparent 32%),
     var(--color-background-gradient);
 }
