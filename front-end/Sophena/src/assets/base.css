@@ -39,8 +39,8 @@
   --color-bg: #f6f5f2;
   --color-background: var(--color-bg);
   --color-background-gradient: linear-gradient(180deg, var(--color-bg) 0%, #eae7df 100%);
-  --color-page-accent-gradient-soft: var(--color-primary-gradient-soft);
-  --color-page-accent-gradient-strong: var(--color-primary-gradient-strong);
+  --color-page-accent-gradient-soft: rgba(205, 223, 211, 0.98);
+  --color-page-accent-gradient-strong: rgba(205, 223, 211, 0.99);
   --color-page-gradient-corner: rgba(234, 231, 223, 0.92);
   --color-surface: #ffffff;
   --color-surface-soft: #f3f2ef;
@@ -122,6 +122,8 @@
   --color-primary-cover-gradient: rgba(221, 214, 254, 0.84);
   --color-primary-cover-fallback: rgba(221, 214, 254, 0.9);
   --color-primary-cover-border: rgba(196, 181, 253, 0.82);
+  --color-page-accent-gradient-soft: rgba(221, 214, 254, 0.98);
+  --color-page-accent-gradient-strong: rgba(221, 214, 254, 0.99);
   --color-muted-border: rgba(101, 91, 120, 0.22);
   --color-muted-border-strong: rgba(101, 91, 120, 0.28);
   --color-shadow-accent-faint: rgba(47, 33, 77, 0.04);

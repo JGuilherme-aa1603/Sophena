@@ -74,7 +74,7 @@ async function openProfileFromDock() {
   padding: var(--space-lg) var(--space-md);
   padding-bottom: calc(var(--dock-height) + var(--space-xl) + var(--viewport-bottom-offset, 0px));
   background:
-    radial-gradient(circle at top left, var(--color-page-accent-gradient-soft), transparent 30%),
+    radial-gradient(circle at top left, var(--color-page-accent-gradient-soft), transparent 38%),
     radial-gradient(circle at bottom right, var(--color-page-gradient-corner), transparent 32%),
     var(--color-background-gradient);
 }

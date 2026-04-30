@@ -13,11 +13,18 @@ function cssBlock(selector: string) {
 }
 
 describe('theme tokens', () => {
-  it('mantém o brilho claro do tema apontando para as cores de destaque', () => {
+  it('deixa o brilho claro verde mais visível sem depender dos tokens de capa', () => {
     const rootTokens = cssBlock(':root')
 
-    expect(rootTokens).toContain('--color-page-accent-gradient-soft: var(--color-primary-gradient-soft);')
-    expect(rootTokens).toContain('--color-page-accent-gradient-strong: var(--color-primary-gradient-strong);')
+    expect(rootTokens).toContain('--color-page-accent-gradient-soft: rgba(205, 223, 211, 0.98);')
+    expect(rootTokens).toContain('--color-page-accent-gradient-strong: rgba(205, 223, 211, 0.99);')
+  })
+
+  it('deixa o brilho claro roxo mais visível quando o tema moderno está ativo', () => {
+    const purpleTokens = cssBlock(":root[data-theme='purple']")
+
+    expect(purpleTokens).toContain('--color-page-accent-gradient-soft: rgba(221, 214, 254, 0.98);')
+    expect(purpleTokens).toContain('--color-page-accent-gradient-strong: rgba(221, 214, 254, 0.99);')
   })
 
   it('usa brilho colorido próprio no modo escuro sem reaproveitar o gradiente claro', () => {
