@@ -49,14 +49,14 @@ function openProfileFromDock(event: MouseEvent) {
   <nav class="authenticated-dock" aria-label="Navegação principal" data-testid="authenticated-dock">
     <button
       type="button"
-      class="dock-link"
+      class="dock-link dock-link--equal"
       :class="{ 'dock-link--active': isListsActive }"
       :aria-current="isListsActive ? 'page' : undefined"
       data-testid="dock-link-lists"
       @click="navigateFromDock($event, 'app-home')"
     >
       <IonIcon
-        class="dock-link-icon"
+        class="dock-link-visual dock-link-icon"
         :icon="libraryOutline"
         aria-hidden="true"
         data-testid="dock-icon-lists"
@@ -66,14 +66,14 @@ function openProfileFromDock(event: MouseEvent) {
 
     <button
       type="button"
-      class="dock-link"
+      class="dock-link dock-link--equal"
       :class="{ 'dock-link--active': isBooksActive }"
       :aria-current="isBooksActive ? 'page' : undefined"
       data-testid="dock-link-books"
       @click="navigateFromDock($event, 'books')"
     >
       <IonIcon
-        class="dock-link-icon"
+        class="dock-link-visual dock-link-icon"
         :icon="bookOutline"
         aria-hidden="true"
         data-testid="dock-icon-books"
@@ -84,14 +84,14 @@ function openProfileFromDock(event: MouseEvent) {
     <button
       v-if="showAdmin"
       type="button"
-      class="dock-link"
+      class="dock-link dock-link--equal"
       :class="{ 'dock-link--active': isAdminActive }"
       :aria-current="isAdminActive ? 'page' : undefined"
       data-testid="dock-link-admin"
       @click="navigateFromDock($event, 'admin-home')"
     >
       <IonIcon
-        class="dock-link-icon"
+        class="dock-link-visual dock-link-icon"
         :icon="settingsOutline"
         aria-hidden="true"
         data-testid="dock-icon-admin"
@@ -101,15 +101,16 @@ function openProfileFromDock(event: MouseEvent) {
 
     <button
       type="button"
-      class="dock-link dock-link--profile"
+      class="dock-link dock-link--equal dock-link--profile"
       :class="{ 'dock-link--active': isProfileActive }"
       :aria-current="isProfileActive ? 'page' : undefined"
       data-testid="dock-action-profile"
       @click="openProfileFromDock"
     >
       <span
-        class="dock-profile-avatar"
+        class="dock-link-visual dock-profile-avatar"
         :class="{ 'dock-profile-avatar--active': isProfileActive && !userPictureUrl }"
+        data-testid="dock-profile-avatar"
       >
         <img
           v-if="userPictureUrl"
@@ -154,7 +155,6 @@ function openProfileFromDock(event: MouseEvent) {
 .dock-link {
   min-width: 4.35rem;
   min-height: 3rem;
-  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 0.38rem;
@@ -177,13 +177,17 @@ function openProfileFromDock(event: MouseEvent) {
     box-shadow var(--transition-fast);
 }
 
+.dock-link--equal {
+  flex: 1 1 0;
+}
+
 .dock-link-label {
   display: block;
   line-height: 1.1;
   text-align: center;
 }
 
-.dock-link-icon {
+.dock-link-visual {
   width: 1.2rem;
   height: 1.2rem;
 }
@@ -205,13 +209,10 @@ function openProfileFromDock(event: MouseEvent) {
 }
 
 .dock-link--profile {
-  flex: 0.78;
   font-weight: 600;
 }
 
 .dock-profile-avatar {
-  width: 1.45rem;
-  height: 1.45rem;
   display: grid;
   place-items: center;
   overflow: hidden;

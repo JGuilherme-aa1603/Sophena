@@ -149,4 +149,33 @@ describe('AuthenticatedDock', () => {
     expect(wrapper.get('[data-testid="dock-link-admin"]').classes()).not.toContain('dock-link--active')
     expect(wrapper.get('[data-testid="dock-action-profile"]').classes()).toContain('dock-link--profile')
   })
+
+  it('mantém todos os itens com a mesma base e ícones com a mesma área visual', () => {
+    const wrapper = mount(AuthenticatedDock, {
+      props: {
+        activeRoute: 'app-home',
+        showAdmin: true,
+        userName: 'admin',
+        userPictureUrl: null,
+      },
+    })
+
+    const dockItems = [
+      wrapper.get('[data-testid="dock-link-lists"]'),
+      wrapper.get('[data-testid="dock-link-books"]'),
+      wrapper.get('[data-testid="dock-link-admin"]'),
+      wrapper.get('[data-testid="dock-action-profile"]'),
+    ]
+
+    for (const item of dockItems) {
+      expect(item.classes()).toContain('dock-link')
+      expect(item.classes()).toContain('dock-link--equal')
+    }
+
+    expect(wrapper.get('[data-testid="dock-action-profile"]').classes()).not.toContain('dock-link--compact')
+    expect(wrapper.get('[data-testid="dock-icon-lists"]').classes()).toContain('dock-link-visual')
+    expect(wrapper.get('[data-testid="dock-icon-books"]').classes()).toContain('dock-link-visual')
+    expect(wrapper.get('[data-testid="dock-icon-admin"]').classes()).toContain('dock-link-visual')
+    expect(wrapper.get('[data-testid="dock-profile-avatar"]').classes()).toContain('dock-link-visual')
+  })
 })
