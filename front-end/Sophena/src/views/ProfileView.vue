@@ -17,6 +17,7 @@ const pictureFileInput = ref<HTMLInputElement | null>(null)
 const isPictureOptionsOpen = ref(false)
 const isRemovePictureConfirmOpen = ref(false)
 const isLogoutConfirmOpen = ref(false)
+const isPictureZoomOpen = ref(false)
 
 const userName = computed(() => authStore.user?.user_name ?? '')
 const userPictureUrl = computed(() => authStore.user?.user_picture_url ?? null)
@@ -25,6 +26,18 @@ const accountTypeLabel = computed(() => (authStore.user?.is_admin ? 'Administrad
 
 function requestPictureOptions() {
   isPictureOptionsOpen.value = true
+}
+
+function openPictureZoom() {
+  if (!userPictureUrl.value) {
+    return
+  }
+
+  isPictureZoomOpen.value = true
+}
+
+function closePictureZoom() {
+  isPictureZoomOpen.value = false
 }
 
 function requestPictureChange() {
@@ -97,16 +110,24 @@ async function logoutFromProfile() {
     </header>
 
     <section class="profile-summary app-fade-in" data-testid="profile-summary">
-      <div class="profile-avatar" data-testid="profile-avatar">
+      <button
+        v-if="userPictureUrl"
+        type="button"
+        class="profile-avatar profile-avatar--button"
+        :aria-label="`Ampliar foto de perfil de ${userName}`"
+        data-testid="profile-picture-zoom-trigger"
+        @click="openPictureZoom"
+      >
         <img
-          v-if="userPictureUrl"
           class="profile-avatar-image"
           :src="userPictureUrl"
           :alt="`Foto de perfil de ${userName}`"
           data-testid="profile-picture-image"
         >
+      </button>
+
+      <div v-else class="profile-avatar" data-testid="profile-avatar">
         <span
-          v-else
           class="profile-avatar-fallback"
           data-testid="profile-picture-fallback"
         >
@@ -120,6 +141,24 @@ async function logoutFromProfile() {
         <span data-testid="profile-account-type">{{ accountTypeLabel }}</span>
       </div>
     </section>
+
+    <div
+      v-if="isPictureZoomOpen && userPictureUrl"
+      class="profile-picture-zoom-overlay"
+      role="dialog"
+      aria-modal="true"
+      :aria-label="`Foto de perfil de ${userName}`"
+      data-testid="profile-picture-zoom-overlay"
+      @click.self="closePictureZoom"
+    >
+      <img
+        class="profile-picture-zoom-image"
+        :src="userPictureUrl"
+        :alt="`Foto de perfil de ${userName}`"
+        data-testid="profile-picture-zoom-image"
+        @click.stop
+      >
+    </div>
 
     <section class="profile-options app-fade-in" aria-label="Opções do perfil">
       <button
@@ -244,11 +283,47 @@ async function logoutFromProfile() {
   font-weight: 800;
 }
 
+.profile-avatar--button {
+  padding: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: zoom-in;
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.profile-avatar--button:focus-visible {
+  outline: 3px solid rgba(53, 95, 74, 0.22);
+  outline-offset: 3px;
+}
+
 .profile-avatar-image {
   width: 100%;
   height: 100%;
   display: block;
   object-fit: cover;
+}
+
+.profile-picture-zoom-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  display: grid;
+  place-items: center;
+  padding: var(--space-lg);
+  background: rgba(28, 37, 32, 0.58);
+}
+
+.profile-picture-zoom-image {
+  width: min(82vw, 72vh, 28rem);
+  height: min(82vw, 72vh, 28rem);
+  display: block;
+  object-fit: cover;
+  border: 3px solid rgba(255, 255, 255, 0.92);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
 }
 
 .profile-summary-copy,
@@ -370,6 +445,12 @@ async function logoutFromProfile() {
 }
 
 @media (hover: hover) and (pointer: fine) {
+  .profile-avatar--button:hover {
+    border-color: rgba(53, 95, 74, 0.42);
+    transform: scale(1.02);
+    box-shadow: var(--shadow-sm);
+  }
+
   .profile-option:hover {
     border-color: rgba(53, 95, 74, 0.28);
   }

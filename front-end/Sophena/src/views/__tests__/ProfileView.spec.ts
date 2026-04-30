@@ -78,6 +78,57 @@ describe('ProfileView', () => {
     expect(wrapper.get('[data-testid="profile-picture-options-sheet"]').text()).toContain('Remover foto')
   })
 
+  it('amplia a foto de perfil ao tocar na foto cadastrada', async () => {
+    authenticate({
+      user_picture_url: 'https://cdn.sophena.test/user-pictures/leitora.webp',
+    })
+
+    const { wrapper } = await mountProfile()
+
+    await wrapper.get('[data-testid="profile-picture-zoom-trigger"]').trigger('click')
+
+    const zoomImage = wrapper.get('[data-testid="profile-picture-zoom-image"]')
+    expect(wrapper.get('[data-testid="profile-picture-zoom-overlay"]').attributes('aria-modal')).toBe('true')
+    expect(zoomImage.attributes('src')).toBe('https://cdn.sophena.test/user-pictures/leitora.webp')
+    expect(zoomImage.attributes('alt')).toBe('Foto de perfil de leitora')
+  })
+
+  it('fecha a foto ampliada ao tocar fora da foto', async () => {
+    authenticate({
+      user_picture_url: 'https://cdn.sophena.test/user-pictures/leitora.webp',
+    })
+
+    const { wrapper } = await mountProfile()
+
+    await wrapper.get('[data-testid="profile-picture-zoom-trigger"]').trigger('click')
+    await wrapper.get('[data-testid="profile-picture-zoom-overlay"]').trigger('click')
+
+    expect(wrapper.find('[data-testid="profile-picture-zoom-overlay"]').exists()).toBe(false)
+  })
+
+  it('mantém a foto ampliada aberta ao tocar na imagem', async () => {
+    authenticate({
+      user_picture_url: 'https://cdn.sophena.test/user-pictures/leitora.webp',
+    })
+
+    const { wrapper } = await mountProfile()
+
+    await wrapper.get('[data-testid="profile-picture-zoom-trigger"]').trigger('click')
+    await wrapper.get('[data-testid="profile-picture-zoom-image"]').trigger('click')
+
+    expect(wrapper.find('[data-testid="profile-picture-zoom-overlay"]').exists()).toBe(true)
+  })
+
+  it('não exibe controle de zoom quando o usuário não tem foto', async () => {
+    authenticate()
+
+    const { wrapper } = await mountProfile()
+
+    expect(wrapper.get('[data-testid="profile-picture-fallback"]').text()).toBe('L')
+    expect(wrapper.find('[data-testid="profile-picture-zoom-trigger"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="profile-picture-zoom-overlay"]').exists()).toBe(false)
+  })
+
   it('altera a foto depois de abrir as opções de foto', async () => {
     const authStore = authenticate()
     const toastStore = useToastStore()
