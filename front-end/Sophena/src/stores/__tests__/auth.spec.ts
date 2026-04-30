@@ -236,17 +236,19 @@ describe('auth store', () => {
     expect(authStore.errorMessage).toBe('')
   })
 
-  it('faz logout pela API antes de limpar a sessão em memória', async () => {
+  it('faz logout pela API antes de limpar a sessão em memória e recarregar a página', async () => {
     const fetchMock = vi
       .fn<typeof fetch>()
       .mockResolvedValueOnce(createJsonResponse({
         status: 200,
         body: {},
       }))
+    const reloadSpy = vi.fn()
 
     vi.stubGlobal('fetch', fetchMock)
 
     const authStore = useAuthStore()
+    authStore.setPageReloadHandler(reloadSpy)
     authStore.setAccessToken('token-valido')
     authStore.user = {
       id: 'user-10',
@@ -270,9 +272,10 @@ describe('auth store', () => {
     expect(authStore.accessToken).toBeNull()
     expect(authStore.user).toBeNull()
     expect(authStore.errorMessage).toBe('')
+    expect(reloadSpy).toHaveBeenCalledTimes(1)
   })
 
-  it('mantém a sessão e mostra mensagem amigável quando o logout falha', async () => {
+  it('mantém a sessão, mostra mensagem amigável e não recarrega a página quando o logout falha', async () => {
     const fetchMock = vi
       .fn<typeof fetch>()
       .mockResolvedValueOnce(createJsonResponse({
@@ -281,10 +284,12 @@ describe('auth store', () => {
           message: 'Internal server error',
         },
       }))
+    const reloadSpy = vi.fn()
 
     vi.stubGlobal('fetch', fetchMock)
 
     const authStore = useAuthStore()
+    authStore.setPageReloadHandler(reloadSpy)
     authStore.setAccessToken('token-valido')
     authStore.user = {
       id: 'user-11',
@@ -303,6 +308,7 @@ describe('auth store', () => {
       is_admin: false,
     })
     expect(authStore.errorMessage).toBe('Não foi possível sair agora. Tente novamente em instantes.')
+    expect(reloadSpy).not.toHaveBeenCalled()
   })
 
   it('altera a foto do usuário autenticado e atualiza a sessão em memória', async () => {

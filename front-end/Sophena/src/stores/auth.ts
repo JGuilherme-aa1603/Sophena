@@ -74,11 +74,18 @@ export const useAuthStore = defineStore('auth', () => {
   const isLoading = ref(false)
   const isUpdatingPicture = ref(false)
   const hasResolvedSession = ref(false)
+  const pageReloadHandler = ref(() => {
+    window.location.reload()
+  })
 
   const isAuthenticated = computed(() => Boolean(accessToken.value && user.value))
 
   function setAccessToken(token: string | null) {
     accessToken.value = token
+  }
+
+  function setPageReloadHandler(handler: () => void) {
+    pageReloadHandler.value = handler
   }
 
   function clearSession() {
@@ -191,6 +198,7 @@ export const useAuthStore = defineStore('auth', () => {
       await logoutRequest(accessToken.value)
       clearSession()
       errorMessage.value = ''
+      pageReloadHandler.value()
     } catch (error) {
       errorMessage.value = mapLogoutError()
       throw error
@@ -258,6 +266,7 @@ export const useAuthStore = defineStore('auth', () => {
     removeUserPicture,
     restoreSessionFromRefreshCookie,
     setAccessToken,
+    setPageReloadHandler,
     updateUserPicture,
   }
 })
