@@ -199,6 +199,7 @@ onMounted(async () => {
 watch(
   listId,
   async (nextListId) => {
+    loadErrorMessage.value = ''
     await listDetailStore.fetchListDetail(nextListId)
     loadErrorMessage.value = toLoadErrorMessage(listDetailStore.errorMessage)
   },

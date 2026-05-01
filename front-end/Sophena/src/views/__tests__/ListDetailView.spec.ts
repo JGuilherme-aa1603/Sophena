@@ -161,6 +161,32 @@ describe('ListDetailView', () => {
     expect(wrapper.text()).not.toContain('Quero ler')
   })
 
+  it('não mostra aviso antigo de sessão expirada enquanto a lista carrega novamente', async () => {
+    const router = createAppRouter(createMemoryHistory())
+    authenticateUser()
+    const store = useListDetailStore()
+    store.errorMessage = 'Sua sessão expirou. Entre novamente.'
+    vi.spyOn(store, 'fetchListDetail').mockImplementation(() => {
+      store.isLoading = true
+      store.errorMessage = ''
+      return new Promise(() => {})
+    })
+
+    await router.push('/app/lists/lista-1')
+
+    const wrapper = mount(ListDetailView, {
+      global: {
+        plugins: [router],
+      },
+    })
+
+    await router.isReady()
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('Carregando sua lista...')
+    expect(wrapper.text()).not.toContain('Sua sessão expirou. Entre novamente.')
+  })
+
   it('permite alternar para o layout compacto e salva a preferência', async () => {
     const router = createAppRouter(createMemoryHistory())
     authenticateUser()
