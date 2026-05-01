@@ -48,6 +48,27 @@ describe('http api client', () => {
   it('mantém URL absoluta quando ela não aponta para o back-end local', () => {
     vi.stubEnv('VITE_API_BASE_URL', 'https://api.sophena.com')
 
-    expect(getApiBaseUrl()).toBe('https://api.sophena.com')
+    expect(getApiBaseUrl({
+      hostname: 'localhost',
+      origin: 'http://localhost:5173',
+    })).toBe('https://api.sophena.com')
+  })
+
+  it('usa proxy relativo em produção quando a API configurada está em outro domínio', () => {
+    vi.stubEnv('VITE_API_BASE_URL', 'https://sophena-api-final.onrender.com')
+
+    expect(getApiBaseUrl({
+      hostname: 'sophena.vercel.app',
+      origin: 'https://sophena.vercel.app',
+    })).toBe('/api')
+  })
+
+  it('usa caminho relativo em produção quando a API configurada já está na mesma origem', () => {
+    vi.stubEnv('VITE_API_BASE_URL', 'https://sophena.vercel.app')
+
+    expect(getApiBaseUrl({
+      hostname: 'sophena.vercel.app',
+      origin: 'https://sophena.vercel.app',
+    })).toBe('')
   })
 })

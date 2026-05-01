@@ -18,4 +18,19 @@ describe('configuracao de rotas da Vercel', () => {
       destination: '/index.html',
     })
   })
+
+  test('encaminha chamadas da API pelo mesmo domínio antes do fallback do app', async () => {
+    const configPath = join(process.cwd(), 'vercel.json')
+    const config = JSON.parse(await readFile(configPath, 'utf8')) as {
+      rewrites?: Array<{
+        source: string
+        destination: string
+      }>
+    }
+
+    expect(config.rewrites?.[0]).toEqual({
+      source: '/api/(.*)',
+      destination: 'https://sophena-api-final.onrender.com/$1',
+    })
+  })
 })

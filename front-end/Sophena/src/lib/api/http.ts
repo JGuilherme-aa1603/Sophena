@@ -7,15 +7,21 @@ export class ApiError extends Error {
   }
 }
 
-export function getApiBaseUrl() {
+type BrowserLocation = Pick<Location, 'hostname' | 'origin'>
+
+export function getApiBaseUrl(currentLocation: BrowserLocation | null = readBrowserLocation()) {
   const configuredBaseUrl = import.meta.env.VITE_API_BASE_URL ?? ''
 
   if (!configuredBaseUrl) {
     return ''
   }
 
-  if (shouldUseRelativeApiBaseUrl(configuredBaseUrl)) {
+  if (shouldUseRelativeApiBaseUrl(configuredBaseUrl, currentLocation)) {
     return ''
+  }
+
+  if (shouldUseProductionApiProxy(configuredBaseUrl, currentLocation)) {
+    return '/api'
   }
 
   return configuredBaseUrl
@@ -42,22 +48,46 @@ export async function requestJson<T>(
   return body as T
 }
 
-function shouldUseRelativeApiBaseUrl(configuredBaseUrl: string) {
-  if (typeof window === 'undefined') {
-    return false
-  }
-
-  if (!isLocalHostname(window.location.hostname)) {
+function shouldUseRelativeApiBaseUrl(configuredBaseUrl: string, currentLocation: BrowserLocation | null) {
+  if (!currentLocation) {
     return false
   }
 
   try {
     const parsedUrl = new URL(configuredBaseUrl)
 
-    return isLocalHostname(parsedUrl.hostname) && parsedUrl.port === '3000'
+    if (parsedUrl.origin === currentLocation.origin) {
+      return true
+    }
+
+    return isLocalHostname(currentLocation.hostname) &&
+      isLocalHostname(parsedUrl.hostname) &&
+      parsedUrl.port === '3000'
   } catch {
     return false
   }
+}
+
+function shouldUseProductionApiProxy(configuredBaseUrl: string, currentLocation: BrowserLocation | null) {
+  if (!currentLocation || isLocalHostname(currentLocation.hostname)) {
+    return false
+  }
+
+  try {
+    const parsedUrl = new URL(configuredBaseUrl)
+
+    return parsedUrl.origin !== currentLocation.origin
+  } catch {
+    return false
+  }
+}
+
+function readBrowserLocation() {
+  if (typeof window === 'undefined') {
+    return null
+  }
+
+  return window.location
 }
 
 function isLocalHostname(hostname: string) {
