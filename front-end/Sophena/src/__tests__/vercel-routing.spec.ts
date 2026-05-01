@@ -19,7 +19,7 @@ describe('configuracao de rotas da Vercel', () => {
     })
   })
 
-  test('encaminha chamadas da API pelo mesmo domínio antes do fallback do app', async () => {
+  test('encaminha chamadas da API pelos caminhos originais antes do fallback do app', async () => {
     const configPath = join(process.cwd(), 'vercel.json')
     const config = JSON.parse(await readFile(configPath, 'utf8')) as {
       rewrites?: Array<{
@@ -28,9 +28,24 @@ describe('configuracao de rotas da Vercel', () => {
       }>
     }
 
-    expect(config.rewrites?.[0]).toEqual({
-      source: '/api/(.*)',
-      destination: 'https://sophena-api-final.onrender.com/$1',
+    const apiBaseUrl = 'https://sophena-api-final.onrender.com'
+    const apiRewrites = [
+      { source: '/auth', destination: `${apiBaseUrl}/auth` },
+      { source: '/auth/(.*)', destination: `${apiBaseUrl}/auth/$1` },
+      { source: '/admin', destination: `${apiBaseUrl}/admin` },
+      { source: '/admin/(.*)', destination: `${apiBaseUrl}/admin/$1` },
+      { source: '/books', destination: `${apiBaseUrl}/books` },
+      { source: '/books/(.*)', destination: `${apiBaseUrl}/books/$1` },
+      { source: '/lists', destination: `${apiBaseUrl}/lists` },
+      { source: '/lists/(.*)', destination: `${apiBaseUrl}/lists/$1` },
+      { source: '/uploads', destination: `${apiBaseUrl}/uploads` },
+      { source: '/uploads/(.*)', destination: `${apiBaseUrl}/uploads/$1` },
+    ]
+
+    expect(config.rewrites?.slice(0, apiRewrites.length)).toEqual(apiRewrites)
+    expect(config.rewrites?.[apiRewrites.length]).toEqual({
+      source: '/(.*)',
+      destination: '/index.html',
     })
   })
 })

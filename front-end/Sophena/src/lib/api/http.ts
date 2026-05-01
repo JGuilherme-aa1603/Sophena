@@ -20,8 +20,8 @@ export function getApiBaseUrl(currentLocation: BrowserLocation | null = readBrow
     return ''
   }
 
-  if (shouldUseProductionApiProxy(configuredBaseUrl, currentLocation)) {
-    return '/api'
+  if (shouldUseSameOriginApiProxy(configuredBaseUrl, currentLocation)) {
+    return ''
   }
 
   return configuredBaseUrl
@@ -68,7 +68,7 @@ function shouldUseRelativeApiBaseUrl(configuredBaseUrl: string, currentLocation:
   }
 }
 
-function shouldUseProductionApiProxy(configuredBaseUrl: string, currentLocation: BrowserLocation | null) {
+function shouldUseSameOriginApiProxy(configuredBaseUrl: string, currentLocation: BrowserLocation | null) {
   if (!currentLocation || isLocalHostname(currentLocation.hostname)) {
     return false
   }

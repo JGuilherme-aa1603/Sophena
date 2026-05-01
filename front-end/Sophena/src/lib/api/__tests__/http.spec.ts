@@ -54,13 +54,13 @@ describe('http api client', () => {
     })).toBe('https://api.sophena.com')
   })
 
-  it('usa proxy relativo em produção quando a API configurada está em outro domínio', () => {
+  it('usa caminho relativo em produção quando a API configurada está em outro domínio', () => {
     vi.stubEnv('VITE_API_BASE_URL', 'https://sophena-api-final.onrender.com')
 
     expect(getApiBaseUrl({
       hostname: 'sophena.vercel.app',
       origin: 'https://sophena.vercel.app',
-    })).toBe('/api')
+    })).toBe('')
   })
 
   it('usa caminho relativo em produção quando a API configurada já está na mesma origem', () => {

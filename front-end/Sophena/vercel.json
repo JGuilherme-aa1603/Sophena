@@ -1,8 +1,44 @@
 {
   "rewrites": [
     {
-      "source": "/api/(.*)",
-      "destination": "https://sophena-api-final.onrender.com/$1"
+      "source": "/auth",
+      "destination": "https://sophena-api-final.onrender.com/auth"
+    },
+    {
+      "source": "/auth/(.*)",
+      "destination": "https://sophena-api-final.onrender.com/auth/$1"
+    },
+    {
+      "source": "/admin",
+      "destination": "https://sophena-api-final.onrender.com/admin"
+    },
+    {
+      "source": "/admin/(.*)",
+      "destination": "https://sophena-api-final.onrender.com/admin/$1"
+    },
+    {
+      "source": "/books",
+      "destination": "https://sophena-api-final.onrender.com/books"
+    },
+    {
+      "source": "/books/(.*)",
+      "destination": "https://sophena-api-final.onrender.com/books/$1"
+    },
+    {
+      "source": "/lists",
+      "destination": "https://sophena-api-final.onrender.com/lists"
+    },
+    {
+      "source": "/lists/(.*)",
+      "destination": "https://sophena-api-final.onrender.com/lists/$1"
+    },
+    {
+      "source": "/uploads",
+      "destination": "https://sophena-api-final.onrender.com/uploads"
+    },
+    {
+      "source": "/uploads/(.*)",
+      "destination": "https://sophena-api-final.onrender.com/uploads/$1"
     },
     {
       "source": "/(.*)",
