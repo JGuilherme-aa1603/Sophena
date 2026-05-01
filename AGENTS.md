@@ -297,6 +297,18 @@ When implementing a feature:
 
 ---
 
+## Commit Workflow
+
+When finishing any task:
+
+- create a Git commit before handing the task back to the user
+- use the Conventional Commits style already established in the project history
+- keep each commit focused on the completed task
+- do not include unrelated user changes in the commit
+- if the task requires multiple distinct phases, commit each completed phase separately
+
+---
+
 ## Enforcement Note
 
 This testing workflow is mandatory.
