@@ -1,6 +1,7 @@
 import { ResourceNotFoundError, ValidationError } from "../../auth/application/auth-errors.ts";
 import { type AuthenticatedUserView } from "../../auth/domain/auth-user.ts";
 import { type Book } from "../../books/domain/book.ts";
+import { parseManagedBookCoverUrl } from "../../books/application/book-cover-url.ts";
 import { type BookList } from "../../lists/domain/book-list.ts";
 import {
   type BookListItem,
@@ -197,6 +198,7 @@ function validateCreateListItemInput(input: CreateListItemInput) {
   const hasBookId = input.book_id !== undefined;
   const hasManualBook = input.book !== undefined;
   const parsedPosition = parsePositiveInteger(input.position, "position", errors, false);
+  let manualCoverUrl: string | null = null;
 
   if (hasBookId === hasManualBook) {
     errors.push({
@@ -223,7 +225,7 @@ function validateCreateListItemInput(input: CreateListItemInput) {
     } else {
       const title = typeof input.book.title === "string" ? input.book.title : null;
       const author = typeof input.book.author === "string" ? input.book.author : null;
-      const coverUrl = input.book.cover_url;
+      manualCoverUrl = parseManagedBookCoverUrl(input.book.cover_url, errors);
 
       if (!title || title.trim().length === 0) {
         errors.push({
@@ -239,12 +241,6 @@ function validateCreateListItemInput(input: CreateListItemInput) {
         });
       }
 
-      if (coverUrl !== undefined && coverUrl !== null && typeof coverUrl !== "string") {
-        errors.push({
-          field: "cover_url",
-          message: "cover_url must be a string, null, or undefined",
-        });
-      }
     }
   }
 
@@ -263,9 +259,7 @@ function validateCreateListItemInput(input: CreateListItemInput) {
     book: {
       title: (input.book as { title: string }).title.trim(),
       author: (input.book as { author: string }).author.trim(),
-      cover_url: typeof (input.book as { cover_url?: unknown }).cover_url === "string"
-        ? (input.book as { cover_url: string }).cover_url
-        : null,
+      cover_url: manualCoverUrl,
     },
     position: parsedPosition,
   };

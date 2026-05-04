@@ -18,6 +18,7 @@ import {
 } from "../auth/support/http-test-server.ts";
 
 let server: Server | undefined;
+const previousR2PublicBaseUrl = process.env.R2_PUBLIC_BASE_URL;
 
 async function loginAs(credentials: {
   user_name: string;
@@ -48,6 +49,7 @@ async function createAuthenticatedUser(input: {
 }
 
 beforeEach(async () => {
+  process.env.R2_PUBLIC_BASE_URL = "https://pub-c31d766e66754764b7152a2a64220803.r2.dev";
   await resetDatabase();
   server = await startHttpServer(createApp());
 });
@@ -61,7 +63,17 @@ afterEach(async () => {
 
 afterEach(async () => {
   await disconnectDatabase();
+  restoreEnv("R2_PUBLIC_BASE_URL", previousR2PublicBaseUrl);
 });
+
+function restoreEnv(name: string, value: string | undefined) {
+  if (value === undefined) {
+    delete process.env[name];
+    return;
+  }
+
+  process.env[name] = value;
+}
 
 describe("Book list items", () => {
   test("requires authentication for GET /lists/:listId/items", async () => {
@@ -349,7 +361,7 @@ describe("Book list items", () => {
         book: {
           title: "Livro manual novo",
           author: "Autora manual",
-          cover_url: "https://example.com/manual.jpg",
+          cover_url: "https://pub-c31d766e66754764b7152a2a64220803.r2.dev/book-covers/manual.webp",
         },
       },
     });
@@ -359,6 +371,41 @@ describe("Book list items", () => {
     assert.equal(response.body.position, 1);
     assert.equal(typeof response.body.book_id, "string");
     assert.equal(typeof response.body.created_at, "string");
+  });
+
+  test("rejects external cover URLs when adding a manual book", async () => {
+    const { user, accessToken } = await createAuthenticatedUser({
+      user_name: "items-add-manual-external-cover",
+      password: "ItensSenha#332",
+    });
+    const list = await createTestList({
+      name: "Lista com capa externa",
+      user_id: user.id,
+    });
+
+    const response = await requestJson(server!, {
+      method: "POST",
+      path: `/lists/${list.id}/items`,
+      headers: {
+        authorization: accessToken,
+      },
+      body: {
+        book: {
+          title: "Livro com capa externa",
+          author: "Autora externa",
+          cover_url: "https://example.com/manual.jpg",
+        },
+      },
+    });
+
+    assert.equal(response.status, 400);
+    assert.equal(response.body.message, "Validation failed");
+    assert.deepEqual(response.body.errors, [
+      {
+        field: "cover_url",
+        message: "cover_url must be a managed book cover URL",
+      },
+    ]);
   });
 
   test("reuses an existing global book when adding a manual book with the same title and author", async () => {
@@ -386,7 +433,7 @@ describe("Book list items", () => {
         book: {
           title: "Livro global reutilizado",
           author: "Autor reaproveitado",
-          cover_url: "https://example.com/outra.jpg",
+          cover_url: "https://pub-c31d766e66754764b7152a2a64220803.r2.dev/book-covers/outra.webp",
         },
       },
     });

@@ -4,6 +4,7 @@ import {
 } from "../../auth/application/auth-errors.ts";
 import { type Book, toBookView } from "../domain/book.ts";
 import { BookDeletionConfirmationRequiredError } from "./book-errors.ts";
+import { parseManagedBookCoverUrl } from "./book-cover-url.ts";
 
 export type BookRepository = {
   findAll(filters?: BookFilters): Promise<Book[]>;
@@ -115,7 +116,7 @@ function validateCreateBookInput(input: CreateBookInput) {
   const errors: Array<{ field: string; message: string }> = [];
   const title = typeof input.title === "string" ? input.title : null;
   const author = typeof input.author === "string" ? input.author : null;
-  const coverUrl = input.cover_url;
+  const coverUrl = parseManagedBookCoverUrl(input.cover_url, errors);
 
   if (!title || title.trim().length === 0) {
     errors.push({ field: "title", message: "title must be a string" });
@@ -125,14 +126,6 @@ function validateCreateBookInput(input: CreateBookInput) {
     errors.push({ field: "author", message: "author must be a string" });
   }
 
-  if (
-    coverUrl !== undefined &&
-    coverUrl !== null &&
-    typeof coverUrl !== "string"
-  ) {
-    errors.push({ field: "cover_url", message: "cover_url must be a string, null, or undefined" });
-  }
-
   if (errors.length > 0) {
     throw new ValidationError(errors);
   }
@@ -140,6 +133,6 @@ function validateCreateBookInput(input: CreateBookInput) {
   return {
     title: title!.trim(),
     author: author!.trim(),
-    cover_url: typeof coverUrl === "string" ? coverUrl : null,
+    cover_url: coverUrl,
   };
 }

@@ -23,6 +23,9 @@ import {
 
 let server: Server | undefined;
 let deletedCoverUrls: string[] = [];
+const managedCoverUrl = "https://pub-c31d766e66754764b7152a2a64220803.r2.dev/book-covers/capitaes.webp";
+const externalCoverUrl = "https://example.com/capitaes.jpg";
+const previousR2PublicBaseUrl = process.env.R2_PUBLIC_BASE_URL;
 
 async function loginAs(credentials: {
   user_name: string;
@@ -39,6 +42,7 @@ async function loginAs(credentials: {
 }
 
 beforeEach(async () => {
+  process.env.R2_PUBLIC_BASE_URL = "https://pub-c31d766e66754764b7152a2a64220803.r2.dev";
   await resetDatabase();
   deletedCoverUrls = [];
   server = await startHttpServer(createApp({
@@ -61,7 +65,17 @@ afterEach(async () => {
 
 afterEach(async () => {
   await disconnectDatabase();
+  restoreEnv("R2_PUBLIC_BASE_URL", previousR2PublicBaseUrl);
 });
+
+function restoreEnv(name: string, value: string | undefined) {
+  if (value === undefined) {
+    delete process.env[name];
+    return;
+  }
+
+  process.env[name] = value;
+}
 
 describe("Books", () => {
   test("requires authentication for GET /books", async () => {
@@ -358,7 +372,7 @@ describe("Books", () => {
       body: {
         title: "Capitaes da Areia",
         author: "Jorge Amado",
-        cover_url: "https://example.com/capitaes.jpg",
+        cover_url: managedCoverUrl,
       },
     });
 
@@ -366,7 +380,40 @@ describe("Books", () => {
     assert.deepEqual(Object.keys(response.body).sort(), ["author", "cover_url", "id", "title"]);
     assert.equal(response.body.title, "Capitaes da Areia");
     assert.equal(response.body.author, "Jorge Amado");
-    assert.equal(response.body.cover_url, "https://example.com/capitaes.jpg");
+    assert.equal(response.body.cover_url, managedCoverUrl);
+  });
+
+  test("rejects external cover URLs when creating a global book", async () => {
+    await createTestUser({
+      user_name: "books-create-external-cover-user",
+      password: "BooksSenha#334",
+    });
+    const accessToken = await loginAs({
+      user_name: "books-create-external-cover-user",
+      password: "BooksSenha#334",
+    });
+
+    const response = await requestJson(server!, {
+      method: "POST",
+      path: "/books",
+      headers: {
+        authorization: accessToken,
+      },
+      body: {
+        title: "Capitaes da Areia",
+        author: "Jorge Amado",
+        cover_url: externalCoverUrl,
+      },
+    });
+
+    assert.equal(response.status, 400);
+    assert.equal(response.body.message, "Validation failed");
+    assert.deepEqual(response.body.errors, [
+      {
+        field: "cover_url",
+        message: "cover_url must be a managed book cover URL",
+      },
+    ]);
   });
 
   test("reuses an existing global book with the same title and author instead of duplicating it", async () => {
@@ -394,7 +441,7 @@ describe("Books", () => {
       body: {
         title: "Vidas Secas",
         author: "Graciliano Ramos",
-        cover_url: "https://example.com/outra-capa.jpg",
+        cover_url: "https://pub-c31d766e66754764b7152a2a64220803.r2.dev/book-covers/outra-capa.webp",
       },
     });
 
@@ -431,7 +478,7 @@ describe("Books", () => {
         body: {
           title: "Grande Sertao: Veredas",
           author: "Joao Guimaraes Rosa",
-          cover_url: "https://example.com/grande-sertao.jpg",
+          cover_url: "https://pub-c31d766e66754764b7152a2a64220803.r2.dev/book-covers/grande-sertao.webp",
         },
       }),
       requestJson(server!, {
@@ -443,7 +490,7 @@ describe("Books", () => {
         body: {
           title: "Grande Sertao: Veredas",
           author: "Joao Guimaraes Rosa",
-          cover_url: "https://example.com/outra-capa.jpg",
+          cover_url: "https://pub-c31d766e66754764b7152a2a64220803.r2.dev/book-covers/outra-capa.webp",
         },
       }),
     ]);
