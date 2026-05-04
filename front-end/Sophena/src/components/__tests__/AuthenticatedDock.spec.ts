@@ -15,12 +15,12 @@ describe('AuthenticatedDock', () => {
     })
 
     expect(wrapper.text()).toContain('Listas')
-    expect(wrapper.text()).toContain('Livros')
     expect(wrapper.text()).toContain('Perfil')
+    expect(wrapper.text()).not.toContain('Livros')
     expect(wrapper.text()).not.toContain('Sair')
     expect(wrapper.text()).not.toContain('Admin')
     expect(wrapper.get('[data-testid="dock-link-lists"]').attributes('aria-current')).toBe('page')
-    expect(wrapper.find('[data-testid="dock-icon-books"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="dock-icon-books"]').exists()).toBe(false)
     expect(wrapper.find('[data-testid="dock-icon-lists"]').exists()).toBe(true)
     expect(wrapper.get('[data-testid="dock-profile-fallback"]').text()).toBe('L')
 
@@ -74,29 +74,12 @@ describe('AuthenticatedDock', () => {
     expect(wrapper.find('[data-testid="dock-icon-admin"]').exists()).toBe(true)
 
     await wrapper.get('[data-testid="dock-link-lists"]').trigger('click')
-    await wrapper.get('[data-testid="dock-link-books"]').trigger('click')
     await wrapper.get('[data-testid="dock-link-admin"]').trigger('click')
 
     expect(wrapper.emitted('navigate')).toEqual([
       ['app-home'],
-      ['books'],
       ['admin-home'],
     ])
-  })
-
-  it('destaca a tela de livros quando ela está ativa', () => {
-    const wrapper = mount(AuthenticatedDock, {
-      props: {
-        activeRoute: 'books',
-        showAdmin: false,
-        userName: 'leitora',
-        userPictureUrl: null,
-      },
-    })
-
-    expect(wrapper.get('[data-testid="dock-link-books"]').attributes('aria-current')).toBe('page')
-    expect(wrapper.get('[data-testid="dock-link-books"]').classes()).toContain('dock-link--active')
-    expect(wrapper.get('[data-testid="dock-link-lists"]').classes()).not.toContain('dock-link--active')
   })
 
   it('remove o foco visual depois do clique por toque ou mouse', async () => {
@@ -162,7 +145,6 @@ describe('AuthenticatedDock', () => {
 
     const dockItems = [
       wrapper.get('[data-testid="dock-link-lists"]'),
-      wrapper.get('[data-testid="dock-link-books"]'),
       wrapper.get('[data-testid="dock-link-admin"]'),
       wrapper.get('[data-testid="dock-action-profile"]'),
     ]
@@ -174,7 +156,7 @@ describe('AuthenticatedDock', () => {
 
     expect(wrapper.get('[data-testid="dock-action-profile"]').classes()).not.toContain('dock-link--compact')
     expect(wrapper.get('[data-testid="dock-icon-lists"]').classes()).toContain('dock-link-visual')
-    expect(wrapper.get('[data-testid="dock-icon-books"]').classes()).toContain('dock-link-visual')
+    expect(wrapper.find('[data-testid="dock-icon-books"]').exists()).toBe(false)
     expect(wrapper.get('[data-testid="dock-icon-admin"]').classes()).toContain('dock-link-visual')
     expect(wrapper.get('[data-testid="dock-profile-avatar"]').classes()).toContain('dock-link-visual')
   })

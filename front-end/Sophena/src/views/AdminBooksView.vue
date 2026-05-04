@@ -11,7 +11,7 @@ import AuthenticatedScaffold from '@/components/layout/AuthenticatedScaffold.vue
 import AppConfirmSheet from '@/components/overlay/AppConfirmSheet.vue'
 import ResponsiveSheetModal from '@/components/overlay/ResponsiveSheetModal.vue'
 import { useAdminBooksStore } from '@/stores/admin-books'
-import type { BookCoverFilter } from '@/stores/books'
+import type { BookCoverFilter } from '@/lib/api/books'
 import { useToastStore } from '@/stores/toast'
 
 const router = useRouter()

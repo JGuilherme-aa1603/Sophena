@@ -55,22 +55,6 @@ describe('auth router guards', () => {
     expect(router.currentRoute.value.name).toBe('app-home')
   })
 
-  it('permite usuário comum na tela pública de livros', async () => {
-    const router = createAppRouter(createMemoryHistory())
-    const authStore = useAuthStore()
-    authStore.setAccessToken('token-valido')
-    authStore.user = {
-      id: 'user-books',
-      user_name: 'leitora',
-      is_admin: false,
-    }
-    vi.spyOn(authStore, 'ensureSession').mockResolvedValue(true)
-
-    await router.push('/app/books')
-
-    expect(router.currentRoute.value.name).toBe('books')
-  })
-
   it('restaura a sessão pelo refresh cookie e entra na área principal', async () => {
     const router = createAppRouter(createMemoryHistory())
     const authStore = useAuthStore()

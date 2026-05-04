@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { IonIcon } from '@ionic/vue'
-import { bookOutline, libraryOutline, settingsOutline } from 'ionicons/icons'
+import { libraryOutline, settingsOutline } from 'ionicons/icons'
 
 const props = defineProps<{
   activeRoute: string
@@ -11,12 +11,11 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  navigate: [target: 'app-home' | 'books' | 'admin-home']
+  navigate: [target: 'app-home' | 'admin-home']
   profile: []
 }>()
 
 const isListsActive = computed(() => props.activeRoute === 'app-home' || props.activeRoute === 'list-detail')
-const isBooksActive = computed(() => props.activeRoute === 'books')
 const isAdminActive = computed(() => props.activeRoute.startsWith('admin-'))
 const isProfileActive = computed(() => props.activeRoute === 'profile')
 const profileInitial = computed(() => props.userName.trim().slice(0, 1).toUpperCase() || 'U')
@@ -33,7 +32,7 @@ function clearPointerFocus(event: MouseEvent) {
   }
 }
 
-function navigateFromDock(event: MouseEvent, target: 'app-home' | 'books' | 'admin-home') {
+function navigateFromDock(event: MouseEvent, target: 'app-home' | 'admin-home') {
   clearPointerFocus(event)
   emit('navigate', target)
 }
@@ -62,23 +61,6 @@ function openProfileFromDock(event: MouseEvent) {
         data-testid="dock-icon-lists"
       />
       <span class="dock-link-label">Listas</span>
-    </button>
-
-    <button
-      type="button"
-      class="dock-link dock-link--equal"
-      :class="{ 'dock-link--active': isBooksActive }"
-      :aria-current="isBooksActive ? 'page' : undefined"
-      data-testid="dock-link-books"
-      @click="navigateFromDock($event, 'books')"
-    >
-      <IonIcon
-        class="dock-link-visual dock-link-icon"
-        :icon="bookOutline"
-        aria-hidden="true"
-        data-testid="dock-icon-books"
-      />
-      <span class="dock-link-label">Livros</span>
     </button>
 
     <button

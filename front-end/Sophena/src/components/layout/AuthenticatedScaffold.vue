@@ -28,7 +28,7 @@ const userName = computed(() => authStore.user?.user_name ?? '')
 const userPictureUrl = computed(() => authStore.user?.user_picture_url ?? null)
 const { viewportStyle } = useViewportBottomOffset()
 
-async function navigateFromDock(target: 'app-home' | 'books' | 'admin-home') {
+async function navigateFromDock(target: 'app-home' | 'admin-home') {
   if (activeRoute.value === target) {
     return
   }

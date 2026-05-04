@@ -10,7 +10,6 @@ import AdminHomeView from '../views/AdminHomeView.vue'
 import AdminBooksView from '../views/AdminBooksView.vue'
 import AdminLogsView from '../views/AdminLogsView.vue'
 import AdminUsersView from '../views/AdminUsersView.vue'
-import BooksView from '../views/BooksView.vue'
 import ListsView from '../views/ListsView.vue'
 import ListDetailView from '../views/ListDetailView.vue'
 import LoginView from '../views/LoginView.vue'
@@ -56,14 +55,6 @@ export function createAppRouter(history: RouterHistory) {
         path: '/app/lists/:listId',
         name: 'list-detail',
         component: ListDetailView,
-        meta: {
-          requiresAuth: true,
-        },
-      },
-      {
-        path: '/app/books',
-        name: 'books',
-        component: BooksView,
         meta: {
           requiresAuth: true,
         },
