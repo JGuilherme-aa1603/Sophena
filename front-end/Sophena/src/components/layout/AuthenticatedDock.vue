@@ -132,6 +132,14 @@ function openProfileFromDock(event: MouseEvent) {
   background: var(--color-panel-bg-strong);
   box-shadow: 0 -4px 16px var(--color-shadow-accent-faint), var(--shadow-lg);
   backdrop-filter: blur(12px);
+  transition:
+    opacity var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+:global(body.sophena-sheet-open) .authenticated-dock {
+  opacity: 0;
+  pointer-events: none;
 }
 
 .dock-link {

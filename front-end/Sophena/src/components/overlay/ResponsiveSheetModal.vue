@@ -1,5 +1,11 @@
+<script lang="ts">
+let activeSheetCount = 0
+</script>
+
 <script setup lang="ts">
 import { onBeforeUnmount, watch } from 'vue'
+
+const activeSheetBodyClass = 'sophena-sheet-open'
 
 const props = withDefaults(defineProps<{
   modelValue: boolean
@@ -17,8 +23,28 @@ const emit = defineEmits<{
   'update:modelValue': [value: boolean]
 }>()
 
+let isRegisteredAsOpen = false
+
 function close() {
   emit('update:modelValue', false)
+}
+
+function updateActiveSheetState(isOpen: boolean) {
+  if (typeof document === 'undefined') {
+    return
+  }
+
+  if (isOpen && !isRegisteredAsOpen) {
+    activeSheetCount += 1
+    isRegisteredAsOpen = true
+  }
+
+  if (!isOpen && isRegisteredAsOpen) {
+    activeSheetCount = Math.max(0, activeSheetCount - 1)
+    isRegisteredAsOpen = false
+  }
+
+  document.body.classList.toggle(activeSheetBodyClass, activeSheetCount > 0)
 }
 
 function handleKeydown(event: KeyboardEvent) {
@@ -28,6 +54,8 @@ function handleKeydown(event: KeyboardEvent) {
 }
 
 watch(() => props.modelValue, (isOpen) => {
+  updateActiveSheetState(isOpen)
+
   if (isOpen) {
     window.addEventListener('keydown', handleKeydown)
     return
@@ -38,6 +66,7 @@ watch(() => props.modelValue, (isOpen) => {
 
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', handleKeydown)
+  updateActiveSheetState(false)
 })
 </script>
 
