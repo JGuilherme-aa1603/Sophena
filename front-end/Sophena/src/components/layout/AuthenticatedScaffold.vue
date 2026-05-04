@@ -70,6 +70,7 @@ async function openProfileFromDock() {
 
 <style scoped>
 .authenticated-page {
+  position: relative;
   min-height: 100%;
   padding: var(--space-lg) var(--space-md);
   padding-bottom: calc(var(--dock-height) + var(--space-xl) + var(--viewport-bottom-offset, 0px));
@@ -77,6 +78,21 @@ async function openProfileFromDock() {
     radial-gradient(circle at top left, var(--color-page-accent-gradient-soft), transparent 38%),
     radial-gradient(circle at bottom right, var(--color-page-gradient-corner), transparent 32%),
     var(--color-background-gradient);
+}
+
+.authenticated-page::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: radial-gradient(circle, rgba(74, 53, 21, 0.09) 1px, transparent 1px);
+  background-size: 22px 22px;
+  z-index: 0;
+}
+
+.authenticated-shell {
+  position: relative;
+  z-index: 1;
 }
 
 .authenticated-shell {

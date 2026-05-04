@@ -102,6 +102,9 @@ describe('ListsView', () => {
         {
           id: 'lista-1',
           name: 'Quero ler',
+          icon: 'bookmark',
+          tint_index: 0,
+          preview_items: [],
           created_at: '2026-01-01T10:00:00.000Z',
           updated_at: '2026-01-01T10:00:00.000Z',
         },
@@ -132,6 +135,9 @@ describe('ListsView', () => {
         {
           id: 'lista-1',
           name: 'Lista com nome maior para leitura da família',
+          icon: 'bookmark',
+          tint_index: 0,
+          preview_items: [],
           created_at: '2026-01-01T10:00:00.000Z',
           updated_at: '2026-01-01T10:00:00.000Z',
         },
@@ -159,6 +165,9 @@ describe('ListsView', () => {
     const createListSpy = vi.spyOn(listsStore, 'createList').mockResolvedValue({
       id: 'lista-2',
       name: 'Lendo agora',
+      icon: 'bookmark',
+      tint_index: 0,
+      preview_items: [],
       created_at: '2026-01-01T11:00:00.000Z',
       updated_at: '2026-01-01T11:00:00.000Z',
     })
@@ -210,6 +219,9 @@ describe('ListsView', () => {
         {
           id: 'lista-1',
           name: 'Quero ler',
+          icon: 'bookmark',
+          tint_index: 0,
+          preview_items: [],
           created_at: '2026-01-01T10:00:00.000Z',
           updated_at: '2026-01-01T10:00:00.000Z',
         },
@@ -241,6 +253,9 @@ describe('ListsView', () => {
         {
           id: 'lista-1',
           name: 'Quero ler',
+          icon: 'bookmark',
+          tint_index: 0,
+          preview_items: [],
           created_at: '2026-01-01T10:00:00.000Z',
           updated_at: '2026-01-01T10:00:00.000Z',
         },
@@ -249,6 +264,9 @@ describe('ListsView', () => {
     const updateListNameSpy = vi.spyOn(listsStore, 'updateListName').mockResolvedValue({
       id: 'lista-1',
       name: 'Lidos este ano',
+      icon: 'bookmark',
+      tint_index: 0,
+      preview_items: [],
       created_at: '2026-01-01T10:00:00.000Z',
       updated_at: '2026-01-02T10:00:00.000Z',
     })
@@ -278,6 +296,9 @@ describe('ListsView', () => {
         {
           id: 'lista-1',
           name: 'Quero ler',
+          icon: 'bookmark',
+          tint_index: 0,
+          preview_items: [],
           created_at: '2026-01-01T10:00:00.000Z',
           updated_at: '2026-01-01T10:00:00.000Z',
         },

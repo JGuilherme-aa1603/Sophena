@@ -110,7 +110,7 @@ export const useListsStore = defineStore('lists', () => {
     }
   }
 
-  async function createList(name: string) {
+  async function createList(name: string, icon: string = 'bookmark', tint_index: number = 0) {
     if (!authStore.accessToken) {
       errorMessage.value = 'Sua sessão expirou. Entre novamente.'
       throw new Error('missing access token')
@@ -122,6 +122,8 @@ export const useListsStore = defineStore('lists', () => {
     try {
       const createdList = await createListRequest(authStore.accessToken, {
         name,
+        icon,
+        tint_index,
       })
 
       items.value = [createdList, ...items.value]

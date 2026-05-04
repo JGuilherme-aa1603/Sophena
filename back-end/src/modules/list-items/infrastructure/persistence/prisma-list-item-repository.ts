@@ -497,6 +497,8 @@ function mapBook(book: {
 function mapBookList(list: {
   id: string;
   name: string;
+  icon: string;
+  tint_index: number;
   user_id: string;
   created_at: Date;
   updated_at: Date;
@@ -504,6 +506,9 @@ function mapBookList(list: {
   return {
     id: list.id,
     name: list.name,
+    icon: list.icon,
+    tint_index: list.tint_index,
+    preview_items: [],
     user_id: list.user_id,
     created_at: list.created_at.toISOString(),
     updated_at: list.updated_at.toISOString(),

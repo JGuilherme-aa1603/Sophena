@@ -3,12 +3,18 @@ import { type AuthenticatedUserView } from "../../auth/domain/auth-user.ts";
 import { type BookList, toBookListView } from "../domain/book-list.ts";
 import { ListNameConflictError } from "./list-errors.ts";
 
+const VALID_ICONS = [
+  "bookmark", "heart", "star", "feather", "coffee",
+  "moon", "leaf", "flame", "flag", "archive",
+] as const;
+
 export type ListRepository = {
   findAllByUserId(userId: string): Promise<BookList[]>;
   findById(listId: string): Promise<BookList | null>;
   findByUserIdAndName(userId: string, name: string): Promise<BookList | null>;
-  create(input: { name: string; user_id: string }): Promise<BookList>;
+  create(input: { name: string; user_id: string; icon: string; tint_index: number }): Promise<BookList>;
   updateName(listId: string, name: string): Promise<BookList>;
+  updateMeta(listId: string, input: { icon: string; tint_index: number }): Promise<BookList>;
   delete(listId: string): Promise<void>;
 };
 
@@ -24,7 +30,7 @@ export class ListService {
 
   async createList(
     authenticatedUser: AuthenticatedUserView,
-    input: { name?: unknown },
+    input: { name?: unknown; icon?: unknown; tint_index?: unknown },
   ) {
     const parsedInput = validateListInput(input);
     await ensureUniqueListName(
@@ -35,6 +41,8 @@ export class ListService {
 
     const list = await this.listRepository.create({
       name: parsedInput.name,
+      icon: parsedInput.icon,
+      tint_index: parsedInput.tint_index,
       user_id: authenticatedUser.id,
     });
 
@@ -62,6 +70,18 @@ export class ListService {
     return toBookListView(updatedList);
   }
 
+  async updateListMeta(
+    authenticatedUser: AuthenticatedUserView,
+    listId: string,
+    input: { icon?: unknown; tint_index?: unknown },
+  ) {
+    const existingList = await this.getOwnedListOrFail(authenticatedUser.id, listId);
+    const parsedMeta = validateMetaInput(input);
+
+    const updatedList = await this.listRepository.updateMeta(existingList.id, parsedMeta);
+    return toBookListView(updatedList);
+  }
+
   async deleteList(
     authenticatedUser: AuthenticatedUserView,
     listId: string,
@@ -85,7 +105,7 @@ export class ListService {
   }
 }
 
-function validateListInput(input: { name?: unknown }) {
+function validateListInput(input: { name?: unknown; icon?: unknown; tint_index?: unknown }) {
   const errors: Array<{ field: string; message: string }> = [];
   const name = typeof input.name === "string" ? input.name : null;
 
@@ -97,9 +117,27 @@ function validateListInput(input: { name?: unknown }) {
     throw new ValidationError(errors);
   }
 
+  const rawIcon = typeof input.icon === "string" ? input.icon : "bookmark";
+  const icon = (VALID_ICONS as readonly string[]).includes(rawIcon) ? rawIcon : "bookmark";
+
+  const rawTint = typeof input.tint_index === "number" ? input.tint_index : 0;
+  const tint_index = Number.isInteger(rawTint) && rawTint >= 0 && rawTint <= 5 ? rawTint : 0;
+
   return {
     name: name!.trim(),
+    icon,
+    tint_index,
   };
+}
+
+function validateMetaInput(input: { icon?: unknown; tint_index?: unknown }) {
+  const rawIcon = typeof input.icon === "string" ? input.icon : "bookmark";
+  const icon = (VALID_ICONS as readonly string[]).includes(rawIcon) ? rawIcon : "bookmark";
+
+  const rawTint = typeof input.tint_index === "number" ? input.tint_index : 0;
+  const tint_index = Number.isInteger(rawTint) && rawTint >= 0 && rawTint <= 5 ? rawTint : 0;
+
+  return { icon, tint_index };
 }
 
 async function ensureUniqueListName(

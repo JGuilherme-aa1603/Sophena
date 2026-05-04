@@ -71,6 +71,8 @@ model Book {
 model BookList {
   id         String         @id @default(uuid()) @db.Uuid
   name       String
+  icon       String         @default("bookmark")
+  tint_index Int            @default(0)
   user_id    String         @db.Uuid
   created_at DateTime       @default(now())
   updated_at DateTime       @updatedAt

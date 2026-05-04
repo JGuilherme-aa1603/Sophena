@@ -1,11 +1,14 @@
 <!DOCTYPE html>
-<html lang="pt-BR" data-theme="green" data-appearance="light">
+<html lang="pt-BR" data-theme="green" data-appearance="light" data-bg="paper">
 
 <head>
   <meta charset="UTF-8">
   <link rel="icon" href="/favicon.ico">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sophena</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 </head>
 
 <body>
@@ -20,7 +23,8 @@
       try {
         var savedValue = localStorage.getItem('sophena:theme-preferences')
         var savedPreferences = savedValue ? JSON.parse(savedValue) : defaultPreferences
-        var isValidAccent = savedPreferences.accentColor === 'green' || savedPreferences.accentColor === 'purple'
+        var validAccents = ['green', 'purple', 'terracotta', 'navy', 'plum', 'forest']
+        var isValidAccent = validAccents.indexOf(savedPreferences.accentColor) !== -1
         var isValidAppearance = savedPreferences.appearance === 'light' || savedPreferences.appearance === 'dark'
         var preferences = isValidAccent && isValidAppearance ? savedPreferences : defaultPreferences
 

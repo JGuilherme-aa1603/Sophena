@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from 'vue'
-import { IonButton, IonCard, IonCardContent, IonIcon, IonSpinner } from '@ionic/vue'
+import { IonButton, IonIcon, IonSpinner } from '@ionic/vue'
 import {
-  addCircleOutline,
   arrowDownOutline,
   arrowUpOutline,
   ellipsisHorizontalOutline,
@@ -383,54 +382,42 @@ async function confirmMove(itemId: string) {
 
 <template>
   <AuthenticatedScaffold page-class="list-detail-page">
-    <header class="app-page-header">
-      <div class="app-page-header__title">
-        <p class="app-page-kicker">Sophena</p>
-        <h1 class="app-page-title">{{ pageTitle }}</h1>
-        <p class="app-page-subtitle">
-          Acompanhe a ordem dos livros e use ações simples para mover, remover ou adicionar outro título.
-        </p>
-      </div>
-
-      <IonButton
-        class="back-button"
-        fill="outline"
+    <!-- Bold header -->
+    <header class="list-detail-header">
+      <button
+        type="button"
+        class="back-btn"
         data-testid="back-to-lists"
+        aria-label="Voltar às listas"
         @click="goBack"
       >
-        Voltar
-      </IonButton>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+      </button>
     </header>
 
-    <IonCard class="app-card add-flow-card app-fade-in">
-      <IonCardContent class="add-flow-content">
-        <div class="add-flow-copy">
-          <p class="hero-kicker">Adicionar livro</p>
-          <h2>Escolha como quer adicionar</h2>
-          <p>Escolher um livro já existente ou cadastrar um livro novo fica disponível em um passo guiado.</p>
-        </div>
+    <div class="list-detail-title-card app-fade-in">
+      <div class="list-detail-title-inner">
+        <p class="app-page-kicker">Estante · {{ bookCountLabel }}</p>
+        <h1 class="app-page-title">{{ pageTitle }}</h1>
+      </div>
+      <button
+        type="button"
+        class="add-book-hero-btn"
+        data-testid="open-add-book-flow"
+        @click="openAddBookFlow"
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+        Adicionar
+      </button>
+    </div>
 
-        <IonButton
-          class="add-flow-button"
-          data-testid="open-add-book-flow"
-          @click="openAddBookFlow"
-        >
-          <span class="button-inline-content">
-            <IonIcon :icon="addCircleOutline" aria-hidden="true" />
-            Adicionar livro
-          </span>
-        </IonButton>
-      </IonCardContent>
-    </IonCard>
-
-    <IonCard class="app-card items-card">
-      <IonCardContent class="items-card-content">
-        <div class="section-heading">
-          <div>
-            <h2>Livros da lista</h2>
-            <p>{{ bookCountLabel }}</p>
-          </div>
+    <div class="items-section">
+      <div class="section-heading">
+        <div>
+          <h2 class="section-title">Livros da lista</h2>
+          <p class="section-subtitle">{{ bookCountLabel }}</p>
         </div>
+      </div>
 
         <BookListControlsMenu
           test-id-prefix="books"
@@ -524,8 +511,7 @@ async function confirmMove(itemId: string) {
             </BookCard>
           </li>
         </ol>
-      </IonCardContent>
-    </IonCard>
+    </div>
 
     <ResponsiveSheetModal
       v-model="isAddBookFlowOpen"
@@ -805,6 +791,97 @@ async function confirmMove(itemId: string) {
 </template>
 
 <style scoped>
+.list-detail-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) 0 0;
+}
+
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: var(--color-heading);
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: background 0.15s;
+}
+
+.back-btn:hover {
+  background: var(--color-surface-soft);
+}
+
+.list-detail-title-card {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding: var(--space-md) 0 var(--space-sm);
+  flex-wrap: wrap;
+}
+
+.list-detail-title-inner {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.add-book-hero-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.7rem 1.2rem;
+  border: none;
+  border-radius: 22px;
+  background: var(--color-primary);
+  color: var(--color-primary-readable);
+  font: inherit;
+  font-family: var(--font-serif);
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: var(--shadow-md);
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+
+.add-book-hero-btn:hover {
+  background: var(--color-primary-hover);
+}
+
+.items-section {
+  display: grid;
+  gap: var(--space-md);
+  padding-bottom: var(--space-lg);
+}
+
+.section-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-md);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.section-title {
+  font-family: var(--font-serif);
+  font-size: 18px;
+  font-weight: 400;
+  color: var(--color-heading);
+  margin: 0;
+}
+
+.section-subtitle {
+  font-size: 13px;
+  color: var(--color-muted);
+  margin: 0;
+}
+
 .back-button {
   --color: var(--color-primary-readable);
   --border-color: var(--color-primary);

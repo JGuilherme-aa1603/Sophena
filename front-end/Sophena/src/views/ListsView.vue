@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, reactive, ref } from 'vue'
-import { IonButton, IonCard, IonCardContent, IonIcon, IonSpinner } from '@ionic/vue'
-import { createOutline, ellipsisHorizontalOutline, trashOutline } from 'ionicons/icons'
+import { computed, onMounted, reactive, ref } from 'vue'
+import { IonIcon, IonSpinner } from '@ionic/vue'
+import { createOutline, trashOutline } from 'ionicons/icons'
 import { useRouter } from 'vue-router'
 
 import EmptyStateCard from '@/components/feedback/EmptyStateCard.vue'
 import AuthenticatedScaffold from '@/components/layout/AuthenticatedScaffold.vue'
+import SophenaWordmark from '@/components/SophenaWordmark.vue'
 import AppConfirmSheet from '@/components/overlay/AppConfirmSheet.vue'
 import ResponsiveSheetModal from '@/components/overlay/ResponsiveSheetModal.vue'
 import { useAuthStore } from '@/stores/auth'
@@ -16,68 +17,83 @@ const router = useRouter()
 const authStore = useAuthStore()
 const listsStore = useListsStore()
 const toastStore = useToastStore()
-const listNameInput = ref<HTMLInputElement | null>(null)
+
 const activeOptionsListId = ref<string | null>(null)
 const editingListId = ref<string | null>(null)
 const pendingDeleteListId = ref<string | null>(null)
+const isCreateOpen = ref(false)
 const loadErrorMessage = ref(listsStore.errorMessage)
 
 const form = reactive({
   name: '',
+  icon: 'bookmark',
+  tint_index: 0,
 })
-const editForm = reactive({
-  name: '',
-})
+const editForm = reactive({ name: '' })
 
-const greeting = computed(() => {
-  if (!authStore.user) {
-    return 'Suas listas'
+// ─── list tints (earth tones) ─────────────────────
+const LIST_TINTS = [
+  { bg: 'rgba(217,227,218,0.7)', fg: '#2d5240' },
+  { bg: 'rgba(232,222,200,0.8)', fg: '#7c5e3e' },
+  { bg: 'rgba(232,213,210,0.75)', fg: '#7a3a4a' },
+  { bg: 'rgba(213,222,232,0.75)', fg: '#2c4a5e' },
+  { bg: 'rgba(222,213,232,0.75)', fg: '#5b4a82' },
+  { bg: 'rgba(225,217,200,0.85)', fg: '#5a4528' },
+]
+
+const LIST_ICONS = [
+  'bookmark', 'heart', 'star', 'feather', 'coffee',
+  'moon', 'leaf', 'flame', 'flag', 'archive',
+] as const
+type ListIconId = (typeof LIST_ICONS)[number]
+
+// Warm book spine colors generated from title+author hash
+const SPINE_COLORS = [
+  '#7a5c3e', '#4a6a52', '#5c4a7a', '#7a4a4a',
+  '#4a5c7a', '#6a7a4a', '#7a6a4a', '#4a6a7a',
+]
+
+function hashBookColor(title: string, author: string): string {
+  let h = 0
+  const s = title + author
+  for (let i = 0; i < s.length; i++) {
+    h = (h * 31 + s.charCodeAt(i)) >>> 0
   }
+  return SPINE_COLORS[h % SPINE_COLORS.length]!
+}
 
-  return `Olá, ${authStore.user.user_name}`
-})
+function listTint(index: number) {
+  return LIST_TINTS[index % LIST_TINTS.length]!
+}
 
-const showEmptyState = computed(() => {
-  return !listsStore.isLoading && listsStore.items.length === 0 && !loadErrorMessage.value
-})
-const optionsList = computed(() => {
-  if (!activeOptionsListId.value) {
-    return null
-  }
+const userName = computed(() => authStore.user?.user_name ?? '')
+const greeting = computed(() => userName.value ? userName.value : 'Suas listas')
 
-  return listsStore.items.find((list) => list.id === activeOptionsListId.value) ?? null
-})
-const editingList = computed(() => {
-  if (!editingListId.value) {
-    return null
-  }
+const showEmptyState = computed(() =>
+  !listsStore.isLoading && listsStore.items.length === 0 && !loadErrorMessage.value,
+)
+const optionsList = computed(() =>
+  activeOptionsListId.value
+    ? listsStore.items.find((l) => l.id === activeOptionsListId.value) ?? null
+    : null,
+)
+const editingList = computed(() =>
+  editingListId.value
+    ? listsStore.items.find((l) => l.id === editingListId.value) ?? null
+    : null,
+)
 
-  return listsStore.items.find((list) => list.id === editingListId.value) ?? null
-})
 const isListOptionsOpen = computed({
   get: () => Boolean(activeOptionsListId.value),
-  set: (value: boolean) => {
-    if (!value) {
-      activeOptionsListId.value = null
-    }
-  },
+  set: (v: boolean) => { if (!v) activeOptionsListId.value = null },
 })
 const isEditListOpen = computed({
   get: () => Boolean(editingListId.value),
-  set: (value: boolean) => {
-    if (!value) {
-      editingListId.value = null
-      editForm.name = ''
-    }
-  },
+  set: (v: boolean) => { if (!v) { editingListId.value = null; editForm.name = '' } },
 })
 const isDeleteConfirmOpen = computed({
   get: () => Boolean(pendingDeleteListId.value),
-  set: (value: boolean) => {
-    if (!value) {
-      pendingDeleteListId.value = null
-    }
-  },
+  set: (v: boolean) => { if (!v) pendingDeleteListId.value = null },
 })
 
 onMounted(async () => {
@@ -85,23 +101,26 @@ onMounted(async () => {
   loadErrorMessage.value = listsStore.errorMessage
 })
 
+function openCreate() {
+  form.name = ''
+  form.icon = 'bookmark'
+  form.tint_index = 0
+  isCreateOpen.value = true
+}
+
 async function submitCreateList() {
   try {
-    await listsStore.createList(form.name.trim())
+    await listsStore.createList(form.name.trim(), form.icon, form.tint_index)
+    isCreateOpen.value = false
     form.name = ''
-    toastStore.showSuccess('Lista criada.')
+    toastStore.showSuccess('Estante criada.')
   } catch {
     toastStore.showError(listsStore.errorMessage || 'Não foi possível criar a lista agora.')
   }
 }
 
 async function openList(listId: string) {
-  await router.push({
-    name: 'list-detail',
-    params: {
-      listId,
-    },
-  })
+  await router.push({ name: 'list-detail', params: { listId } })
 }
 
 function openListOptions(listId: string) {
@@ -110,11 +129,7 @@ function openListOptions(listId: string) {
 
 function requestRenameList(listId: string) {
   const list = listsStore.items.find((item) => item.id === listId)
-
-  if (!list) {
-    return
-  }
-
+  if (!list) return
   activeOptionsListId.value = null
   editingListId.value = listId
   editForm.name = list.name
@@ -126,10 +141,7 @@ function requestDeleteList(listId: string) {
 }
 
 async function submitEditList() {
-  if (!editingListId.value) {
-    return
-  }
-
+  if (!editingListId.value) return
   try {
     await listsStore.updateListName(editingListId.value, editForm.name.trim())
     editingListId.value = null
@@ -141,10 +153,7 @@ async function submitEditList() {
 }
 
 async function confirmDeleteList() {
-  if (!pendingDeleteListId.value) {
-    return
-  }
-
+  if (!pendingDeleteListId.value) return
   try {
     await listsStore.deleteList(pendingDeleteListId.value)
     pendingDeleteListId.value = null
@@ -153,54 +162,31 @@ async function confirmDeleteList() {
     toastStore.showError(listsStore.errorMessage || 'Não foi possível apagar a lista agora.')
   }
 }
-
-async function focusCreateList() {
-  await nextTick()
-  listNameInput.value?.focus()
-}
 </script>
 
 <template>
   <AuthenticatedScaffold page-class="lists-page">
-    <header class="app-page-header">
-      <div class="app-page-header__title">
-        <p class="app-page-kicker">Sophena</p>
-        <h1 class="app-page-title">{{ greeting }}</h1>
-        <p class="app-page-subtitle">
-          Organize suas listas em poucos toques. Crie uma nova e continue de onde parou.
-        </p>
+    <!-- Header -->
+    <header class="lists-header">
+      <SophenaWordmark :size="28" />
+      <div class="lists-header-right">
+        <span
+          class="lists-count-badge"
+          :title="`${listsStore.items.length} estante(s)`"
+          aria-label="`${listsStore.items.length} estante(s)`"
+        >
+          {{ listsStore.items.length }}
+        </span>
       </div>
     </header>
 
-    <IonCard class="app-card hero-card app-fade-in">
-      <IonCardContent class="hero-card-content">
-        <div class="hero-copy">
-          <p class="hero-kicker">Começar</p>
-          <h2>Criar uma nova lista</h2>
-          <p>Dê um nome simples para encontrar seus livros com facilidade depois.</p>
-        </div>
-
-        <form class="create-list-form" @submit.prevent="submitCreateList">
-          <label class="app-field">
-            <span>Nova lista</span>
-            <input
-              ref="listNameInput"
-              name="list-name"
-              type="text"
-              autocomplete="off"
-              placeholder="Exemplo: Quero ler"
-              :disabled="listsStore.isCreating"
-              v-model="form.name"
-            />
-          </label>
-
-          <IonButton type="submit" class="create-button" :disabled="listsStore.isCreating">
-            <span v-if="!listsStore.isCreating">Criar lista</span>
-            <IonSpinner v-else name="crescent" />
-          </IonButton>
-        </form>
-      </IonCardContent>
-    </IonCard>
+    <div class="lists-hero">
+      <p class="app-page-kicker">Sua biblioteca · {{ listsStore.items.length }} estante(s)</p>
+      <h1 class="app-page-title">
+        Boa tarde,<br>
+        <em>{{ greeting }}.</em>
+      </h1>
+    </div>
 
     <p
       v-if="loadErrorMessage"
@@ -211,110 +197,262 @@ async function focusCreateList() {
       {{ loadErrorMessage }}
     </p>
 
-    <section class="lists-section">
-      <div class="section-heading">
-        <h2>Suas listas</h2>
-        <span class="section-count centered-inline-badge" data-testid="lists-section-count">
-          {{ listsStore.items.length }}
-        </span>
-      </div>
-
-      <div v-if="listsStore.isLoading" class="loading-state" role="status" aria-live="polite">
-        <IonSpinner name="crescent" />
-        <span>Carregando suas listas...</span>
-        <div class="loading-skeleton-list" data-testid="lists-loading-skeleton" aria-hidden="true">
-          <div v-for="index in 3" :key="index" class="app-skeleton-card" data-testid="skeleton-block">
+    <!-- Loading skeletons -->
+    <div v-if="listsStore.isLoading" class="loading-state" role="status" aria-live="polite">
+      <div class="loading-skeleton-list" aria-hidden="true">
+        <div v-for="i in 3" :key="i" class="shelf-skeleton">
+          <div class="shelf-skeleton-header app-skeleton"></div>
+          <div class="shelf-skeleton-body app-skeleton-card">
             <div class="app-skeleton app-skeleton-text app-skeleton-text--medium"></div>
-            <div class="app-skeleton app-skeleton-text app-skeleton-text--long"></div>
+            <div class="app-skeleton app-skeleton-text app-skeleton-text--short"></div>
           </div>
         </div>
       </div>
+    </div>
 
-      <EmptyStateCard
-        v-else-if="showEmptyState"
-        title="Você ainda não criou nenhuma lista."
-        description="Crie sua primeira lista para começar."
-        action-label="Criar minha primeira lista"
-        action-testid="empty-create-list"
-        @action="focusCreateList"
-      />
+    <EmptyStateCard
+      v-else-if="showEmptyState"
+      title="Você ainda não criou nenhuma estante."
+      description="Crie sua primeira estante e comece a organizar seus livros."
+      action-label="Criar minha primeira estante"
+      action-testid="empty-create-list"
+      @action="openCreate"
+    />
 
-      <ul v-else class="lists-grid app-fade-in">
-        <li v-for="list in listsStore.items" :key="list.id">
-          <div class="list-card">
+    <!-- List cards (shelf style) -->
+    <ul v-else class="lists-grid app-fade-in">
+      <li v-for="list in listsStore.items" :key="list.id">
+        <div class="shelf-card" :data-testid="`list-card-${list.id}`">
+          <!-- Shelf preview area -->
+          <button
+            type="button"
+            class="shelf-preview"
+            :style="{ background: `linear-gradient(180deg, ${listTint(list.tint_index).bg} 0%, rgba(251,246,236,0) 100%)` }"
+            :aria-label="`Abrir lista ${list.name}`"
+            :data-testid="`list-link-${list.id}`"
+            @click="openList(list.id)"
+          >
+            <div class="shelf-books">
+              <div
+                v-for="(book, j) in list.preview_items.slice(0, 5)"
+                :key="book.id"
+                class="shelf-book"
+              >
+                <img
+                  v-if="book.cover_url"
+                  :src="book.cover_url"
+                  :alt="book.title"
+                  class="shelf-book-cover"
+                >
+                <div
+                  v-else
+                  class="shelf-book-spine"
+                  :style="{ background: hashBookColor(book.title, book.author) }"
+                >
+                  <span class="shelf-book-author">{{ book.author.slice(0, 12) }}</span>
+                  <span class="shelf-book-title">{{ book.title.slice(0, 18) }}</span>
+                </div>
+              </div>
+              <div
+                v-if="list.preview_items.length === 0"
+                class="shelf-book-empty"
+              >
+                <span>vazio</span>
+              </div>
+            </div>
+            <div class="shelf-edge"></div>
+          </button>
+
+          <!-- Card footer -->
+          <div class="shelf-footer">
+            <div class="shelf-footer-left">
+              <!-- Icon badge -->
+              <span
+                class="shelf-icon-badge"
+                :style="{
+                  background: listTint(list.tint_index).bg,
+                  color: listTint(list.tint_index).fg,
+                }"
+              >
+                <!-- bookmark -->
+                <svg v-if="list.icon === 'bookmark'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"/></svg>
+                <!-- heart -->
+                <svg v-else-if="list.icon === 'heart'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-4.5-9-9c-1.5-3.5 1-7 4.5-7 2 0 3.5 1 4.5 2.5C13 6 14.5 5 16.5 5 20 5 22.5 8.5 21 12c-2 4.5-9 9-9 9z"/></svg>
+                <!-- star -->
+                <svg v-else-if="list.icon === 'star'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.7 6 6.3.6-4.8 4.3 1.5 6.1L12 17l-5.7 3 1.5-6.1L3 9.6 9.3 9z"/></svg>
+                <!-- feather -->
+                <svg v-else-if="list.icon === 'feather'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 4c-6 0-12 4-13 12-1 4 1 4 1 4s2-2 4-2c8 0 12-6 12-12zM4 20l5-5"/></svg>
+                <!-- coffee -->
+                <svg v-else-if="list.icon === 'coffee'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h12v6a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4zM16 9h2a2 2 0 0 1 0 4h-2M5 3v2M9 3v2M13 3v2"/></svg>
+                <!-- moon -->
+                <svg v-else-if="list.icon === 'moon'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z"/></svg>
+                <!-- leaf -->
+                <svg v-else-if="list.icon === 'leaf'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 21c-5-3-7-8-6-13 5-1 10 1 13 6-1 4-3 6-7 7zM5 19l8-8"/></svg>
+                <!-- flame -->
+                <svg v-else-if="list.icon === 'flame'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22c4 0 7-3 7-7 0-4-4-6-4-10-3 0-7 4-7 9 0 4 1 8 4 8z"/></svg>
+                <!-- flag -->
+                <svg v-else-if="list.icon === 'flag'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 21V4M5 4h12l-2 4 2 4H5"/></svg>
+                <!-- archive -->
+                <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5h18v4H3zM5 9v11h14V9M9 13h6"/></svg>
+              </span>
+
+              <div class="shelf-info">
+                <span class="shelf-name">{{ list.name }}</span>
+                <span class="shelf-meta">
+                  {{ list.preview_items.length === 1 ? '1 livro' : `${list.preview_items.length} livros` }}
+                </span>
+              </div>
+            </div>
+
             <button
               type="button"
-              class="list-link app-interactive"
-              :data-testid="`list-link-${list.id}`"
-              @click="openList(list.id)"
-            >
-              <span class="list-link-copy">
-                <strong>{{ list.name }}</strong>
-                <small>Toque para abrir e organizar seus livros</small>
-              </span>
-              <span
-                class="list-link-action centered-list-action"
-                :data-testid="`list-open-action-${list.id}`"
-              >
-                Abrir
-              </span>
-            </button>
-
-            <IonButton
-              fill="clear"
-              class="list-options-button"
+              class="shelf-options-btn"
+              :aria-label="`Opções de ${list.name}`"
               :data-testid="`open-list-options-${list.id}`"
-              :aria-label="`Editar lista ${list.name}`"
-              :title="`Editar lista ${list.name}`"
-              @click="openListOptions(list.id)"
+              @click.stop="openListOptions(list.id)"
             >
-              <IonIcon :icon="ellipsisHorizontalOutline" aria-hidden="true" />
-            </IonButton>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/>
+              </svg>
+            </button>
           </div>
-        </li>
-      </ul>
-    </section>
+        </div>
+      </li>
+    </ul>
 
+    <!-- Nova estante button -->
+    <button
+      v-if="!listsStore.isLoading"
+      type="button"
+      class="create-shelf-btn"
+      @click="openCreate"
+    >
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M12 5v14M5 12h14"/>
+      </svg>
+      Nova estante
+    </button>
+
+    <!-- Create list sheet -->
+    <ResponsiveSheetModal
+      v-model="isCreateOpen"
+      title="Nova estante"
+      description="Escolha um nome, ícone e cor para ela."
+      panel-testid="create-list-sheet"
+      close-testid="close-create-list"
+    >
+      <form class="create-form" @submit.prevent="submitCreateList">
+        <label class="app-field">
+          <span>Nome</span>
+          <input
+            name="list-name"
+            type="text"
+            autocomplete="off"
+            placeholder="Ex: Para ler em 2026"
+            :disabled="listsStore.isCreating"
+            v-model="form.name"
+          />
+        </label>
+
+        <!-- Icon picker -->
+        <div class="picker-section">
+          <span class="picker-label">Ícone</span>
+          <div class="icon-grid">
+            <button
+              v-for="iconId in LIST_ICONS"
+              :key="iconId"
+              type="button"
+              class="icon-btn"
+              :class="{ 'icon-btn--active': form.icon === iconId }"
+              :style="form.icon === iconId ? {
+                background: listTint(form.tint_index).bg,
+                color: listTint(form.tint_index).fg,
+                borderColor: listTint(form.tint_index).fg,
+              } : {}"
+              :aria-label="iconId"
+              @click="form.icon = iconId"
+            >
+              <!-- bookmark -->
+              <svg v-if="iconId === 'bookmark'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"/></svg>
+              <svg v-else-if="iconId === 'heart'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-4.5-9-9c-1.5-3.5 1-7 4.5-7 2 0 3.5 1 4.5 2.5C13 6 14.5 5 16.5 5 20 5 22.5 8.5 21 12c-2 4.5-9 9-9 9z"/></svg>
+              <svg v-else-if="iconId === 'star'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.7 6 6.3.6-4.8 4.3 1.5 6.1L12 17l-5.7 3 1.5-6.1L3 9.6 9.3 9z"/></svg>
+              <svg v-else-if="iconId === 'feather'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 4c-6 0-12 4-13 12-1 4 1 4 1 4s2-2 4-2c8 0 12-6 12-12zM4 20l5-5"/></svg>
+              <svg v-else-if="iconId === 'coffee'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h12v6a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4zM16 9h2a2 2 0 0 1 0 4h-2M5 3v2M9 3v2M13 3v2"/></svg>
+              <svg v-else-if="iconId === 'moon'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z"/></svg>
+              <svg v-else-if="iconId === 'leaf'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 21c-5-3-7-8-6-13 5-1 10 1 13 6-1 4-3 6-7 7zM5 19l8-8"/></svg>
+              <svg v-else-if="iconId === 'flame'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22c4 0 7-3 7-7 0-4-4-6-4-10-3 0-7 4-7 9 0 4 1 8 4 8z"/></svg>
+              <svg v-else-if="iconId === 'flag'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 21V4M5 4h12l-2 4 2 4H5"/></svg>
+              <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5h18v4H3zM5 9v11h14V9M9 13h6"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Tint picker -->
+        <div class="picker-section">
+          <span class="picker-label">Cor</span>
+          <div class="tint-grid">
+            <button
+              v-for="(tint, i) in LIST_TINTS"
+              :key="i"
+              type="button"
+              class="tint-btn"
+              :class="{ 'tint-btn--active': form.tint_index === i }"
+              :style="{ background: tint.bg, borderColor: form.tint_index === i ? tint.fg : 'transparent' }"
+              :aria-label="`Cor ${i + 1}`"
+              @click="form.tint_index = i"
+            >
+              <svg v-if="form.tint_index === i" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" :style="{ color: tint.fg }"><path d="M20 6L9 17l-5-5"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="create-form-actions">
+          <button type="button" class="app-secondary-button" @click="isCreateOpen = false">
+            Cancelar
+          </button>
+          <button type="submit" class="app-primary-button" :disabled="listsStore.isCreating">
+            <IonSpinner v-if="listsStore.isCreating" name="crescent" style="--color: #fff; width: 18px; height: 18px;" />
+            <span v-else>Criar estante</span>
+          </button>
+        </div>
+      </form>
+    </ResponsiveSheetModal>
+
+    <!-- List options sheet -->
     <ResponsiveSheetModal
       v-model="isListOptionsOpen"
-      title="Editar lista"
-      description="Escolha o que deseja fazer com esta lista."
+      title="Opções"
+      description="O que você quer fazer com essa estante?"
       panel-testid="list-options-sheet"
       close-testid="close-list-options"
     >
       <div v-if="optionsList" class="list-options">
-        <div class="list-options-summary">
-          <strong>{{ optionsList.name }}</strong>
-        </div>
+        <div class="list-options-name">{{ optionsList.name }}</div>
 
-        <IonButton
-          fill="outline"
-          class="list-menu-button"
+        <button
+          type="button"
+          class="list-menu-btn"
           :data-testid="`request-rename-list-${optionsList.id}`"
           @click="requestRenameList(optionsList.id)"
         >
-          <span class="button-inline-content">
-            <IonIcon :icon="createOutline" aria-hidden="true" />
-            Editar nome
-          </span>
-        </IonButton>
+          <IonIcon :icon="createOutline" aria-hidden="true" />
+          Editar nome
+        </button>
 
-        <IonButton
-          fill="outline"
-          color="danger"
-          class="list-menu-button"
+        <button
+          type="button"
+          class="list-menu-btn list-menu-btn--danger"
           :disabled="listsStore.isDeleting"
           :data-testid="`request-delete-list-${optionsList.id}`"
           @click="requestDeleteList(optionsList.id)"
         >
-          <span class="button-inline-content">
-            <IonIcon :icon="trashOutline" aria-hidden="true" />
-            Apagar lista
-          </span>
-        </IonButton>
+          <IonIcon :icon="trashOutline" aria-hidden="true" />
+          Apagar estante
+        </button>
       </div>
     </ResponsiveSheetModal>
 
+    <!-- Edit name sheet -->
     <ResponsiveSheetModal
       v-model="isEditListOpen"
       title="Editar nome"
@@ -324,7 +462,7 @@ async function focusCreateList() {
     >
       <form
         v-if="editingList"
-        class="edit-list-form"
+        class="edit-form"
         data-testid="edit-list-form"
         @submit.prevent="submitEditList"
       >
@@ -340,10 +478,10 @@ async function focusCreateList() {
           />
         </label>
 
-        <IonButton type="submit" class="save-edit-button" :disabled="listsStore.isUpdating">
-          <span v-if="!listsStore.isUpdating">Salvar nome</span>
-          <IonSpinner v-else name="crescent" />
-        </IonButton>
+        <button type="submit" class="app-primary-button" :disabled="listsStore.isUpdating">
+          <IonSpinner v-if="listsStore.isUpdating" name="crescent" style="--color: #fff; width: 18px; height: 18px;" />
+          <span v-else>Salvar nome</span>
+        </button>
       </form>
     </ResponsiveSheetModal>
 
@@ -361,214 +499,413 @@ async function focusCreateList() {
 </template>
 
 <style scoped>
-.hero-card-content {
-  display: grid;
-  gap: var(--space-md);
-}
-
-.hero-copy {
-  display: grid;
-  gap: var(--space-xs);
-}
-
-.hero-kicker {
-  color: var(--color-muted);
-  font-size: 14px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.hero-copy h2,
-.section-heading h2 {
-  color: var(--color-heading);
-  font-size: 22px;
-  font-weight: 600;
-}
-
-.hero-copy p {
-  color: var(--color-muted);
-}
-
-.create-list-form {
-  display: grid;
-  gap: var(--space-sm);
-}
-
-.create-button {
-  --background: var(--color-primary);
-  --background-hover: var(--color-primary-hover);
-  --border-radius: var(--radius-lg);
-  --box-shadow: var(--shadow-md);
-  min-height: 3.2rem;
-  font-weight: 700;
-}
-
-.lists-section {
-  display: grid;
-  gap: var(--space-md);
-}
-
-.section-heading {
+/* ─── Header ─────────────────────────────────────── */
+.lists-header {
   display: flex;
-  gap: var(--space-sm);
   align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-lg);
 }
 
-.section-count {
+.lists-count-badge {
   min-width: 2rem;
   min-height: 2rem;
-  padding: 0.2rem 0.6rem;
+  padding: 0.2rem 0.65rem;
   border-radius: 999px;
   background: var(--color-primary-soft);
   color: var(--color-primary);
-  font-weight: 700;
-  line-height: 1;
-}
-
-.centered-inline-badge {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
   display: inline-grid;
   place-items: center;
-  text-align: center;
 }
 
-.loading-state {
+.lists-hero {
+  margin-bottom: var(--space-lg);
   display: grid;
   gap: var(--space-sm);
-  justify-items: start;
-  color: var(--color-muted);
+}
+
+/* ─── Loading ─────────────────────────────────────── */
+.loading-state {
+  display: grid;
+  gap: var(--space-md);
 }
 
 .loading-skeleton-list {
-  width: min(100%, 32rem);
   display: grid;
-  gap: var(--space-sm);
+  gap: var(--space-md);
 }
 
+.shelf-skeleton {
+  border-radius: 20px;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-md);
+}
+
+.shelf-skeleton-header {
+  height: 120px;
+  border-radius: 0;
+}
+
+.shelf-skeleton-body {
+  border-radius: 0;
+}
+
+/* ─── Grid ────────────────────────────────────────── */
 .lists-grid {
   display: grid;
-  gap: var(--space-sm);
+  gap: var(--space-md);
   list-style: none;
   padding: 0;
 }
 
-.list-card {
-  width: 100%;
-  display: flex;
-  gap: var(--space-md);
-  align-items: center;
+/* ─── Shelf card ─────────────────────────────────── */
+.shelf-card {
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-card);
-  box-shadow: var(--shadow-sm);
-}
-
-.list-card:hover {
-  transform: translateY(-1px);
-  border-color: var(--color-primary-border-strong);
+  border-radius: 20px;
+  background: var(--color-surface);
   box-shadow: var(--shadow-md);
+  overflow: hidden;
+  transition:
+    box-shadow var(--transition-fast),
+    transform var(--transition-fast);
 }
 
-.list-link {
-  min-width: 0;
-  flex: 1;
+.shelf-card:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-1px);
+}
+
+/* Shelf preview (top section with book spines) */
+.shelf-preview {
+  display: block;
+  width: 100%;
+  height: 130px;
+  position: relative;
+  border: none;
+  cursor: pointer;
+  overflow: hidden;
+  padding: 0;
+}
+
+.shelf-books {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 8px;
   display: flex;
-  gap: var(--space-md);
+  gap: 6px;
+  align-items: flex-end;
+}
+
+.shelf-book {
+  width: 56px;
+  height: 84px;
+  border-radius: 3px;
+  overflow: hidden;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(74, 53, 21, 0.2);
+}
+
+.shelf-book-cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.shelf-book-spine {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 5px 5px 5px 8px;
+  color: rgba(255, 255, 255, 0.9);
+  position: relative;
+}
+
+.shelf-book-spine::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: linear-gradient(180deg, rgba(0,0,0,0.3), rgba(0,0,0,0.06));
+}
+
+.shelf-book-author {
+  font-family: var(--font-mono);
+  font-size: 6px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  opacity: 0.78;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.shelf-book-title {
+  font-family: var(--font-serif);
+  font-size: 7.5px;
+  font-weight: 500;
+  line-height: 1.2;
+  margin-top: 2px;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+}
+
+.shelf-book-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 84px;
+  border-radius: 3px;
+  border: 1.5px dashed var(--color-border);
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: 9px;
+}
+
+.shelf-edge {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 8px;
+  background: linear-gradient(180deg, rgba(74, 53, 21, 0.08), rgba(74, 53, 21, 0.02));
+}
+
+/* Shelf footer */
+.shelf-footer {
+  display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--space-md);
-  border: 0;
-  background: transparent;
-  color: var(--color-heading);
-  text-align: left;
+  gap: 10px;
+  padding: 12px 14px 14px;
 }
 
-.list-options-button {
-  --color: var(--color-primary-readable);
-  --border-radius: var(--radius-md);
-  align-self: center;
-  width: 3rem;
-  min-width: 3rem;
-  min-height: 3rem;
-  margin-right: var(--space-xs);
+.shelf-footer-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
 }
 
-.list-link:focus-visible,
-.list-options-button:focus-visible {
-  outline: 3px solid var(--color-primary-focus);
-  outline-offset: 2px;
-}
-
-.list-link-copy {
+.shelf-icon-badge {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
   display: grid;
-  gap: var(--space-xs);
-}
-
-.list-link-copy strong {
-  font-size: 1rem;
-  font-weight: 700;
-}
-
-.list-link-copy small {
-  color: var(--color-muted);
-}
-
-.list-link-action {
-  color: var(--color-primary-readable);
-  font-weight: 700;
-}
-
-.centered-list-action {
-  display: inline-grid;
   place-items: center;
-  align-self: center;
-  min-height: 2rem;
-  text-align: center;
-  line-height: 1.2;
+  flex-shrink: 0;
+  border: 1px solid var(--color-border);
 }
 
-.list-options,
-.edit-list-form {
+.shelf-info {
+  min-width: 0;
+  display: grid;
+}
+
+.shelf-name {
+  font-family: var(--font-serif);
+  font-size: 18px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--color-heading);
+}
+
+.shelf-meta {
+  font-size: 12.5px;
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+.shelf-options-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  border: 0;
+  background: var(--color-surface-soft);
+  color: var(--color-text-soft);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background var(--transition-fast);
+}
+
+.shelf-options-btn:hover {
+  background: var(--color-border);
+}
+
+/* ─── Create shelf button ─────────────────────────── */
+.create-shelf-btn {
+  width: 100%;
+  padding: 18px;
+  border: 1.5px dashed var(--color-border);
+  border-radius: 20px;
+  background: transparent;
+  color: var(--color-primary);
+  font-family: var(--font-serif);
+  font-size: 16px;
+  font-weight: 500;
+  font-style: italic;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition:
+    border-color var(--transition-fast),
+    background var(--transition-fast);
+}
+
+.create-shelf-btn:hover {
+  background: var(--color-primary-surface-hover);
+  border-color: var(--color-primary-border-strong);
+}
+
+/* ─── Create form ─────────────────────────────────── */
+.create-form {
+  display: grid;
+  gap: var(--space-md);
+}
+
+.picker-section {
   display: grid;
   gap: var(--space-sm);
 }
 
-.list-options-summary {
-  padding: var(--space-sm) 0;
+.picker-label {
+  font-family: var(--font-serif);
+  font-size: 13px;
+  font-style: italic;
+  font-weight: 500;
+  color: var(--color-text-soft);
+}
+
+.icon-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  padding: 10px;
+  background: var(--color-surface-soft);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+}
+
+.icon-btn {
+  aspect-ratio: 1;
+  border-radius: 10px;
+  border: 1.5px solid transparent;
+  background: var(--color-surface);
+  color: var(--color-text-soft);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: all var(--transition-fast);
+}
+
+.icon-btn--active {
+  border-color: currentColor;
+}
+
+.icon-btn:hover:not(.icon-btn--active) {
+  background: var(--color-surface-soft);
+  border-color: var(--color-border);
+}
+
+.tint-grid {
+  display: flex;
+  gap: 10px;
+  padding: 10px;
+  background: var(--color-surface-soft);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  justify-content: space-between;
+}
+
+.tint-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  border: 2.5px solid transparent;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: all var(--transition-fast);
+}
+
+.tint-btn--active {
+  border-color: currentColor;
+}
+
+.create-form-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-sm);
+  margin-top: var(--space-xs);
+}
+
+/* ─── Options sheet ───────────────────────────────── */
+.list-options {
+  display: grid;
+  gap: var(--space-sm);
+}
+
+.list-options-name {
+  font-family: var(--font-serif);
+  font-size: 18px;
+  font-weight: 500;
+  padding: var(--space-xs) 0 var(--space-sm);
   color: var(--color-heading);
 }
 
-.list-menu-button,
-.save-edit-button {
-  --border-radius: var(--radius-lg);
-  min-height: 3.15rem;
-  font-weight: 700;
-}
-
-.save-edit-button {
-  --background: var(--color-primary);
-  --background-hover: var(--color-primary-hover);
-  --box-shadow: var(--shadow-md);
-}
-
-.button-inline-content {
-  display: inline-flex;
-  gap: var(--space-xs);
+.list-menu-btn {
+  display: flex;
   align-items: center;
-  justify-content: center;
+  gap: var(--space-sm);
+  padding: 14px 16px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  cursor: pointer;
+  font-family: var(--font-serif);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--color-text);
+  text-align: left;
+  transition: background var(--transition-fast);
 }
 
-@media (min-width: 768px) {
-  .hero-card-content {
-    grid-template-columns: minmax(0, 1fr) minmax(18rem, 22rem);
-    align-items: end;
-  }
+.list-menu-btn:hover {
+  background: var(--color-surface-soft);
 }
 
-@media (max-width: 640px) {
-  .list-card,
-  .list-link {
-    align-items: center;
-  }
+.list-menu-btn--danger {
+  color: var(--color-danger-text);
+  border-color: rgba(217, 83, 79, 0.22);
+}
+
+.list-menu-btn--danger:hover {
+  background: rgba(217, 83, 79, 0.06);
+}
+
+/* ─── Edit form ───────────────────────────────────── */
+.edit-form {
+  display: grid;
+  gap: var(--space-md);
 }
 </style>

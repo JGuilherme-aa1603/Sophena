@@ -60,6 +60,20 @@ export function createListRouter() {
     }
   });
 
+  router.patch("/:listId/meta", async (request, response) => {
+    try {
+      const result = await listService.updateListMeta(
+        getAuthenticatedUser(response),
+        request.params.listId,
+        request.body ?? {},
+      );
+
+      response.status(200).json(result);
+    } catch (error) {
+      handleListError(error, response);
+    }
+  });
+
   router.delete("/:listId", async (request, response) => {
     try {
       const result = await listService.deleteList(

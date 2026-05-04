@@ -37,32 +37,12 @@ const userPictureUrl = computed(() => authStore.user?.user_picture_url ?? null)
 const profileInitial = computed(() => userName.value.trim().slice(0, 1).toUpperCase() || 'U')
 const accountTypeLabel = computed(() => (authStore.user?.is_admin ? 'Administrador' : 'Usuário'))
 const themeOptions = [
-  {
-    accentColor: 'green' as const,
-    label: 'Clássico',
-    description: 'Verde original do Sophena',
-    testId: 'profile-theme-green',
-  },
-  {
-    accentColor: 'purple' as const,
-    label: 'Moderno',
-    description: 'Roxo para destacar ações e atalhos',
-    testId: 'profile-theme-purple',
-  },
-]
-const appearanceOptions = [
-  {
-    appearance: 'light' as const,
-    label: 'Claro',
-    description: 'Fundo claro para usar durante o dia',
-    testId: 'profile-appearance-light',
-  },
-  {
-    appearance: 'dark' as const,
-    label: 'Escuro',
-    description: 'Tons escuros para reduzir o brilho da tela',
-    testId: 'profile-appearance-dark',
-  },
+  { accentColor: 'green' as const, label: 'Sálvia', testId: 'profile-theme-green' },
+  { accentColor: 'purple' as const, label: 'Violeta', testId: 'profile-theme-purple' },
+  { accentColor: 'terracotta' as const, label: 'Terracota', testId: 'profile-theme-terracotta' },
+  { accentColor: 'navy' as const, label: 'Tinta', testId: 'profile-theme-navy' },
+  { accentColor: 'plum' as const, label: 'Ameixa', testId: 'profile-theme-plum' },
+  { accentColor: 'forest' as const, label: 'Pinheiro', testId: 'profile-theme-forest' },
 ]
 
 function requestPictureOptions() {
@@ -326,10 +306,7 @@ async function logoutFromProfile() {
                 :class="`profile-theme-swatch--${themeOption.accentColor}`"
                 aria-hidden="true"
               ></span>
-              <span class="profile-theme-copy">
-                <strong>{{ themeOption.label }}</strong>
-                <span>{{ themeOption.description }}</span>
-              </span>
+              <span class="profile-theme-color-label">{{ themeOption.label }}</span>
             </button>
           </div>
         </section>
@@ -337,26 +314,28 @@ async function logoutFromProfile() {
         <section class="profile-theme-section" aria-labelledby="profile-appearance-title">
           <h3 id="profile-appearance-title">Aparência</h3>
 
-          <div class="profile-theme-options" role="group" aria-label="Aparências">
+          <div class="profile-appearance-pill" role="group" aria-label="Aparências">
             <button
-              v-for="appearanceOption in appearanceOptions"
-              :key="appearanceOption.appearance"
               type="button"
-              class="profile-theme-option"
-              :class="{ 'profile-theme-option--active': themePreferencesStore.appearance === appearanceOption.appearance }"
-              :aria-pressed="themePreferencesStore.appearance === appearanceOption.appearance"
-              :data-testid="appearanceOption.testId"
-              @click="selectAppearance(appearanceOption.appearance)"
+              class="profile-appearance-segment"
+              :class="{ 'profile-appearance-segment--active': themePreferencesStore.appearance === 'light' }"
+              :aria-pressed="themePreferencesStore.appearance === 'light'"
+              data-testid="profile-appearance-light"
+              @click="selectAppearance('light')"
             >
-              <span
-                class="profile-appearance-indicator"
-                :class="`profile-appearance-indicator--${appearanceOption.appearance}`"
-                aria-hidden="true"
-              ></span>
-              <span class="profile-theme-copy">
-                <strong>{{ appearanceOption.label }}</strong>
-                <span>{{ appearanceOption.description }}</span>
-              </span>
+              <span class="profile-appearance-indicator profile-appearance-indicator--light" aria-hidden="true"></span>
+              Claro
+            </button>
+            <button
+              type="button"
+              class="profile-appearance-segment"
+              :class="{ 'profile-appearance-segment--active': themePreferencesStore.appearance === 'dark' }"
+              :aria-pressed="themePreferencesStore.appearance === 'dark'"
+              data-testid="profile-appearance-dark"
+              @click="selectAppearance('dark')"
+            >
+              <span class="profile-appearance-indicator profile-appearance-indicator--dark" aria-hidden="true"></span>
+              Escuro
             </button>
           </div>
         </section>
@@ -545,8 +524,7 @@ async function logoutFromProfile() {
 }
 
 .profile-theme-sections,
-.profile-theme-section,
-.profile-theme-options {
+.profile-theme-section {
   display: grid;
   gap: var(--space-sm);
 }
@@ -557,64 +535,107 @@ async function logoutFromProfile() {
   font-weight: 700;
 }
 
-.profile-theme-option {
-  min-height: 4rem;
+.profile-theme-options {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: var(--space-md);
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-sm);
+}
+
+.profile-theme-option {
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  width: 100%;
-  padding: var(--space-md);
-  border: 1px solid var(--color-border);
+  justify-content: center;
+  gap: 0.45rem;
+  padding: var(--space-sm) var(--space-xs);
+  border: 2px solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-surface);
   color: var(--color-text);
   font: inherit;
-  text-align: left;
-  box-shadow: var(--shadow-sm);
+  cursor: pointer;
   transition:
-    background-color 0.25s ease,
-    color 0.25s ease,
-    border-color 0.25s ease;
+    border-color 0.18s ease,
+    background-color 0.18s ease;
 }
 
 .profile-theme-option--active {
-  border-color: var(--color-primary-border-strong);
+  border-color: var(--color-primary);
   background: var(--color-selected-bg);
 }
 
 .profile-theme-swatch {
-  width: 2.35rem;
-  height: 2.35rem;
+  width: 2rem;
+  height: 2rem;
   border: 2px solid var(--color-surface);
   border-radius: 999px;
   box-shadow: 0 0 0 1px var(--color-border);
 }
 
-.profile-theme-swatch--green {
-  background: #355f4a;
+.profile-theme-color-label {
+  font-family: var(--font-serif);
+  font-size: 13px;
+  color: var(--color-heading);
+  text-align: center;
 }
 
-.profile-theme-swatch--purple {
-  background: #7c3aed;
-}
+.profile-theme-swatch--green { background: #355f4a; }
+.profile-theme-swatch--purple { background: #7c3aed; }
+.profile-theme-swatch--terracotta { background: #a04a2c; }
+.profile-theme-swatch--navy { background: #2c4a6e; }
+.profile-theme-swatch--plum { background: #7a3a5a; }
+.profile-theme-swatch--forest { background: #1f4034; }
 
-.profile-appearance-indicator {
-  width: 2.35rem;
-  height: 2.35rem;
+.profile-appearance-pill {
+  display: flex;
   border: 1px solid var(--color-border);
   border-radius: 999px;
+  background: var(--color-surface-soft);
+  padding: 3px;
+  gap: 3px;
+}
+
+.profile-appearance-segment {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.55rem 1rem;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--color-muted);
+  font: inherit;
+  font-family: var(--font-serif);
+  font-size: 14px;
+  cursor: pointer;
+  transition:
+    background 0.18s ease,
+    color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.profile-appearance-segment--active {
+  background: var(--color-surface);
+  color: var(--color-heading);
   box-shadow: var(--shadow-sm);
 }
 
+.profile-appearance-indicator {
+  width: 1.1rem;
+  height: 1.1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
 .profile-appearance-indicator--light {
-  background:
-    linear-gradient(135deg, #ffffff 0 50%, #f3f2ef 50% 100%);
+  background: linear-gradient(135deg, #ffffff 0 50%, #efe9dd 50% 100%);
 }
 
 .profile-appearance-indicator--dark {
-  background:
-    linear-gradient(135deg, #0f172a 0 50%, #1f2937 50% 100%);
+  background: linear-gradient(135deg, #0f172a 0 50%, #1f2937 50% 100%);
 }
 
 .profile-theme-copy {

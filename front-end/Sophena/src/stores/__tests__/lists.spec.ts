@@ -195,6 +195,9 @@ describe('lists store', () => {
       {
         id: 'lista-1',
         name: 'Lidos',
+        icon: 'bookmark',
+        tint_index: 0,
+        preview_items: [],
         created_at: '2026-01-01T10:00:00.000Z',
         updated_at: '2026-01-01T10:00:00.000Z',
       },
@@ -240,12 +243,18 @@ describe('lists store', () => {
       {
         id: 'lista-1',
         name: 'Quero ler',
+        icon: 'bookmark',
+        tint_index: 0,
+        preview_items: [],
         created_at: '2026-01-01T10:00:00.000Z',
         updated_at: '2026-01-01T10:00:00.000Z',
       },
       {
         id: 'lista-2',
         name: 'Lidos',
+        icon: 'bookmark',
+        tint_index: 0,
+        preview_items: [],
         created_at: '2026-01-01T11:00:00.000Z',
         updated_at: '2026-01-01T11:00:00.000Z',
       },

@@ -165,6 +165,8 @@ function openProfileFromDock(event: MouseEvent) {
 
 .dock-link-label {
   display: block;
+  font-family: var(--font-serif);
+  font-size: 12px;
   line-height: 1.1;
   text-align: center;
 }
