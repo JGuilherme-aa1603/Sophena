@@ -175,23 +175,25 @@ async function logoutFromProfile() {
       </div>
     </section>
 
-    <div
-      v-if="isPictureZoomOpen && userPictureUrl"
-      class="profile-picture-zoom-overlay"
-      role="dialog"
-      aria-modal="true"
-      :aria-label="`Foto de perfil de ${userName}`"
-      data-testid="profile-picture-zoom-overlay"
-      @click.self="closePictureZoom"
-    >
-      <img
-        class="profile-picture-zoom-image"
-        :src="userPictureUrl"
-        :alt="`Foto de perfil de ${userName}`"
-        data-testid="profile-picture-zoom-image"
-        @click.stop
+    <teleport to="body">
+      <div
+        v-if="isPictureZoomOpen && userPictureUrl"
+        class="profile-picture-zoom-overlay"
+        role="dialog"
+        aria-modal="true"
+        :aria-label="`Foto de perfil de ${userName}`"
+        data-testid="profile-picture-zoom-overlay"
+        @click.self="closePictureZoom"
       >
-    </div>
+        <img
+          class="profile-picture-zoom-image"
+          :src="userPictureUrl"
+          :alt="`Foto de perfil de ${userName}`"
+          data-testid="profile-picture-zoom-image"
+          @click.stop
+        >
+      </div>
+    </teleport>
 
     <section class="profile-options app-fade-in" aria-label="Opções do perfil">
       <button
