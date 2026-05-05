@@ -76,6 +76,47 @@ function listTint(index: number | undefined | null) {
 const userName = computed(() => authStore.user?.user_name ?? '')
 const greeting = computed(() => userName.value ? userName.value : 'Suas listas')
 
+const TIME_GREETINGS: Record<'madrugada' | 'manha' | 'tarde' | 'noite', string[]> = {
+  madrugada: [
+    'Ainda às páginas,',
+    'Lendo até tarde,',
+    'Uma última página,',
+    'A madrugada e um bom livro,',
+  ],
+  manha: [
+    'Bom dia,',
+    'Boa manhã,',
+    'Uma manhã ótima para ler,',
+    'Começa bem o dia,',
+  ],
+  tarde: [
+    'Boa tarde,',
+    'Uma boa tarde para ler,',
+    'Tarde de leitura,',
+    'Que bela tarde para as páginas,',
+  ],
+  noite: [
+    'Boa noite,',
+    'Boa noite de leitura,',
+    'Hora de um bom livro,',
+    'Uma noite entre as páginas,',
+  ],
+}
+
+function getTimeGreeting(): string {
+  const hour = new Date().getHours()
+  const minute = new Date().getMinutes()
+  let period: keyof typeof TIME_GREETINGS
+  if (hour >= 0 && hour < 5) period = 'madrugada'
+  else if (hour < 12) period = 'manha'
+  else if (hour < 18) period = 'tarde'
+  else period = 'noite'
+  const options = TIME_GREETINGS[period]
+  return options[(hour + minute) % options.length]!
+}
+
+const timeGreeting = ref(getTimeGreeting())
+
 const showEmptyState = computed(() =>
   !listsStore.isLoading && listsStore.items.length === 0 && !loadErrorMessage.value,
 )
@@ -190,7 +231,7 @@ async function confirmDeleteList() {
     <div class="lists-hero">
       <p class="app-page-kicker">Sua biblioteca · {{ listsStore.items.length }} estante(s)</p>
       <h1 class="app-page-title">
-        Boa tarde,<br>
+        {{ timeGreeting }}<br>
         <em>{{ greeting }}.</em>
       </h1>
     </div>
