@@ -165,8 +165,8 @@ function openProfileFromDock(event: MouseEvent) {
   -webkit-appearance: none;
   background: transparent;
   color: var(--color-text);
-  font: inherit;
-  font-weight: 700;
+  font-family: var(--font-serif);
+  font-weight: 500;
   -webkit-tap-highlight-color: transparent;
   transition:
     background var(--transition-fast),
@@ -183,6 +183,8 @@ function openProfileFromDock(event: MouseEvent) {
   display: block;
   font-family: var(--font-serif);
   font-size: 12px;
+  font-style: italic;
+  font-weight: 500;
   line-height: 1.1;
   text-align: center;
 }

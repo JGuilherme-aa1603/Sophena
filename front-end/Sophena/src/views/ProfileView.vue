@@ -448,12 +448,16 @@ async function logoutFromProfile() {
 .profile-field-label,
 .profile-option-copy span {
   color: var(--color-muted);
+  font-family: var(--font-serif);
+  font-style: italic;
   font-size: 14px;
 }
 
 .profile-summary-copy strong {
   color: var(--color-heading);
+  font-family: var(--font-serif);
   font-size: 22px;
+  font-weight: 500;
   line-height: 1.2;
   overflow-wrap: anywhere;
 }
@@ -481,7 +485,7 @@ async function logoutFromProfile() {
   border-radius: var(--radius-md);
   background: var(--color-card);
   color: var(--color-text);
-  font: inherit;
+  font-family: var(--font-serif);
   text-align: left;
   box-shadow: var(--shadow-sm);
 }
@@ -503,7 +507,9 @@ async function logoutFromProfile() {
 
 .profile-option-copy strong {
   color: var(--color-heading);
-  font-weight: 700;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 500;
 }
 
 .profile-option--danger .profile-option-icon {
@@ -533,8 +539,10 @@ async function logoutFromProfile() {
 
 .profile-theme-section h3 {
   color: var(--color-heading);
+  font-family: var(--font-serif);
   font-size: 1rem;
-  font-weight: 700;
+  font-style: italic;
+  font-weight: 500;
 }
 
 .profile-theme-options {
@@ -554,7 +562,7 @@ async function logoutFromProfile() {
   border-radius: var(--radius-md);
   background: var(--color-surface);
   color: var(--color-text);
-  font: inherit;
+  font-family: var(--font-serif);
   cursor: pointer;
   transition:
     border-color 0.18s ease,
@@ -577,6 +585,8 @@ async function logoutFromProfile() {
 .profile-theme-color-label {
   font-family: var(--font-serif);
   font-size: 13px;
+  font-style: italic;
+  font-weight: 500;
   color: var(--color-heading);
   text-align: center;
 }
@@ -608,9 +618,10 @@ async function logoutFromProfile() {
   border-radius: 999px;
   background: transparent;
   color: var(--color-muted);
-  font: inherit;
   font-family: var(--font-serif);
   font-size: 14px;
+  font-style: italic;
+  font-weight: 500;
   cursor: pointer;
   transition:
     background 0.18s ease,
@@ -648,7 +659,9 @@ async function logoutFromProfile() {
 
 .profile-theme-copy strong {
   color: var(--color-heading);
-  font-weight: 700;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 500;
 }
 
 .profile-theme-copy span {
@@ -667,8 +680,9 @@ async function logoutFromProfile() {
   border-radius: var(--radius-lg);
   background: var(--color-primary);
   color: var(--color-on-primary);
-  font: inherit;
-  font-weight: 700;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 500;
   box-shadow: var(--shadow-md);
 }
 

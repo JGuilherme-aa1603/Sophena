@@ -160,16 +160,19 @@ onBeforeUnmount(() => {
 
 .sheet-kicker {
   color: var(--color-muted);
-  font-size: 14px;
-  font-weight: 700;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
 .sheet-title-group h2 {
   color: var(--color-heading);
+  font-family: var(--font-serif);
   font-size: 22px;
-  font-weight: 600;
+  font-style: italic;
+  font-weight: 500;
   line-height: 1.2;
 }
 
@@ -186,8 +189,9 @@ onBeforeUnmount(() => {
   border-radius: var(--radius-lg);
   background: transparent;
   color: var(--color-heading);
-  font: inherit;
-  font-weight: 700;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 500;
   align-self: start;
   justify-self: end;
   grid-area: close;

@@ -116,7 +116,9 @@ async function openAdminBooks() {
 
 .summary-badge strong {
   color: var(--color-heading);
-  font-weight: 700;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 500;
 }
 
 .summary-badge span,
@@ -164,8 +166,10 @@ async function openAdminBooks() {
 
 .admin-home-task h2 {
   color: var(--color-heading);
+  font-family: var(--font-serif);
   font-size: 20px;
-  font-weight: 600;
+  font-style: italic;
+  font-weight: 500;
 }
 
 .action-button {
@@ -175,7 +179,7 @@ async function openAdminBooks() {
   --border-radius: var(--radius-lg);
   --box-shadow: var(--shadow-md);
   min-height: 3rem;
-  font-weight: 700;
+  font-weight: 500;
 }
 
 @media (min-width: 768px) {

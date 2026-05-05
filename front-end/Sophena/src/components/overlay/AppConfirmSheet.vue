@@ -89,8 +89,9 @@ function confirm() {
   border-radius: var(--radius-lg);
   background: var(--color-primary);
   color: var(--color-on-primary);
-  font: inherit;
-  font-weight: 700;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 500;
   box-shadow: var(--shadow-md);
 }
 

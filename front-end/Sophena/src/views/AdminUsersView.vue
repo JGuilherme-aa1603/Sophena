@@ -154,16 +154,19 @@ async function goBack() {
 
 .form-kicker {
   color: var(--color-muted);
-  font-size: 14px;
-  font-weight: 700;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
 .form-intro h2 {
   color: var(--color-heading);
+  font-family: var(--font-serif);
   font-size: 22px;
-  font-weight: 600;
+  font-style: italic;
+  font-weight: 500;
 }
 
 .form-intro p,
@@ -178,7 +181,9 @@ async function goBack() {
 
 .permission-label {
   color: var(--color-heading);
-  font-weight: 700;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 500;
 }
 
 .permission-options {
@@ -197,8 +202,9 @@ async function goBack() {
   border-radius: var(--radius-md);
   background: transparent;
   color: var(--color-heading);
-  font: inherit;
-  font-weight: 700;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 500;
 }
 
 .permission-option--active {
@@ -218,7 +224,7 @@ async function goBack() {
   --border-radius: var(--radius-lg);
   --box-shadow: var(--shadow-md);
   min-height: 3rem;
-  font-weight: 700;
+  font-weight: 500;
 }
 
 @media (min-width: 520px) {

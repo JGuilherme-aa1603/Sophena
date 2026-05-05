@@ -100,8 +100,10 @@ function toneClass(tone: ToastTone) {
 
 .app-toast-copy strong {
   color: var(--color-heading);
+  font-family: var(--font-serif);
   font-size: 0.9rem;
-  font-weight: 700;
+  font-style: italic;
+  font-weight: 500;
 }
 
 .app-toast-copy span {
@@ -117,8 +119,9 @@ function toneClass(tone: ToastTone) {
   border-radius: var(--radius-md);
   background: transparent;
   color: var(--color-heading);
-  font: inherit;
-  font-weight: 700;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 500;
 }
 
 .app-toast-close:focus-visible {

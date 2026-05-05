@@ -374,15 +374,18 @@ function formatDateTime(value: string) {
 
 .summary-label {
   color: var(--color-muted);
-  font-weight: 700;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 500;
 }
 
 .summary-value {
   display: block;
   margin-top: var(--space-xs);
   color: var(--color-heading);
+  font-family: var(--font-serif);
   font-size: 22px;
-  font-weight: 700;
+  font-weight: 500;
 }
 
 .logs-content {
@@ -397,8 +400,10 @@ function formatDateTime(value: string) {
 
 .logs-toolbar h2 {
   color: var(--color-heading);
+  font-family: var(--font-serif);
   font-size: 22px;
-  font-weight: 600;
+  font-style: italic;
+  font-weight: 500;
 }
 
 .logs-toolbar p {
@@ -409,7 +414,7 @@ function formatDateTime(value: string) {
   --border-color: var(--color-primary);
   --border-radius: var(--radius-lg);
   --color: var(--color-primary-readable);
-  font-weight: 700;
+  font-weight: 500;
 }
 
 .button-inline-content {
@@ -431,7 +436,7 @@ function formatDateTime(value: string) {
   --border-radius: var(--radius-lg);
   --box-shadow: var(--shadow-md);
   min-height: 3rem;
-  font-weight: 700;
+  font-weight: 500;
 }
 
 .loading-state {
@@ -473,8 +478,10 @@ function formatDateTime(value: string) {
 .log-badge {
   padding: 0.3rem 0.7rem;
   border-radius: 999px;
+  font-family: var(--font-serif);
   font-size: 0.88rem;
-  font-weight: 700;
+  font-style: italic;
+  font-weight: 500;
 }
 
 .log-badge--info {
@@ -499,7 +506,8 @@ function formatDateTime(value: string) {
 
 .log-message {
   color: var(--color-heading);
-  font-weight: 700;
+  font-family: var(--font-serif);
+  font-weight: 500;
 }
 
 .log-meta {
@@ -514,10 +522,11 @@ function formatDateTime(value: string) {
 
 .log-meta dt {
   color: var(--color-muted);
-  font-size: 0.84rem;
-  font-weight: 700;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
 }
 
 .log-meta dd {
@@ -535,12 +544,14 @@ function formatDateTime(value: string) {
   --border-radius: 999px;
   width: 100%;
   min-width: min(100%, 11.5rem);
-  font-weight: 700;
+  font-weight: 500;
 }
 
 .pagination-text {
   text-align: center;
   color: var(--color-muted);
+  font-family: var(--font-serif);
+  font-style: italic;
 }
 
 @media (min-width: 480px) {

@@ -182,6 +182,7 @@ async function submitLogin() {
   color: var(--color-on-primary);
   font-family: var(--font-serif);
   font-size: 17px;
+  font-style: italic;
   font-weight: 500;
   cursor: pointer;
   box-shadow: 0 12px 24px var(--color-shadow-accent-medium);

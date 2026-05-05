@@ -42,8 +42,10 @@ const emit = defineEmits<{
 
 .empty-state-card h2 {
   color: var(--color-heading);
+  font-family: var(--font-serif);
   font-size: 22px;
-  font-weight: 700;
+  font-style: italic;
+  font-weight: 500;
   line-height: 1.2;
 }
 
@@ -58,8 +60,9 @@ const emit = defineEmits<{
   border-radius: var(--radius-lg);
   background: var(--color-primary);
   color: var(--color-on-primary);
-  font: inherit;
-  font-weight: 700;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 500;
   box-shadow: var(--shadow-md);
   transition:
     transform var(--transition-fast),
