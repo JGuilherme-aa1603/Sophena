@@ -508,7 +508,6 @@ async function logoutFromProfile() {
 .profile-option-copy strong {
   color: var(--color-heading);
   font-family: var(--font-serif);
-  font-style: italic;
   font-weight: 500;
 }
 
