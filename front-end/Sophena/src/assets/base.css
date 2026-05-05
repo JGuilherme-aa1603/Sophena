@@ -45,8 +45,8 @@
   --color-shadow-accent-medium: rgba(74, 53, 21, 0.12);
   --color-image-overlay: rgba(28, 37, 32, 0.58);
   --color-overlay: rgba(36, 51, 43, 0.34);
-  --color-page-accent-gradient-soft: rgba(205, 223, 211, 0.98);
-  --color-page-accent-gradient-strong: rgba(205, 223, 211, 0.99);
+  --color-page-accent-gradient-soft: rgba(171, 215, 186, 0.98);
+  --color-page-accent-gradient-strong: rgba(120, 182, 141, 0.99);
   --color-page-gradient-corner: rgba(234, 231, 223, 0.92);
 }
 
@@ -204,8 +204,8 @@
   --color-primary-gradient-soft: rgba(248, 220, 234, 0.92);
   --color-primary-gradient-strong: rgba(248, 220, 234, 0.94);
   --color-primary-gradient-muted: rgba(248, 220, 234, 0.72);
-  --color-page-accent-gradient-soft: rgba(228, 140, 182, 0.98);
-  --color-page-accent-gradient-strong: rgba(228, 140, 182, 0.99);
+  --color-page-accent-gradient-soft: rgba(228, 140, 182, 0.72);
+  --color-page-accent-gradient-strong: rgba(228, 140, 182, 0.78);
   --color-primary-readable: var(--color-primary);
   --color-shadow-accent-faint: rgba(66, 30, 49, 0.04);
   --color-shadow-accent-soft: rgba(66, 30, 49, 0.08);
