@@ -85,8 +85,8 @@ async function openProfileFromDock() {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background-image: radial-gradient(circle, rgba(74, 53, 21, 0.09) 1px, transparent 1px);
-  background-size: 22px 22px;
+  background-image: radial-gradient(rgba(74, 53, 21, 0.05) 1px, transparent 1px);
+  background-size: 4px 4px;
   z-index: 0;
 }
 

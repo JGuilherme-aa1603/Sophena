@@ -34,8 +34,8 @@ describe('theme tokens', () => {
   it('usa brilho colorido próprio no modo escuro sem reaproveitar o gradiente claro', () => {
     const darkTokens = cssBlock(":root[data-appearance='dark']")
 
-    expect(darkTokens).toContain('--color-page-accent-gradient-soft: rgba(53, 95, 74, 0.3);')
-    expect(darkTokens).toContain('--color-page-accent-gradient-strong: rgba(53, 95, 74, 0.36);')
+    expect(darkTokens).toContain('--color-page-accent-gradient-soft: rgba(53, 95, 74, 0.32);')
+    expect(darkTokens).toContain('--color-page-accent-gradient-strong: rgba(53, 95, 74, 0.38);')
     expect(darkTokens).not.toContain('rgba(230, 239, 233, 0.92)')
     expect(darkTokens).not.toContain('rgba(237, 233, 254, 0.92)')
   })
@@ -43,7 +43,7 @@ describe('theme tokens', () => {
   it('ajusta o brilho escuro para roxo quando o tema moderno está ativo', () => {
     const darkPurpleTokens = cssBlock(":root[data-theme='purple'][data-appearance='dark']")
 
-    expect(darkPurpleTokens).toContain('--color-page-accent-gradient-soft: rgba(109, 40, 217, 0.3);')
-    expect(darkPurpleTokens).toContain('--color-page-accent-gradient-strong: rgba(109, 40, 217, 0.36);')
+    expect(darkPurpleTokens).toContain('--color-page-accent-gradient-soft: rgba(109, 40, 217, 0.32);')
+    expect(darkPurpleTokens).toContain('--color-page-accent-gradient-strong: rgba(109, 40, 217, 0.38);')
   })
 })
