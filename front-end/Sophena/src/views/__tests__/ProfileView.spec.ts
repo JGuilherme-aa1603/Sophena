@@ -1,7 +1,8 @@
-import { flushPromises, mount } from '@vue/test-utils'
+import { flushPromises, mount, type VueWrapper } from '@vue/test-utils'
 import { createMemoryHistory } from '@ionic/vue-router'
 import { createPinia, setActivePinia } from 'pinia'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { nextTick } from 'vue'
 
 import ProfileView from '../ProfileView.vue'
 import { createAppRouter } from '@/router'
@@ -10,6 +11,8 @@ import { useThemePreferencesStore } from '@/stores/theme-preferences'
 import { useToastStore } from '@/stores/toast'
 
 describe('ProfileView', () => {
+  let activeWrapper: VueWrapper | null = null
+
   beforeEach(() => {
     setActivePinia(createPinia())
     localStorage.clear()
@@ -17,6 +20,11 @@ describe('ProfileView', () => {
     document.documentElement.removeAttribute('data-theme')
     document.documentElement.removeAttribute('data-appearance')
     vi.restoreAllMocks()
+  })
+
+  afterEach(() => {
+    activeWrapper?.unmount()
+    activeWrapper = null
   })
 
   function authenticate(input: {
@@ -45,6 +53,7 @@ describe('ProfileView', () => {
     })
 
     await router.isReady()
+    activeWrapper = wrapper
     return { router, wrapper }
   }
 
@@ -98,8 +107,8 @@ describe('ProfileView', () => {
     const themeSheet = wrapper.get('[data-testid="profile-theme-options-sheet"]')
     expect(themeSheet.attributes('aria-modal')).toBe('true')
     expect(themeSheet.text()).toContain('Cor do tema')
-    expect(themeSheet.text()).toContain('Clássico')
-    expect(themeSheet.text()).toContain('Moderno')
+    expect(themeSheet.text()).toContain('Sálvia')
+    expect(themeSheet.text()).toContain('Violeta')
     expect(themeSheet.text()).toContain('Aparência')
     expect(themeSheet.text()).toContain('Claro')
     expect(themeSheet.text()).toContain('Escuro')
@@ -168,10 +177,11 @@ describe('ProfileView', () => {
 
     await wrapper.get('[data-testid="profile-picture-zoom-trigger"]').trigger('click')
 
-    const zoomImage = wrapper.get('[data-testid="profile-picture-zoom-image"]')
-    expect(wrapper.get('[data-testid="profile-picture-zoom-overlay"]').attributes('aria-modal')).toBe('true')
-    expect(zoomImage.attributes('src')).toBe('https://cdn.sophena.test/user-pictures/leitora.webp')
-    expect(zoomImage.attributes('alt')).toBe('Foto de perfil de leitora')
+    const zoomOverlay = document.body.querySelector('[data-testid="profile-picture-zoom-overlay"]') as HTMLElement
+    const zoomImage = document.body.querySelector('[data-testid="profile-picture-zoom-image"]') as HTMLImageElement
+    expect(zoomOverlay?.getAttribute('aria-modal')).toBe('true')
+    expect(zoomImage?.getAttribute('src')).toBe('https://cdn.sophena.test/user-pictures/leitora.webp')
+    expect(zoomImage?.getAttribute('alt')).toBe('Foto de perfil de leitora')
   })
 
   it('fecha a foto ampliada ao tocar fora da foto', async () => {
@@ -182,9 +192,10 @@ describe('ProfileView', () => {
     const { wrapper } = await mountProfile()
 
     await wrapper.get('[data-testid="profile-picture-zoom-trigger"]').trigger('click')
-    await wrapper.get('[data-testid="profile-picture-zoom-overlay"]').trigger('click')
+    ;(document.body.querySelector('[data-testid="profile-picture-zoom-overlay"]') as HTMLElement).click()
+    await nextTick()
 
-    expect(wrapper.find('[data-testid="profile-picture-zoom-overlay"]').exists()).toBe(false)
+    expect(document.body.querySelector('[data-testid="profile-picture-zoom-overlay"]')).toBeNull()
   })
 
   it('mantém a foto ampliada aberta ao tocar na imagem', async () => {
@@ -195,9 +206,10 @@ describe('ProfileView', () => {
     const { wrapper } = await mountProfile()
 
     await wrapper.get('[data-testid="profile-picture-zoom-trigger"]').trigger('click')
-    await wrapper.get('[data-testid="profile-picture-zoom-image"]').trigger('click')
+    ;(document.body.querySelector('[data-testid="profile-picture-zoom-image"]') as HTMLElement).click()
+    await nextTick()
 
-    expect(wrapper.find('[data-testid="profile-picture-zoom-overlay"]').exists()).toBe(true)
+    expect(document.body.querySelector('[data-testid="profile-picture-zoom-overlay"]')).not.toBeNull()
   })
 
   it('não exibe controle de zoom quando o usuário não tem foto', async () => {
@@ -207,7 +219,7 @@ describe('ProfileView', () => {
 
     expect(wrapper.get('[data-testid="profile-picture-fallback"]').text()).toBe('L')
     expect(wrapper.find('[data-testid="profile-picture-zoom-trigger"]').exists()).toBe(false)
-    expect(wrapper.find('[data-testid="profile-picture-zoom-overlay"]').exists()).toBe(false)
+    expect(document.body.querySelector('[data-testid="profile-picture-zoom-overlay"]')).toBeNull()
   })
 
   it('altera a foto depois de abrir as opções de foto', async () => {

@@ -619,7 +619,7 @@ describe('ListDetailView', () => {
     await wrapper.get('[data-testid="add-existing-book-book-1"]').trigger('click')
     await flushPromises()
 
-    expect(wrapper.text()).toContain('Escolher um livro já existente')
+    expect(wrapper.text()).toContain('Livro adicionado à lista.')
     expect(searchBooksSpy).toHaveBeenCalledWith('Dom')
     expect(addExistingBookSpy).toHaveBeenCalledWith('lista-1', 'book-1')
   })

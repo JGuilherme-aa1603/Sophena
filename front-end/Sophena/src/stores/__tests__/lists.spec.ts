@@ -108,6 +108,8 @@ describe('lists store', () => {
         credentials: 'include',
         body: JSON.stringify({
           name: 'Lendo agora',
+          icon: 'bookmark',
+          tint_index: 0,
         }),
       }),
     )

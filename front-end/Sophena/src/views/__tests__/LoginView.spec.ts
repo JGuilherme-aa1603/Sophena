@@ -76,6 +76,6 @@ describe('LoginView', () => {
     expect(wrapper.text()).toContain('Entrar')
     expect(wrapper.text()).toContain('Usuário')
     expect(wrapper.text()).toContain('Senha')
-    expect(wrapper.text()).toContain('Entre com seus dados para continuar.')
+    expect(wrapper.text()).toContain('Suas listas estão te esperando.')
   })
 })

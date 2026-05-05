@@ -7,9 +7,13 @@ const baseCss = readFileSync(baseCssPath, 'utf8')
 
 function cssBlock(selector: string) {
   const escapedSelector = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-  const match = baseCss.match(new RegExp(`${escapedSelector}\\s*\\{(?<body>[\\s\\S]*?)\\n\\}`))
-
-  return match?.groups?.body ?? ''
+  const pattern = new RegExp(`${escapedSelector}\\s*\\{(?<body>[\\s\\S]*?)\\n\\}`, 'g')
+  const bodies: string[] = []
+  let match: RegExpExecArray | null
+  while ((match = pattern.exec(baseCss)) !== null) {
+    if (match.groups?.body) bodies.push(match.groups.body)
+  }
+  return bodies.join('\n')
 }
 
 describe('theme tokens', () => {

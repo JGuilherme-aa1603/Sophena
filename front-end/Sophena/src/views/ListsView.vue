@@ -326,6 +326,7 @@ async function confirmDeleteList() {
       v-if="!listsStore.isLoading"
       type="button"
       class="create-shelf-btn"
+      data-testid="open-create-list"
       @click="openCreate"
     >
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -342,7 +343,7 @@ async function confirmDeleteList() {
       panel-testid="create-list-sheet"
       close-testid="close-create-list"
     >
-      <form class="create-form" @submit.prevent="submitCreateList">
+      <form class="create-form" data-testid="create-list-form" @submit.prevent="submitCreateList">
         <label class="app-field">
           <span>Nome</span>
           <input

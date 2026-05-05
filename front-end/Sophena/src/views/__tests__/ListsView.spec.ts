@@ -55,9 +55,9 @@ describe('ListsView', () => {
 
     await router.isReady()
 
-    expect(wrapper.text()).toContain('Você ainda não criou nenhuma lista.')
-    expect(wrapper.text()).toContain('Crie sua primeira lista para começar.')
-    expect(wrapper.get('[data-testid="empty-create-list"]').text()).toContain('Criar minha primeira lista')
+    expect(wrapper.text()).toContain('Você ainda não criou nenhuma estante.')
+    expect(wrapper.text()).toContain('Crie sua primeira estante e comece a organizar seus livros.')
+    expect(wrapper.get('[data-testid="empty-create-list"]').text()).toContain('Criar minha primeira estante')
   })
 
   it('mostra carregamento ao buscar listas', () => {
@@ -73,8 +73,8 @@ describe('ListsView', () => {
       },
     })
 
-    expect(wrapper.text()).toContain('Carregando suas listas...')
-    expect(wrapper.get('[data-testid="lists-loading-skeleton"]').findAll('[data-testid="skeleton-block"]')).toHaveLength(3)
+    expect(wrapper.find('.loading-state').exists()).toBe(true)
+    expect(wrapper.findAll('.shelf-skeleton')).toHaveLength(3)
   })
 
   it('mostra erro em português quando não consegue carregar listas', () => {
@@ -152,8 +152,9 @@ describe('ListsView', () => {
 
     await router.isReady()
 
-    expect(wrapper.get('[data-testid="lists-section-count"]').classes()).toContain('centered-inline-badge')
-    expect(wrapper.get('[data-testid="list-open-action-lista-1"]').classes()).toContain('centered-list-action')
+    const card = wrapper.get('[data-testid="list-card-lista-1"]')
+    expect(card.text()).toContain('0 livros')
+    expect(wrapper.get('[data-testid="list-link-lista-1"]').exists()).toBe(true)
   })
 
   it('envia o nome para criar uma nova lista', async () => {
@@ -178,11 +179,13 @@ describe('ListsView', () => {
       },
     })
 
+    await wrapper.get('[data-testid="open-create-list"]').trigger('click')
     await wrapper.get('input[name="list-name"]').setValue('Lendo agora')
-    await wrapper.get('form').trigger('submit.prevent')
+    await wrapper.get('form[data-testid="create-list-form"]').trigger('submit.prevent')
+    await flushPromises()
 
-    expect(createListSpy).toHaveBeenCalledWith('Lendo agora')
-    expect(useToastStore().current?.message).toBe('Lista criada.')
+    expect(createListSpy).toHaveBeenCalledWith('Lendo agora', 'bookmark', 0)
+    expect(useToastStore().current?.message).toBe('Estante criada.')
   })
 
   it('usa somente toast para avisar falhas ao criar lista', async () => {
@@ -203,8 +206,10 @@ describe('ListsView', () => {
     })
 
     await router.isReady()
+    await wrapper.get('[data-testid="open-create-list"]').trigger('click')
     await wrapper.get('input[name="list-name"]').setValue('Quero ler')
-    await wrapper.get('form').trigger('submit.prevent')
+    await wrapper.get('form[data-testid="create-list-form"]').trigger('submit.prevent')
+    await flushPromises()
 
     expect(wrapper.text()).toContain('Você já tem uma lista com esse nome.')
     expect(wrapper.find('.app-feedback--error').exists()).toBe(false)
@@ -239,9 +244,8 @@ describe('ListsView', () => {
     await wrapper.get('[data-testid="open-list-options-lista-1"]').trigger('click')
 
     expect(router.currentRoute.value.name).toBe('app-home')
-    expect(wrapper.get('[data-testid="list-options-sheet"]').text()).toContain('Editar lista')
     expect(wrapper.get('[data-testid="list-options-sheet"]').text()).toContain('Editar nome')
-    expect(wrapper.get('[data-testid="list-options-sheet"]').text()).toContain('Apagar lista')
+    expect(wrapper.get('[data-testid="list-options-sheet"]').text()).toContain('Apagar estante')
   })
 
   it('renomeia uma lista pelo menu de edição', async () => {

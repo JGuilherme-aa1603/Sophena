@@ -33,7 +33,7 @@ describe('App auth rendering', () => {
 
     await nextTick()
 
-    expect(wrapper.text()).toContain('Seja bem-vindo')
-    expect(wrapper.text()).toContain('Entre com seus dados para continuar.')
+    expect(wrapper.text()).toContain('Volte para')
+    expect(wrapper.text()).toContain('Suas listas estão te esperando.')
   })
 })
