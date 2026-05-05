@@ -3,7 +3,7 @@ import { defineStore } from 'pinia'
 
 export const THEME_PREFERENCES_STORAGE_KEY = 'sophena:theme-preferences'
 
-export type AccentColor = 'green' | 'purple' | 'terracotta' | 'navy' | 'plum' | 'forest'
+export type AccentColor = 'green' | 'purple' | 'terracotta' | 'navy' | 'plum' | 'ebony'
 export type AppearanceMode = 'light' | 'dark'
 
 type ThemePreferences = {
@@ -16,7 +16,7 @@ const DEFAULT_THEME_PREFERENCES: ThemePreferences = {
   appearance: 'light',
 }
 
-const VALID_ACCENT_COLORS: AccentColor[] = ['green', 'purple', 'terracotta', 'navy', 'plum', 'forest']
+const VALID_ACCENT_COLORS: AccentColor[] = ['green', 'purple', 'terracotta', 'navy', 'plum', 'ebony']
 
 function isAccentColor(value: unknown): value is AccentColor {
   return VALID_ACCENT_COLORS.includes(value as AccentColor)

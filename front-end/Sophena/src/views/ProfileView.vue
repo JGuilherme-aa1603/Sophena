@@ -42,7 +42,7 @@ const themeOptions = [
   { accentColor: 'terracotta' as const, label: 'Terracota', testId: 'profile-theme-terracotta' },
   { accentColor: 'navy' as const, label: 'Tinta', testId: 'profile-theme-navy' },
   { accentColor: 'plum' as const, label: 'Ameixa', testId: 'profile-theme-plum' },
-  { accentColor: 'forest' as const, label: 'Pinheiro', testId: 'profile-theme-forest' },
+  { accentColor: 'ebony' as const, label: 'Ébano', testId: 'profile-theme-ebony' },
 ]
 
 function requestPictureOptions() {
@@ -586,7 +586,7 @@ async function logoutFromProfile() {
 .profile-theme-swatch--terracotta { background: #a04a2c; }
 .profile-theme-swatch--navy { background: #2c4a6e; }
 .profile-theme-swatch--plum { background: #7a3a5a; }
-.profile-theme-swatch--forest { background: #1f4034; }
+.profile-theme-swatch--ebony { background: #3e3830; }
 
 .profile-appearance-pill {
   display: flex;

@@ -20,8 +20,8 @@ describe('theme tokens', () => {
   it('deixa o brilho claro verde mais visível sem depender dos tokens de capa', () => {
     const rootTokens = cssBlock(':root')
 
-    expect(rootTokens).toContain('--color-page-accent-gradient-soft: rgba(205, 223, 211, 0.98);')
-    expect(rootTokens).toContain('--color-page-accent-gradient-strong: rgba(205, 223, 211, 0.99);')
+    expect(rootTokens).toContain('--color-page-accent-gradient-soft: rgba(171, 215, 186, 0.98);')
+    expect(rootTokens).toContain('--color-page-accent-gradient-strong: rgba(120, 182, 141, 0.99);')
   })
 
   it('deixa o brilho claro roxo mais visível quando o tema moderno está ativo', () => {
