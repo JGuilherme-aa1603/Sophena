@@ -19,6 +19,7 @@ import AppConfirmSheet from '@/components/overlay/AppConfirmSheet.vue'
 import ResponsiveSheetModal from '@/components/overlay/ResponsiveSheetModal.vue'
 import { useListDetailStore } from '@/stores/list-detail'
 import { useListsStore } from '@/stores/lists'
+import { useThemePreferencesStore } from '@/stores/theme-preferences'
 import { useToastStore } from '@/stores/toast'
 import type { BookCoverFilter } from '@/lib/api/books'
 
@@ -26,7 +27,28 @@ const router = useRouter()
 const route = useRoute()
 const listDetailStore = useListDetailStore()
 const listsStore = useListsStore()
+const themePrefs = useThemePreferencesStore()
 const toastStore = useToastStore()
+
+const isDark = computed(() => themePrefs.appearance === 'dark')
+
+const LIST_TINTS = [
+  { bg: 'rgba(205,225,208,0.78)', fg: '#2d5240', darkBg: 'rgba(40,72,55,0.48)',  darkFg: '#a0c4b0' },
+  { bg: 'rgba(235,216,190,0.85)', fg: '#7c5e3e', darkBg: 'rgba(72,55,30,0.48)',  darkFg: '#c8a870' },
+  { bg: 'rgba(238,205,200,0.80)', fg: '#7a3a4a', darkBg: 'rgba(72,35,45,0.48)',  darkFg: '#c890a0' },
+  { bg: 'rgba(205,215,235,0.80)', fg: '#2c4a5e', darkBg: 'rgba(35,52,70,0.48)',  darkFg: '#88aec8' },
+  { bg: 'rgba(215,205,238,0.80)', fg: '#5b4a82', darkBg: 'rgba(55,38,75,0.48)',  darkFg: '#b0a0d0' },
+  { bg: 'rgba(230,210,185,0.88)', fg: '#5a4528', darkBg: 'rgba(65,50,28,0.48)',  darkFg: '#c0a060' },
+]
+
+function listTint(index: number | undefined | null) {
+  const i = typeof index === 'number' && Number.isFinite(index) ? index : 0
+  const t = LIST_TINTS[((i % LIST_TINTS.length) + LIST_TINTS.length) % LIST_TINTS.length]!
+  return isDark.value ? { bg: t.darkBg, fg: t.darkFg } : { bg: t.bg, fg: t.fg }
+}
+
+const currentList = computed(() => listsStore.items.find((l) => l.id === listId.value) ?? null)
+const currentListTint = computed(() => listTint(currentList.value?.tint_index))
 const BOOKS_LAYOUT_STORAGE_KEY = 'sophena:list-books-layout'
 
 const searchForm = reactive({
@@ -395,19 +417,34 @@ async function confirmMove(itemId: string) {
       </button>
     </header>
 
-    <div class="list-detail-title-card app-fade-in">
-      <div class="list-detail-title-inner">
-        <p class="app-page-kicker">Estante · {{ bookCountLabel }}</p>
-        <h1 class="app-page-title">{{ pageTitle }}</h1>
+    <div
+      class="list-hero app-fade-in"
+      :style="{ background: `linear-gradient(160deg, ${currentListTint.bg} 0%, transparent 100%)` }"
+    >
+      <div class="list-hero-top">
+        <span class="list-hero-icon" :style="{ background: currentListTint.bg, color: currentListTint.fg }">
+          <svg v-if="currentList?.icon === 'bookmark'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"/></svg>
+          <svg v-else-if="currentList?.icon === 'heart'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-4.5-9-9c-1.5-3.5 1-7 4.5-7 2 0 3.5 1 4.5 2.5C13 6 14.5 5 16.5 5 20 5 22.5 8.5 21 12c-2 4.5-9 9-9 9z"/></svg>
+          <svg v-else-if="currentList?.icon === 'star'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.7 6 6.3.6-4.8 4.3 1.5 6.1L12 17l-5.7 3 1.5-6.1L3 9.6 9.3 9z"/></svg>
+          <svg v-else-if="currentList?.icon === 'feather'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 4c-6 0-12 4-13 12-1 4 1 4 1 4s2-2 4-2c8 0 12-6 12-12zM4 20l5-5"/></svg>
+          <svg v-else-if="currentList?.icon === 'coffee'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h12v6a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4zM16 9h2a2 2 0 0 1 0 4h-2M5 3v2M9 3v2M13 3v2"/></svg>
+          <svg v-else-if="currentList?.icon === 'moon'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z"/></svg>
+          <svg v-else-if="currentList?.icon === 'leaf'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 21c-5-3-7-8-6-13 5-1 10 1 13 6-1 4-3 6-7 7zM5 19l8-8"/></svg>
+          <svg v-else-if="currentList?.icon === 'flame'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22c4 0 7-3 7-7 0-4-4-6-4-10-3 0-7 4-7 9 0 4 1 8 4 8z"/></svg>
+          <svg v-else-if="currentList?.icon === 'flag'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 21V4M5 4h12l-2 4 2 4H5"/></svg>
+          <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5h18v4H3zM5 9v11h14V9M9 13h6"/></svg>
+        </span>
+        <p class="list-hero-kicker">Estante · {{ bookCountLabel }}</p>
       </div>
+      <h1 class="list-hero-title">{{ pageTitle }}</h1>
       <button
         type="button"
-        class="add-book-hero-btn"
+        class="add-book-btn"
         data-testid="open-add-book-flow"
         @click="openAddBookFlow"
       >
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
-        Adicionar
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+        Adicionar livro
       </button>
     </div>
 
@@ -817,41 +854,77 @@ async function confirmMove(itemId: string) {
   background: var(--color-surface-soft);
 }
 
-.list-detail-title-card {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: var(--space-md);
-  padding: var(--space-md) 0 var(--space-sm);
-  flex-wrap: wrap;
-}
-
-.list-detail-title-inner {
+.list-hero {
+  border: 1px solid var(--color-border);
+  border-radius: 20px;
+  padding: var(--space-md) var(--space-md) var(--space-lg);
   display: grid;
-  gap: 0.25rem;
+  gap: var(--space-sm);
+  box-shadow: var(--shadow-md);
+  margin-bottom: var(--space-xs);
 }
 
-.add-book-hero-btn {
+.list-hero-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.list-hero-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  border: 1px solid var(--color-border);
+}
+
+.list-hero-kicker {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+  margin: 0;
+}
+
+.list-hero-title {
+  font-family: var(--font-serif);
+  font-size: 32px;
+  font-weight: 500;
+  color: var(--color-heading);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  margin: 0;
+  padding: var(--space-xs) 0 0;
+}
+
+.add-book-btn {
+  align-self: start;
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
-  padding: 0.7rem 1.2rem;
-  border: none;
-  border-radius: 22px;
-  background: var(--color-primary);
-  color: var(--color-primary-readable);
-  font: inherit;
+  gap: 6px;
+  padding: 8px 16px;
+  margin-top: var(--space-xs);
+  border: 1.5px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: var(--color-heading);
   font-family: var(--font-serif);
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 500;
+  font-style: italic;
   cursor: pointer;
-  box-shadow: var(--shadow-md);
-  transition: background 0.15s;
+  box-shadow: var(--shadow-sm);
+  transition: background var(--transition-fast), border-color var(--transition-fast);
   white-space: nowrap;
 }
 
-.add-book-hero-btn:hover {
-  background: var(--color-primary-hover);
+.add-book-btn:hover {
+  background: var(--color-surface-soft);
+  border-color: var(--color-primary-border);
 }
 
 .items-section {
