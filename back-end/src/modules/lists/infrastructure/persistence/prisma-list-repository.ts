@@ -49,7 +49,7 @@ export class PrismaListRepository implements ListRepository {
   async findAllByUserId(userId: string): Promise<BookList[]> {
     const lists = await prisma.bookList.findMany({
       where: { user_id: userId },
-      orderBy: { created_at: "asc" },
+      orderBy: { created_at: "desc" },
       include: PREVIEW_INCLUDE,
     });
 
