@@ -11,12 +11,17 @@ import AppConfirmSheet from '@/components/overlay/AppConfirmSheet.vue'
 import ResponsiveSheetModal from '@/components/overlay/ResponsiveSheetModal.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useListsStore } from '@/stores/lists'
+import { useThemePreferencesStore } from '@/stores/theme-preferences'
 import { useToastStore } from '@/stores/toast'
 
 const router = useRouter()
 const authStore = useAuthStore()
 const listsStore = useListsStore()
+const themePrefs = useThemePreferencesStore()
 const toastStore = useToastStore()
+
+const isDark = computed(() => themePrefs.appearance === 'dark')
+const gradientBottom = computed(() => isDark.value ? 'rgba(19,17,12,0)' : 'rgba(251,246,236,0)')
 
 const activeOptionsListId = ref<string | null>(null)
 const editingListId = ref<string | null>(null)
@@ -33,12 +38,12 @@ const editForm = reactive({ name: '' })
 
 // ─── list tints (earth tones) ─────────────────────
 const LIST_TINTS = [
-  { bg: 'rgba(217,227,218,0.7)', fg: '#2d5240' },
-  { bg: 'rgba(232,222,200,0.8)', fg: '#7c5e3e' },
-  { bg: 'rgba(232,213,210,0.75)', fg: '#7a3a4a' },
-  { bg: 'rgba(213,222,232,0.75)', fg: '#2c4a5e' },
-  { bg: 'rgba(222,213,232,0.75)', fg: '#5b4a82' },
-  { bg: 'rgba(225,217,200,0.85)', fg: '#5a4528' },
+  { bg: 'rgba(205,225,208,0.78)', fg: '#2d5240', darkBg: 'rgba(40,72,55,0.48)',  darkFg: '#a0c4b0' },
+  { bg: 'rgba(235,216,190,0.85)', fg: '#7c5e3e', darkBg: 'rgba(72,55,30,0.48)',  darkFg: '#c8a870' },
+  { bg: 'rgba(238,205,200,0.80)', fg: '#7a3a4a', darkBg: 'rgba(72,35,45,0.48)',  darkFg: '#c890a0' },
+  { bg: 'rgba(205,215,235,0.80)', fg: '#2c4a5e', darkBg: 'rgba(35,52,70,0.48)',  darkFg: '#88aec8' },
+  { bg: 'rgba(215,205,238,0.80)', fg: '#5b4a82', darkBg: 'rgba(55,38,75,0.48)',  darkFg: '#b0a0d0' },
+  { bg: 'rgba(230,210,185,0.88)', fg: '#5a4528', darkBg: 'rgba(65,50,28,0.48)',  darkFg: '#c0a060' },
 ]
 
 const LIST_ICONS = [
@@ -64,7 +69,8 @@ function hashBookColor(title: string, author: string): string {
 
 function listTint(index: number | undefined | null) {
   const i = typeof index === 'number' && Number.isFinite(index) ? index : 0
-  return LIST_TINTS[((i % LIST_TINTS.length) + LIST_TINTS.length) % LIST_TINTS.length]!
+  const t = LIST_TINTS[((i % LIST_TINTS.length) + LIST_TINTS.length) % LIST_TINTS.length]!
+  return isDark.value ? { bg: t.darkBg, fg: t.darkFg } : { bg: t.bg, fg: t.fg }
 }
 
 const userName = computed(() => authStore.user?.user_name ?? '')
@@ -228,7 +234,7 @@ async function confirmDeleteList() {
           <button
             type="button"
             class="shelf-preview"
-            :style="{ background: `linear-gradient(180deg, ${listTint(list.tint_index).bg} 0%, rgba(251,246,236,0) 100%)` }"
+            :style="{ background: `linear-gradient(180deg, ${listTint(list.tint_index).bg} 0%, ${gradientBottom} 100%)` }"
             :aria-label="`Abrir lista ${list.name}`"
             :data-testid="`list-link-${list.id}`"
             @click="openList(list.id)"
