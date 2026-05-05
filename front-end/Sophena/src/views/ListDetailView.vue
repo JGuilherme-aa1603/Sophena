@@ -905,6 +905,7 @@ async function confirmMove(itemId: string) {
   align-self: start;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
   padding: 8px 16px;
   margin-top: var(--space-xs);
