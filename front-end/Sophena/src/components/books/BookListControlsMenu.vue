@@ -196,8 +196,10 @@ function updateLayout(layout: 'comfortable' | 'compact') {
   border-radius: var(--radius-lg);
   background: var(--color-card);
   color: var(--color-heading);
-  font: inherit;
-  font-weight: 700;
+  font-family: var(--font-serif);
+  font-size: 15px;
+  font-weight: 500;
+  font-style: italic;
   box-shadow: var(--shadow-sm);
 }
 
@@ -229,8 +231,10 @@ function updateLayout(layout: 'comfortable' | 'compact') {
 
 .layout-toggle-label {
   color: var(--color-muted);
+  font-family: var(--font-serif);
   font-size: 0.86rem;
-  font-weight: 700;
+  font-style: italic;
+  font-weight: 500;
 }
 
 .layout-toggle-actions {
@@ -249,8 +253,10 @@ function updateLayout(layout: 'comfortable' | 'compact') {
   border-radius: 999px;
   background: transparent;
   color: var(--color-heading);
-  font: inherit;
-  font-weight: 700;
+  font-family: var(--font-serif);
+  font-size: 14px;
+  font-style: italic;
+  font-weight: 500;
 }
 
 .layout-toggle-button--active {

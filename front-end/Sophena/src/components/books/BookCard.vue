@@ -150,7 +150,9 @@ const useOverlayControls = computed(() => props.layout === 'compact')
   border: 1px solid var(--color-primary-border-soft);
   background: var(--color-primary-soft);
   color: var(--color-primary);
-  font-weight: 700;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 500;
   box-shadow: inset 0 1px 0 var(--color-inset-highlight);
 }
 
@@ -224,14 +226,18 @@ const useOverlayControls = computed(() => props.layout === 'compact')
 }
 
 .book-card-content strong {
+  font-family: var(--font-serif);
   font-size: 1.08rem;
-  font-weight: 700;
+  font-weight: 500;
   line-height: 1.25;
+  letter-spacing: -0.01em;
 }
 
 .book-card-content span {
   color: var(--color-muted);
-  font-size: 0.96rem;
+  font-family: var(--font-serif);
+  font-size: 0.92rem;
+  font-style: italic;
   line-height: 1.4;
 }
 
@@ -289,12 +295,12 @@ const useOverlayControls = computed(() => props.layout === 'compact')
 }
 
 .book-card--compact .book-card-content strong {
-  font-size: 0.98rem;
+  font-size: 0.92rem;
   line-height: 1.3;
 }
 
 .book-card--compact .book-card-content span {
-  font-size: 0.88rem;
+  font-size: 0.82rem;
   line-height: 1.35;
 }
 
