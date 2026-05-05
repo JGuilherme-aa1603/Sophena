@@ -62,8 +62,9 @@ function hashBookColor(title: string, author: string): string {
   return SPINE_COLORS[h % SPINE_COLORS.length]!
 }
 
-function listTint(index: number) {
-  return LIST_TINTS[index % LIST_TINTS.length]!
+function listTint(index: number | undefined | null) {
+  const i = typeof index === 'number' && Number.isFinite(index) ? index : 0
+  return LIST_TINTS[((i % LIST_TINTS.length) + LIST_TINTS.length) % LIST_TINTS.length]!
 }
 
 const userName = computed(() => authStore.user?.user_name ?? '')
