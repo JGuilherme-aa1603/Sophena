@@ -3,6 +3,8 @@ import { computed } from 'vue'
 import { IonIcon } from '@ionic/vue'
 import { libraryOutline, settingsOutline } from 'ionicons/icons'
 
+import { hasActiveSheet } from '@/components/overlay/sheet-activity'
+
 const props = defineProps<{
   activeRoute: string
   showAdmin: boolean
@@ -19,6 +21,7 @@ const isListsActive = computed(() => props.activeRoute === 'app-home' || props.a
 const isAdminActive = computed(() => props.activeRoute.startsWith('admin-'))
 const isProfileActive = computed(() => props.activeRoute === 'profile')
 const profileInitial = computed(() => props.userName.trim().slice(0, 1).toUpperCase() || 'U')
+const isHiddenBySheet = hasActiveSheet
 
 function clearPointerFocus(event: MouseEvent) {
   if (event.detail <= 0) {
@@ -45,7 +48,12 @@ function openProfileFromDock(event: MouseEvent) {
 </script>
 
 <template>
-  <nav class="authenticated-dock" aria-label="Navegação principal" data-testid="authenticated-dock">
+  <nav
+    class="authenticated-dock"
+    :class="{ 'authenticated-dock--sheet-open': isHiddenBySheet }"
+    aria-label="Navegação principal"
+    data-testid="authenticated-dock"
+  >
     <button
       type="button"
       class="dock-link dock-link--equal"
@@ -137,7 +145,7 @@ function openProfileFromDock(event: MouseEvent) {
     transform var(--transition-fast);
 }
 
-:global(body.sophena-sheet-open) .authenticated-dock {
+.authenticated-dock--sheet-open {
   opacity: 0;
   pointer-events: none;
 }

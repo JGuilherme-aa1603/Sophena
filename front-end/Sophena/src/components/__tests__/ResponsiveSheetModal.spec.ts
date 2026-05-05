@@ -2,12 +2,13 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { enableAutoUnmount, mount } from '@vue/test-utils'
 import { afterEach, describe, expect, it } from 'vitest'
+import { nextTick } from 'vue'
 
+import AuthenticatedDock from '../layout/AuthenticatedDock.vue'
 import ResponsiveSheetModal from '../overlay/ResponsiveSheetModal.vue'
 
 const sheetSourcePath = join(process.cwd(), 'src/components/overlay/ResponsiveSheetModal.vue')
 const dockSourcePath = join(process.cwd(), 'src/components/layout/AuthenticatedDock.vue')
-const sheetOpenClass = 'sophena-sheet-open'
 
 enableAutoUnmount(afterEach)
 
@@ -26,10 +27,6 @@ function zIndexFrom(source: string, selector: string) {
 }
 
 describe('ResponsiveSheetModal', () => {
-  afterEach(() => {
-    document.body.classList.remove(sheetOpenClass)
-  })
-
   it('mantém o sheet acima do dock inferior quando está aberto', () => {
     const sheetSource = readFileSync(sheetSourcePath, 'utf8')
     const dockSource = readFileSync(dockSourcePath, 'utf8')
@@ -39,7 +36,15 @@ describe('ResponsiveSheetModal', () => {
     )
   })
 
-  it('marca a página com sheet ativo para esconder a dock inferior', async () => {
+  it('desativa a dock inferior sem alterar classes globais da página', async () => {
+    const dock = mount(AuthenticatedDock, {
+      props: {
+        activeRoute: 'app-home',
+        showAdmin: false,
+        userName: 'leitora',
+        userPictureUrl: null,
+      },
+    })
     const wrapper = mount(ResponsiveSheetModal, {
       props: {
         modelValue: true,
@@ -47,14 +52,30 @@ describe('ResponsiveSheetModal', () => {
       },
     })
 
-    expect(document.body.classList.contains(sheetOpenClass)).toBe(true)
+    await nextTick()
+
+    expect(document.body.className).not.toContain('sophena-sheet-open')
+    expect(dock.get('[data-testid="authenticated-dock"]').classes()).toContain(
+      'authenticated-dock--sheet-open',
+    )
 
     await wrapper.setProps({ modelValue: false })
+    await nextTick()
 
-    expect(document.body.classList.contains(sheetOpenClass)).toBe(false)
+    expect(dock.get('[data-testid="authenticated-dock"]').classes()).not.toContain(
+      'authenticated-dock--sheet-open',
+    )
   })
 
-  it('mantém a dock escondida enquanto outro sheet continua aberto', () => {
+  it('mantém a dock escondida enquanto outro sheet continua aberto', async () => {
+    const dock = mount(AuthenticatedDock, {
+      props: {
+        activeRoute: 'app-home',
+        showAdmin: false,
+        userName: 'leitora',
+        userPictureUrl: null,
+      },
+    })
     const firstSheet = mount(ResponsiveSheetModal, {
       props: {
         modelValue: true,
@@ -69,15 +90,18 @@ describe('ResponsiveSheetModal', () => {
     })
 
     firstSheet.unmount()
+    await nextTick()
 
-    expect(document.body.classList.contains(sheetOpenClass)).toBe(true)
+    expect(dock.get('[data-testid="authenticated-dock"]').classes()).toContain(
+      'authenticated-dock--sheet-open',
+    )
 
     secondSheet.unmount()
   })
 
-  it('declara o estado global que desativa a dock enquanto o sheet está aberto', () => {
+  it('declara a classe local que desativa a dock enquanto o sheet está aberto', () => {
     const dockSource = readFileSync(dockSourcePath, 'utf8')
-    const inactiveDockBlock = cssBlock(dockSource, ':global(body.sophena-sheet-open) .authenticated-dock')
+    const inactiveDockBlock = cssBlock(dockSource, '.authenticated-dock--sheet-open')
 
     expect(inactiveDockBlock).toContain('opacity: 0;')
     expect(inactiveDockBlock).toContain('pointer-events: none;')
