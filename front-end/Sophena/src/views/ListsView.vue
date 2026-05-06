@@ -281,16 +281,20 @@ async function confirmDeleteList() {
       <SophenaWordmark :size="28" />
       <div class="lists-header-right">
         <div class="lists-search-wrapper" :class="{ 'lists-search-wrapper--open': isSearchOpen }">
-          <input
-            v-if="isSearchOpen"
-            ref="searchInputRef"
-            v-model="searchQuery"
-            type="search"
-            class="lists-search-input"
-            placeholder="Buscar estante…"
-            aria-label="Buscar estante por nome"
-            @keydown.escape="closeSearch"
-          />
+          <div v-if="isSearchOpen" class="lists-search-input-wrapper">
+            <span class="lists-search-input-icon" aria-hidden="true">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
+            </span>
+            <input
+              ref="searchInputRef"
+              v-model="searchQuery"
+              type="search"
+              class="lists-search-input"
+              placeholder="Buscar estante…"
+              aria-label="Buscar estante por nome"
+              @keydown.escape="closeSearch"
+            />
+          </div>
           <button
             v-if="isSearchOpen"
             type="button"
@@ -298,7 +302,7 @@ async function confirmDeleteList() {
             aria-label="Fechar busca"
             @click="closeSearch"
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>
           </button>
           <button
             v-else
@@ -322,25 +326,28 @@ async function confirmDeleteList() {
     </div>
 
     <!-- Sort pills -->
-    <div v-if="listsStore.items.length > 1 && !listsStore.isLoading" class="lists-sort-row">
-      <button
-        type="button"
-        class="sort-pill"
-        :class="{ 'sort-pill--active': sortBy === 'updated_at' }"
-        @click="sortBy = 'updated_at'"
-      >Atualização</button>
-      <button
-        type="button"
-        class="sort-pill"
-        :class="{ 'sort-pill--active': sortBy === 'created_at' }"
-        @click="sortBy = 'created_at'"
-      >Criação</button>
-      <button
-        type="button"
-        class="sort-pill"
-        :class="{ 'sort-pill--active': sortBy === 'name' }"
-        @click="sortBy = 'name'"
-      >Nome</button>
+    <div v-if="listsStore.items.length > 1 && !listsStore.isLoading" class="lists-sort-section">
+      <span class="lists-sort-label">Ordenar estantes por</span>
+      <div class="lists-sort-row">
+        <button
+          type="button"
+          class="sort-pill"
+          :class="{ 'sort-pill--active': sortBy === 'updated_at' }"
+          @click="sortBy = 'updated_at'"
+        >Atualização</button>
+        <button
+          type="button"
+          class="sort-pill"
+          :class="{ 'sort-pill--active': sortBy === 'created_at' }"
+          @click="sortBy = 'created_at'"
+        >Criação</button>
+        <button
+          type="button"
+          class="sort-pill"
+          :class="{ 'sort-pill--active': sortBy === 'name' }"
+          @click="sortBy = 'name'"
+        >Nome</button>
+      </div>
     </div>
 
     <p
@@ -680,22 +687,24 @@ async function confirmDeleteList() {
 
 .lists-search-wrapper--open {
   flex: 1;
-  max-width: 220px;
+  max-width: 260px;
 }
 
 .lists-search-btn {
-  width: 36px;
-  height: 36px;
+  width: 38px;
+  height: 38px;
   border-radius: 12px;
   border: 1.5px solid var(--color-border);
   background: var(--color-surface);
-  color: var(--color-text);
+  color: var(--color-text-soft);
   display: grid;
   place-items: center;
   cursor: pointer;
   transition:
     background var(--transition-fast),
-    border-color var(--transition-fast);
+    border-color var(--transition-fast),
+    color var(--transition-fast),
+    box-shadow var(--transition-fast);
   box-shadow: var(--shadow-sm, 0 1px 3px rgba(0,0,0,0.08));
 }
 
@@ -703,48 +712,93 @@ async function confirmDeleteList() {
   background: var(--color-surface-soft);
   border-color: var(--color-primary-border-strong);
   color: var(--color-primary);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.10);
 }
 
 .lists-search-input {
   flex: 1;
-  height: 36px;
-  padding: 0 10px;
-  border: 1.5px solid var(--color-primary-border-strong, var(--color-primary));
+  height: 38px;
+  padding: 0 12px 0 36px;
+  border: 1.5px solid var(--color-border);
   border-radius: 12px;
   background: var(--color-surface);
   color: var(--color-text);
   font-family: var(--font-sans, inherit);
-  font-size: 14px;
+  font-size: 14.5px;
   outline: none;
+  box-shadow: var(--shadow-sm, 0 1px 3px rgba(0,0,0,0.06));
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.lists-search-input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-soft, rgba(0,0,0,0.06)), var(--shadow-sm, 0 1px 3px rgba(0,0,0,0.06));
 }
 
 .lists-search-input::placeholder {
   color: var(--color-text-muted);
+  font-style: italic;
+}
+
+.lists-search-input-wrapper {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.lists-search-input-icon {
+  position: absolute;
+  left: 10px;
+  color: var(--color-text-muted);
+  display: grid;
+  place-items: center;
+  pointer-events: none;
 }
 
 .lists-search-close-btn {
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   border-radius: 999px;
-  border: 0;
-  background: var(--color-surface-soft);
+  border: 1.5px solid var(--color-border);
+  background: var(--color-surface);
   color: var(--color-text-soft);
   display: grid;
   place-items: center;
   cursor: pointer;
   flex-shrink: 0;
-  transition: background var(--transition-fast);
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast);
 }
 
 .lists-search-close-btn:hover {
-  background: var(--color-border);
+  background: var(--color-surface-soft);
+  border-color: var(--color-border);
+  color: var(--color-text);
 }
 
 /* ─── Sort pills ──────────────────────────────────── */
+.lists-sort-section {
+  display: grid;
+  gap: 6px;
+  margin-bottom: var(--space-md);
+}
+
+.lists-sort-label {
+  font-family: var(--font-serif);
+  font-size: 12px;
+  font-style: italic;
+  color: var(--color-text-muted);
+  letter-spacing: 0.01em;
+}
+
 .lists-sort-row {
   display: flex;
   gap: 6px;
-  margin-bottom: var(--space-md);
   flex-wrap: wrap;
 }
 
