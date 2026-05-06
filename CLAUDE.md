@@ -229,6 +229,7 @@ The application must use Brazilian Portuguese (pt-BR) as the primary language.
 - **Admin deletion:** remove only administrative permission; do not delete the `User`
 - **Book_List deletion:** cascade-delete all `Book_List_Item` records
 - **Book deletion:** admin-only; remove book cover from external storage if managed; re-normalize positions of affected lists
+- **Log deletion:** logs must be preserved for audit purposes; logs must not be automatically deleted due to normal user deletion
 
 ---
 
@@ -299,7 +300,7 @@ Logs must not expose password hashes, raw refresh tokens, or sensitive private d
 ## Front-end Rules
 
 - UI must be simple and friendly for low-technical users
-- Dangerous actions must require a confirmation dialog that clearly explains the action and its consequence
+- Dangerous actions (deleting a list, removing a book from a list) must require a confirmation dialog that clearly explains the action, clearly states the consequence, and minimizes accidental destructive actions
 - Error feedback must be understandable — avoid technical jargon
 - Use simple list-based or section-based visualization (not kanban as the authoritative structure)
 - Book ordering must be read from the persisted `position` in the database
@@ -334,6 +335,24 @@ This flow is mandatory and must not be skipped or reordered.
 5. Only after that, implement the feature
 6. Ensure all tests pass
 
+### Test-First Rule
+
+Before writing any implementation code:
+
+- All expected behaviors must be covered by tests
+- Tests must define the correct behavior of the system
+- Implementation must satisfy the tests, not define them
+
+Tests are the source of truth for behavior.
+
+The agent must never:
+- implement functionality before writing tests
+- skip test definition
+- write implementation and tests at the same time
+- write superficial or incomplete tests
+
+---
+
 ### Required Test Coverage
 
 Every feature must include:
@@ -345,6 +364,39 @@ Every feature must include:
 - **Business rules:** duplicate list names, duplicate book in list, book reuse logic, position consistency
 - **API endpoints:** success response, validation errors, authorization errors, edge cases, business rule violations
 - **Database:** uniqueness constraints, foreign key constraints, cascade deletion, ordering consistency, transaction safety
+
+All endpoints must have integration-level tests.
+
+### Reordering Logic Tests
+
+Special attention is required for list ordering. Tests must verify:
+
+- inserting at end
+- inserting at a specific position
+- moving item up
+- moving item down
+- removing item and reordering
+- moving item between lists
+- no duplicate positions
+- consistent sequence after operations
+
+### Logging Tests
+
+Tests should verify:
+
+- logs are created for important events
+- errors generate `ERROR` logs
+- invalid access generates `WARN` logs
+- successful operations generate `INFO` logs
+
+### Implementation Constraints
+
+Implementation must:
+
+- satisfy all tests
+- not bypass tests
+- not hardcode values just to pass tests
+- not ignore failing tests
 
 ### Test Quality Rules
 
@@ -360,6 +412,10 @@ Every feature must include:
 - Mocking critical domain logic incorrectly
 - Removing tests to make code pass
 
+### Enforcement Note
+
+This testing workflow is mandatory. If there is a conflict between speed and correctness, correctness and test coverage must always be prioritized. The agent must not skip this process under any circumstance.
+
 ---
 
 ## Commit Workflow
@@ -368,6 +424,12 @@ When finishing any task:
 
 - Create a Git commit before handing the task back to the user
 - Use the Conventional Commits style established in the project history
+- Always include a scope in parentheses specifying which part of the monorepo was changed:
+  - `feat(back-end): ...` for backend-only changes
+  - `feat(front-end): ...` for frontend-only changes
+  - `fix(front-end/tests): ...` for frontend test changes
+  - `fix(back-end/tests): ...` for backend test changes
+  - Use nested scopes (e.g. `front-end/tests`) when the change is scoped to a sub-area
 - Keep each commit focused on the completed task
 - Do not include unrelated changes in the commit
 - If the task requires multiple distinct phases, commit each completed phase separately
