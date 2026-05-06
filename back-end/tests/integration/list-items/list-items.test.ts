@@ -1061,3 +1061,104 @@ describe("Book list items", () => {
     assert.equal(moveResponse.body?.message, "Resource not found");
   });
 });
+
+describe("Book_List updated_at is bumped on item mutations", () => {
+  async function getListUpdatedAt(accessToken: string, listId: string): Promise<string> {
+    const response = await requestJson(server!, {
+      method: "GET",
+      path: "/lists",
+      headers: { authorization: accessToken },
+    });
+    assert.equal(response.status, 200);
+    const list = (response.body.items as Array<{ id: string; updated_at: string }>).find((l) => l.id === listId);
+    assert.ok(list, "list not found in GET /lists response");
+    return list.updated_at;
+  }
+
+  test("adding an item bumps the list updated_at", async () => {
+    const { accessToken } = await createAuthenticatedUser({
+      user_name: "bump-add-user",
+      password: "BumpAdd#999",
+    });
+    const user = await createTestUser({ user_name: "bump-add-owner", password: "BumpAdd#998" });
+    const list = await createTestList({ name: "Bump Add List", user_id: user.id });
+    const book = await createTestBook({ title: "Bump Add Book", author: "Bump Author" });
+
+    const ownerSession = await loginAs({ user_name: "bump-add-owner", password: "BumpAdd#998" });
+    const before = new Date();
+
+    await requestJson(server!, {
+      method: "POST",
+      path: `/lists/${list.id}/items`,
+      headers: { authorization: ownerSession },
+      body: { book_id: book.id },
+    });
+
+    const updatedAt = await getListUpdatedAt(ownerSession, list.id);
+    assert.ok(new Date(updatedAt) >= before, "updated_at should be >= time before add");
+  });
+
+  test("removing an item bumps the list updated_at", async () => {
+    const user = await createTestUser({ user_name: "bump-del-owner", password: "BumpDel#997" });
+    const list = await createTestList({ name: "Bump Del List", user_id: user.id });
+    const book = await createTestBook({ title: "Bump Del Book", author: "Bump Del Author" });
+    const item = await createTestBookListItem({ list_id: list.id, book_id: book.id, position: 1 });
+    const ownerSession = await loginAs({ user_name: "bump-del-owner", password: "BumpDel#997" });
+
+    const before = new Date();
+
+    await requestJson(server!, {
+      method: "DELETE",
+      path: `/lists/${list.id}/items/${item.id}`,
+      headers: { authorization: ownerSession },
+    });
+
+    const updatedAt = await getListUpdatedAt(ownerSession, list.id);
+    assert.ok(new Date(updatedAt) >= before, "updated_at should be >= time before delete");
+  });
+
+  test("reordering an item bumps the list updated_at", async () => {
+    const user = await createTestUser({ user_name: "bump-reorder-owner", password: "BumpReorder#996" });
+    const list = await createTestList({ name: "Bump Reorder List", user_id: user.id });
+    const bookA = await createTestBook({ title: "Bump Reorder A", author: "Author A" });
+    const bookB = await createTestBook({ title: "Bump Reorder B", author: "Author B" });
+    const itemA = await createTestBookListItem({ list_id: list.id, book_id: bookA.id, position: 1 });
+    await createTestBookListItem({ list_id: list.id, book_id: bookB.id, position: 2 });
+    const ownerSession = await loginAs({ user_name: "bump-reorder-owner", password: "BumpReorder#996" });
+
+    const before = new Date();
+
+    await requestJson(server!, {
+      method: "PATCH",
+      path: `/lists/${list.id}/items/${itemA.id}/reorder`,
+      headers: { authorization: ownerSession },
+      body: { position: 2 },
+    });
+
+    const updatedAt = await getListUpdatedAt(ownerSession, list.id);
+    assert.ok(new Date(updatedAt) >= before, "updated_at should be >= time before reorder");
+  });
+
+  test("moving an item bumps updated_at on both source and destination lists", async () => {
+    const user = await createTestUser({ user_name: "bump-move-owner", password: "BumpMove#995" });
+    const sourceList = await createTestList({ name: "Bump Move Source", user_id: user.id });
+    const destList = await createTestList({ name: "Bump Move Dest", user_id: user.id });
+    const book = await createTestBook({ title: "Bump Move Book", author: "Bump Move Author" });
+    const item = await createTestBookListItem({ list_id: sourceList.id, book_id: book.id, position: 1 });
+    const ownerSession = await loginAs({ user_name: "bump-move-owner", password: "BumpMove#995" });
+
+    const before = new Date();
+
+    await requestJson(server!, {
+      method: "PATCH",
+      path: `/lists/${sourceList.id}/items/${item.id}/move`,
+      headers: { authorization: ownerSession },
+      body: { target_list_id: destList.id, target_position: 1 },
+    });
+
+    const sourceUpdatedAt = await getListUpdatedAt(ownerSession, sourceList.id);
+    const destUpdatedAt = await getListUpdatedAt(ownerSession, destList.id);
+    assert.ok(new Date(sourceUpdatedAt) >= before, "source list updated_at should be >= time before move");
+    assert.ok(new Date(destUpdatedAt) >= before, "destination list updated_at should be >= time before move");
+  });
+});

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, reactive, ref } from 'vue'
-import { IonIcon, IonSpinner } from '@ionic/vue'
+import { IonIcon, IonSpinner, onIonViewDidEnter } from '@ionic/vue'
 import { createOutline, trashOutline } from 'ionicons/icons'
 import { useRouter } from 'vue-router'
 
@@ -209,6 +209,10 @@ const isDeleteConfirmOpen = computed({
 onMounted(async () => {
   await listsStore.fetchLists()
   loadErrorMessage.value = listsStore.errorMessage
+})
+
+onIonViewDidEnter(() => {
+  listsStore.fetchLists()
 })
 
 function openCreate() {

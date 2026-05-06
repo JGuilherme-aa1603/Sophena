@@ -112,6 +112,11 @@ export class PrismaListItemRepository implements ListItemRepository {
             },
           });
 
+          await tx.bookList.update({
+            where: { id: input.list_id },
+            data: { updated_at: new Date() },
+          });
+
           return mapBookListItem(createdItem);
         });
       } catch (error: unknown) {
@@ -170,6 +175,11 @@ export class PrismaListItemRepository implements ListItemRepository {
             decrement: 1,
           },
         },
+      });
+
+      await tx.bookList.update({
+        where: { id: input.list_id },
+        data: { updated_at: new Date() },
       });
     });
   }
@@ -263,6 +273,11 @@ export class PrismaListItemRepository implements ListItemRepository {
         throw new ResourceNotFoundError();
       }
 
+      await tx.bookList.update({
+        where: { id: input.list_id },
+        data: { updated_at: new Date() },
+      });
+
       return mapBookListItem(updatedItem);
     });
   }
@@ -290,6 +305,10 @@ export class PrismaListItemRepository implements ListItemRepository {
             list_id: input.source_list_id,
             item_id: input.item_id,
             position: input.target_position,
+          });
+          await tx.bookList.update({
+            where: { id: input.source_list_id },
+            data: { updated_at: new Date() },
           });
           return;
         }
@@ -354,6 +373,16 @@ export class PrismaListItemRepository implements ListItemRepository {
         if (movedItem.count === 0) {
           throw new ResourceNotFoundError();
         }
+
+        const now = new Date();
+        await tx.bookList.update({
+          where: { id: input.source_list_id },
+          data: { updated_at: now },
+        });
+        await tx.bookList.update({
+          where: { id: input.target_list_id },
+          data: { updated_at: now },
+        });
       });
     } catch (error: unknown) {
       if (

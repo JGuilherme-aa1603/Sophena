@@ -9,6 +9,18 @@ import { useAuthStore } from '@/stores/auth'
 import { useListsStore } from '@/stores/lists'
 import { useToastStore } from '@/stores/toast'
 
+// Captura os callbacks registrados via onIonViewDidEnter para poder disparar o lifecycle nos testes
+const ionViewDidEnterCallbacks = vi.hoisted(() => [] as Array<() => void>)
+vi.mock('@ionic/vue', async (importOriginal) => {
+  const original = await importOriginal<typeof import('@ionic/vue')>()
+  return {
+    ...original,
+    onIonViewDidEnter: (cb: () => void) => {
+      ionViewDidEnterCallbacks.push(cb)
+    },
+  }
+})
+
 describe('ListsView', () => {
   function authenticateUser() {
     const authStore = useAuthStore()
@@ -37,6 +49,7 @@ describe('ListsView', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.restoreAllMocks()
+    ionViewDidEnterCallbacks.length = 0
   })
 
   it('mostra estado vazio quando não há listas', async () => {
@@ -400,5 +413,29 @@ describe('ListsView', () => {
     await flushPromises()
 
     expect(router.currentRoute.value.name).toBe('profile')
+  })
+
+  it('chama fetchLists ao entrar na view (onIonViewDidEnter)', async () => {
+    const router = createAppRouter(createMemoryHistory())
+    authenticateUser()
+    const listsStore = useListsStore()
+    const fetchSpy = vi.spyOn(listsStore, 'fetchLists').mockResolvedValue()
+
+    mount(ListsView, {
+      global: { plugins: [router] },
+    })
+
+    await flushPromises()
+    const callsAfterMount = fetchSpy.mock.calls.length
+    expect(callsAfterMount).toBeGreaterThanOrEqual(1)
+
+    // O componente deve ter registrado um callback via onIonViewDidEnter
+    expect(ionViewDidEnterCallbacks.length).toBeGreaterThan(0)
+
+    // Simula o IonRouterOutlet disparando o lifecycle ao voltar para a view
+    ionViewDidEnterCallbacks.forEach((cb) => cb())
+    await flushPromises()
+
+    expect(fetchSpy.mock.calls.length).toBeGreaterThan(callsAfterMount)
   })
 })
