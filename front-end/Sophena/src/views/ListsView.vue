@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, nextTick, onMounted, reactive, ref } from 'vue'
 import { IonIcon, IonSpinner } from '@ionic/vue'
 import { createOutline, trashOutline } from 'ionicons/icons'
 import { useRouter } from 'vue-router'
@@ -28,6 +28,56 @@ const editingListId = ref<string | null>(null)
 const pendingDeleteListId = ref<string | null>(null)
 const isCreateOpen = ref(false)
 const loadErrorMessage = ref(listsStore.errorMessage)
+
+// ─── Search & sort ────────────────────────────────
+const searchQuery = ref('')
+const isSearchOpen = ref(false)
+const sortBy = ref<'updated_at' | 'created_at' | 'name'>('updated_at')
+const searchInputRef = ref<HTMLInputElement | null>(null)
+
+function formatRelativeTime(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime()
+  const minutes = Math.floor(diff / 60_000)
+  const hours = Math.floor(diff / 3_600_000)
+  const days = Math.floor(diff / 86_400_000)
+  const weeks = Math.floor(days / 7)
+  const months = Math.floor(days / 30)
+  const years = Math.floor(days / 365)
+  if (minutes < 1) return 'agora mesmo'
+  if (hours < 1) return `há ${minutes} ${minutes === 1 ? 'minuto' : 'minutos'}`
+  if (days < 1) return `há ${hours} ${hours === 1 ? 'hora' : 'horas'}`
+  if (days < 14) return `há ${days} ${days === 1 ? 'dia' : 'dias'}`
+  if (days < 60) return `há ${weeks} ${weeks === 1 ? 'semana' : 'semanas'}`
+  if (days < 365) return `há ${months} ${months === 1 ? 'mês' : 'meses'}`
+  return `há ${years} ${years === 1 ? 'ano' : 'anos'}`
+}
+
+const filteredAndSortedLists = computed(() => {
+  const query = searchQuery.value.trim().toLowerCase()
+  const result = query
+    ? listsStore.items.filter((l) => l.name.toLowerCase().includes(query))
+    : [...listsStore.items]
+
+  if (sortBy.value === 'name') {
+    result.sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'))
+  } else if (sortBy.value === 'created_at') {
+    result.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+  } else {
+    result.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
+  }
+  return result
+})
+
+async function openSearch() {
+  isSearchOpen.value = true
+  await nextTick()
+  searchInputRef.value?.focus()
+}
+
+function closeSearch() {
+  isSearchOpen.value = false
+  searchQuery.value = ''
+}
 
 const form = reactive({
   name: '',
@@ -230,13 +280,36 @@ async function confirmDeleteList() {
     <header class="lists-header">
       <SophenaWordmark :size="28" />
       <div class="lists-header-right">
-        <span
-          class="lists-count-badge"
-          :title="`${listsStore.items.length} estante(s)`"
-          aria-label="`${listsStore.items.length} estante(s)`"
-        >
-          {{ listsStore.items.length }}
-        </span>
+        <div class="lists-search-wrapper" :class="{ 'lists-search-wrapper--open': isSearchOpen }">
+          <input
+            v-if="isSearchOpen"
+            ref="searchInputRef"
+            v-model="searchQuery"
+            type="search"
+            class="lists-search-input"
+            placeholder="Buscar estante…"
+            aria-label="Buscar estante por nome"
+            @keydown.escape="closeSearch"
+          />
+          <button
+            v-if="isSearchOpen"
+            type="button"
+            class="lists-search-close-btn"
+            aria-label="Fechar busca"
+            @click="closeSearch"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </button>
+          <button
+            v-else
+            type="button"
+            class="lists-search-btn"
+            aria-label="Buscar estante"
+            @click="openSearch"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
+          </button>
+        </div>
       </div>
     </header>
 
@@ -246,6 +319,28 @@ async function confirmDeleteList() {
         {{ timeGreeting }}<br>
         <em>{{ greeting }}.</em>
       </h1>
+    </div>
+
+    <!-- Sort pills -->
+    <div v-if="listsStore.items.length > 1 && !listsStore.isLoading" class="lists-sort-row">
+      <button
+        type="button"
+        class="sort-pill"
+        :class="{ 'sort-pill--active': sortBy === 'updated_at' }"
+        @click="sortBy = 'updated_at'"
+      >Atualização</button>
+      <button
+        type="button"
+        class="sort-pill"
+        :class="{ 'sort-pill--active': sortBy === 'created_at' }"
+        @click="sortBy = 'created_at'"
+      >Criação</button>
+      <button
+        type="button"
+        class="sort-pill"
+        :class="{ 'sort-pill--active': sortBy === 'name' }"
+        @click="sortBy = 'name'"
+      >Nome</button>
     </div>
 
     <p
@@ -279,9 +374,18 @@ async function confirmDeleteList() {
       @action="openCreate"
     />
 
+    <!-- Empty search state -->
+    <p
+      v-else-if="filteredAndSortedLists.length === 0 && searchQuery.trim()"
+      class="lists-search-empty"
+      role="status"
+    >
+      Nenhuma estante encontrada para "<em>{{ searchQuery.trim() }}</em>".
+    </p>
+
     <!-- List cards (shelf style) -->
     <ul v-else class="lists-grid app-fade-in">
-      <li v-for="list in listsStore.items" :key="list.id">
+      <li v-for="list in filteredAndSortedLists" :key="list.id">
         <div class="shelf-card" :data-testid="`list-card-${list.id}`">
           <!-- Shelf preview area -->
           <button
@@ -359,7 +463,7 @@ async function confirmDeleteList() {
               <div class="shelf-info">
                 <span class="shelf-name">{{ list.name }}</span>
                 <span class="shelf-meta">
-                  {{ list.preview_items.length === 1 ? '1 livro' : `${list.preview_items.length} livros` }}
+                  {{ list.preview_items.length === 1 ? '1 livro' : `${list.preview_items.length} livros` }} · {{ formatRelativeTime(list.updated_at) }}
                 </span>
               </div>
             </div>
@@ -568,18 +672,119 @@ async function confirmDeleteList() {
   margin-bottom: var(--space-lg);
 }
 
-.lists-count-badge {
-  min-width: 2rem;
-  min-height: 2rem;
-  padding: 0.2rem 0.65rem;
-  border-radius: 999px;
-  background: var(--color-primary-soft);
-  color: var(--color-primary);
-  font-family: var(--font-mono);
-  font-size: 12px;
-  font-weight: 500;
-  display: inline-grid;
+.lists-search-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.lists-search-wrapper--open {
+  flex: 1;
+  max-width: 220px;
+}
+
+.lists-search-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  border: 1.5px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+  display: grid;
   place-items: center;
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast);
+  box-shadow: var(--shadow-sm, 0 1px 3px rgba(0,0,0,0.08));
+}
+
+.lists-search-btn:hover {
+  background: var(--color-surface-soft);
+  border-color: var(--color-primary-border-strong);
+  color: var(--color-primary);
+}
+
+.lists-search-input {
+  flex: 1;
+  height: 36px;
+  padding: 0 10px;
+  border: 1.5px solid var(--color-primary-border-strong, var(--color-primary));
+  border-radius: 12px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-family: var(--font-sans, inherit);
+  font-size: 14px;
+  outline: none;
+}
+
+.lists-search-input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.lists-search-close-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  border: 0;
+  background: var(--color-surface-soft);
+  color: var(--color-text-soft);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background var(--transition-fast);
+}
+
+.lists-search-close-btn:hover {
+  background: var(--color-border);
+}
+
+/* ─── Sort pills ──────────────────────────────────── */
+.lists-sort-row {
+  display: flex;
+  gap: 6px;
+  margin-bottom: var(--space-md);
+  flex-wrap: wrap;
+}
+
+.sort-pill {
+  padding: 5px 13px;
+  border-radius: 999px;
+  border: 1.5px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-soft);
+  font-family: var(--font-serif);
+  font-size: 12.5px;
+  font-weight: 500;
+  font-style: italic;
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.sort-pill:hover:not(.sort-pill--active) {
+  background: var(--color-surface-soft);
+  border-color: var(--color-primary-border-strong);
+  color: var(--color-text);
+}
+
+.sort-pill--active {
+  background: var(--color-primary-soft);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+/* ─── Search empty state ──────────────────────────── */
+.lists-search-empty {
+  font-family: var(--font-serif);
+  font-size: 14.5px;
+  font-style: italic;
+  color: var(--color-text-muted);
+  text-align: center;
+  padding: var(--space-lg) 0;
 }
 
 .lists-hero {
