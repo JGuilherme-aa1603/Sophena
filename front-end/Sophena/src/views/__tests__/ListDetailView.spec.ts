@@ -163,7 +163,7 @@ describe('ListDetailView', () => {
     await router.isReady()
     await flushPromises()
 
-    expect(wrapper.get('.app-page-title').text()).toBe('Lidos')
+    expect(wrapper.get('.list-hero-title').text()).toBe('Lidos')
     expect(wrapper.text()).not.toContain('Quero ler')
   })
 

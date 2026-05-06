@@ -154,7 +154,7 @@ describe('ListsView', () => {
 
     const card = wrapper.get('[data-testid="list-card-lista-1"]')
     expect(card.text()).toContain('0 livros')
-    expect(wrapper.get('[data-testid="list-link-lista-1"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="list-link-lista-1"]').exists()).toBe(true)
   })
 
   it('envia o nome para criar uma nova lista', async () => {
