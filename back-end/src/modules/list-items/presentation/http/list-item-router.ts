@@ -157,6 +157,8 @@ function handleListItemError(error: unknown, response: ListItemRouterResponse) {
     return;
   }
 
+  console.error("Unhandled error in list items router.", error);
+
   response.status(500).json({
     message: "Internal server error",
   });
