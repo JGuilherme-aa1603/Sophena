@@ -62,6 +62,14 @@ jobs:
         run: yarn test
         env:
           DATABASE_URL_TEST: postgresql://postgres:postgres@localhost:5432/sophena_test
+          # O módulo de uploads valida a configuração do R2 ao ser composto,
+          # então a suíte precisa destes valores mesmo sem tocar no storage.
+          # São placeholders: apontam para um domínio reservado e inacessível.
+          R2_ENDPOINT: https://r2.invalid
+          R2_BUCKET_NAME: sophena-ci
+          R2_ACCESS_KEY_ID: ci-access-key
+          R2_SECRET_ACCESS_KEY: ci-secret-key
+          R2_PUBLIC_BASE_URL: https://r2.invalid/sophena-ci
 
   front-end:
     name: Front-end
