@@ -495,12 +495,12 @@ function isUniqueConstraintError(error: unknown): error is Prisma.PrismaClientKn
   return error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002";
 }
 
-// O formato de `meta.target` depende de como o Prisma fala com o banco. Pelo
-// motor próprio vem a lista de colunas (["list_id", "position"]); pelo driver
-// adapter (@prisma/adapter-pg) o erro do Postgres é repassado cru e vem o nome
-// da constraint ("Book_List_Item_list_id_position_key"). Aceitar só a primeira
-// forma faz o conflito passar despercebido e virar 500 em vez de acionar o
-// retry de posição.
+// Como as colunas do conflito chegam depende de como o Prisma fala com o banco.
+// Pelo motor próprio, `meta.target` traz a lista de colunas. Pelo driver adapter
+// (@prisma/adapter-pg, Prisma 7) o campo não é preenchido — o meta só tem
+// modelName e driverAdapterError — e as colunas sobram apenas na mensagem.
+// Sem ler a mensagem, o conflito de posição não é reconhecido, o retry que já
+// existe em createItem nunca dispara e a inserção concorrente vira 500.
 function readUniqueConstraintTarget(error: Prisma.PrismaClientKnownRequestError) {
   const target = error.meta?.target;
 
@@ -508,7 +508,27 @@ function readUniqueConstraintTarget(error: Prisma.PrismaClientKnownRequestError)
     return target.filter((value): value is string => typeof value === "string");
   }
 
-  return typeof target === "string" ? [target] : [];
+  if (typeof target === "string") {
+    return [target];
+  }
+
+  return readUniqueConstraintFieldsFromMessage(error.message);
+}
+
+// Formato da mensagem:
+//   Unique constraint failed on the fields: (`list_id`, `"position"`)
+// As aspas duplas aparecem em colunas cujo nome é palavra reservada no banco.
+function readUniqueConstraintFieldsFromMessage(message: string) {
+  const match = /Unique constraint failed on the fields: \(([^)]*)\)/.exec(message);
+
+  if (!match) {
+    return [];
+  }
+
+  return match[1]
+    .split(",")
+    .map((field) => field.trim().replace(/[`"]/g, ""))
+    .filter((field) => field.length > 0);
 }
 
 function isListBookConflictTarget(target: string[]) {
