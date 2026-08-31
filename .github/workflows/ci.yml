@@ -1,0 +1,90 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  back-end:
+    name: Back-end
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: sophena_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports: ['5432:5432']
+
+    defaults:
+      run:
+        working-directory: back-end
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: back-end/package-lock.json
+
+      - run: npm ci
+
+      # O schema não usa migrations versionadas, então o banco de teste é
+      # criado com db push. Aqui DATABASE_URL aponta para o banco de teste
+      # porque é a variável que o Prisma CLI lê (prisma.config.ts).
+      - name: Preparar banco de teste
+        run: npx prisma db push --skip-generate
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/sophena_test
+
+      - run: npx prisma generate
+
+      - run: npm run typecheck
+
+      # Na execução dos testes só DATABASE_URL_TEST é definida: o runtime de
+      # teste recusa rodar se ela for igual a DATABASE_URL.
+      - name: Testes (unitários + integração)
+        run: npm test
+        env:
+          DATABASE_URL_TEST: postgresql://postgres:postgres@localhost:5432/sophena_test
+
+  front-end:
+    name: Front-end
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: front-end/Sophena
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: front-end/Sophena/package-lock.json
+
+      - run: npm ci
+
+      # Os scripts locais de lint rodam com --fix; na CI os linters são
+      # chamados em modo de verificação para que a violação falhe o job.
+      - name: Lint
+        run: |
+          npx oxlint .
+          npx eslint .
+
+      - run: npm run type-check
+
+      - name: Testes unitários
+        run: npm run test:unit:run
