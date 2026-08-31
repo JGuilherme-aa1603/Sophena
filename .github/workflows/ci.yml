@@ -43,11 +43,9 @@ jobs:
       # criado com db push. Aqui DATABASE_URL aponta para o banco de teste
       # porque é a variável que o Prisma CLI lê (prisma.config.ts).
       - name: Preparar banco de teste
-        run: yarn prisma db push --skip-generate
+        run: yarn prisma db push
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/sophena_test
-
-      - run: yarn prisma generate
 
       - run: yarn typecheck
 

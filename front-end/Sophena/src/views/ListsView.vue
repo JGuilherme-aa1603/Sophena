@@ -100,7 +100,6 @@ const LIST_ICONS = [
   'bookmark', 'heart', 'star', 'feather', 'coffee',
   'moon', 'leaf', 'flame', 'flag', 'archive',
 ] as const
-type ListIconId = (typeof LIST_ICONS)[number]
 
 // Warm book spine colors generated from title+author hash
 const SPINE_COLORS = [
@@ -409,7 +408,7 @@ async function confirmDeleteList() {
           >
             <div class="shelf-books">
               <div
-                v-for="(book, j) in list.preview_items.slice(0, 5)"
+                v-for="book in list.preview_items.slice(0, 5)"
                 :key="book.id"
                 class="shelf-book"
               >

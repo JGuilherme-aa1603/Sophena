@@ -237,10 +237,6 @@ function openAddBookFlow() {
   showManualBookForm.value = false
 }
 
-function closeAddBookFlow() {
-  isAddBookFlowOpen.value = false
-}
-
 function openBookOptions(itemId: string) {
   activeOptionsItemId.value = itemId
 }
