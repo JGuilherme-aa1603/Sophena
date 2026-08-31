@@ -42,6 +42,13 @@ jobs:
       # O schema não usa migrations versionadas, então o banco de teste é
       # criado com db push. Aqui DATABASE_URL aponta para o banco de teste
       # porque é a variável que o Prisma CLI lê (prisma.config.ts).
+      # O client é gerado em back-end/generated/prisma, que não é versionado:
+      # sem este passo o typecheck não encontra os tipos do Prisma.
+      - name: Gerar client do Prisma
+        run: yarn prisma generate
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/sophena_test
+
       - name: Preparar banco de teste
         run: yarn prisma db push
         env:
