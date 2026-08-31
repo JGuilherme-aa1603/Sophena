@@ -495,18 +495,38 @@ function isUniqueConstraintError(error: unknown): error is Prisma.PrismaClientKn
   return error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002";
 }
 
+// O formato de `meta.target` depende de como o Prisma fala com o banco. Pelo
+// motor próprio vem a lista de colunas (["list_id", "position"]); pelo driver
+// adapter (@prisma/adapter-pg) o erro do Postgres é repassado cru e vem o nome
+// da constraint ("Book_List_Item_list_id_position_key"). Aceitar só a primeira
+// forma faz o conflito passar despercebido e virar 500 em vez de acionar o
+// retry de posição.
 function readUniqueConstraintTarget(error: Prisma.PrismaClientKnownRequestError) {
   const target = error.meta?.target;
 
-  return Array.isArray(target) ? target.filter((value): value is string => typeof value === "string") : [];
+  if (Array.isArray(target)) {
+    return target.filter((value): value is string => typeof value === "string");
+  }
+
+  return typeof target === "string" ? [target] : [];
 }
 
 function isListBookConflictTarget(target: string[]) {
-  return target.includes("list_id") && target.includes("book_id");
+  return matchesConstraint(target, ["list_id", "book_id"]);
 }
 
 function isListPositionConflictTarget(target: string[]) {
-  return target.includes("list_id") && target.includes("position");
+  return matchesConstraint(target, ["list_id", "position"]);
+}
+
+function matchesConstraint(target: string[], columns: string[]) {
+  if (columns.every((column) => target.includes(column))) {
+    return true;
+  }
+
+  const constraintSuffix = `${columns.join("_")}_key`;
+
+  return target.some((value) => value.endsWith(constraintSuffix));
 }
 
 function mapBook(book: {
