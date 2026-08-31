@@ -92,19 +92,7 @@ export class PrismaListItemRepository implements ListItemRepository {
           });
           const targetPosition = normalizeInsertPosition(input.position, totalItems);
 
-          await tx.bookListItem.updateMany({
-            where: {
-              list_id: input.list_id,
-              position: {
-                gte: targetPosition,
-              },
-            },
-            data: {
-              position: {
-                increment: 1,
-              },
-            },
-          });
+          await openPositionGap(tx, input.list_id, targetPosition);
 
           const createdItem = await tx.bookListItem.create({
             data: {
@@ -497,6 +485,44 @@ function normalizeInsertPosition(position: number | undefined, totalItems: numbe
 
 function normalizeExistingItemPosition(position: number, totalItems: number) {
   return Math.max(1, Math.min(position, Math.max(totalItems, 1)));
+}
+
+// Deslocar posições contíguas com um `position = position + 1` colide consigo
+// mesmo: `unique(list_id, position)` é verificada linha a linha, então a linha
+// que vira 2 encontra a que ainda está em 2. O desvio é passar por uma faixa
+// negativa, onde as linhas em trânsito não têm vizinho para colidir, e trazê-las
+// de volta já deslocadas. É o mesmo princípio do "destacar para a posição 0"
+// que reorderItem usa.
+const POSITION_SHIFT_OFFSET = 1_000_000_000;
+
+async function openPositionGap(tx: Prisma.TransactionClient, listId: string, fromPosition: number) {
+  await tx.bookListItem.updateMany({
+    where: {
+      list_id: listId,
+      position: {
+        gte: fromPosition,
+      },
+    },
+    data: {
+      position: {
+        decrement: POSITION_SHIFT_OFFSET,
+      },
+    },
+  });
+
+  await tx.bookListItem.updateMany({
+    where: {
+      list_id: listId,
+      position: {
+        lt: 0,
+      },
+    },
+    data: {
+      position: {
+        increment: POSITION_SHIFT_OFFSET + 1,
+      },
+    },
+  });
 }
 
 // As posições de uma lista são reescritas em bloco (deslocar tudo a partir do
