@@ -72,6 +72,8 @@ export class PrismaListItemRepository implements ListItemRepository {
     for (let attempt = 0; attempt < 3; attempt += 1) {
       try {
         return await prisma.$transaction(async (tx) => {
+          await lockLists(tx, input.list_id);
+
           const existingItem = await tx.bookListItem.findFirst({
             where: {
               list_id: input.list_id,
@@ -147,6 +149,8 @@ export class PrismaListItemRepository implements ListItemRepository {
 
   async deleteItem(input: { list_id: string; item_id: string }): Promise<void> {
     await prisma.$transaction(async (tx) => {
+      await lockLists(tx, input.list_id);
+
       const item = await tx.bookListItem.findUnique({
         where: {
           id: input.item_id,
@@ -186,6 +190,8 @@ export class PrismaListItemRepository implements ListItemRepository {
 
   async reorderItem(input: { list_id: string; item_id: string; position: number }): Promise<BookListItem> {
     return prisma.$transaction(async (tx) => {
+      await lockLists(tx, input.list_id);
+
       const item = await tx.bookListItem.findUnique({
         where: {
           id: input.item_id,
@@ -290,6 +296,8 @@ export class PrismaListItemRepository implements ListItemRepository {
   }): Promise<void> {
     try {
       await prisma.$transaction(async (tx) => {
+        await lockLists(tx, input.source_list_id, input.target_list_id);
+
         const item = await tx.bookListItem.findUnique({
           where: {
             id: input.item_id,
@@ -489,6 +497,21 @@ function normalizeInsertPosition(position: number | undefined, totalItems: numbe
 
 function normalizeExistingItemPosition(position: number, totalItems: number) {
   return Math.max(1, Math.min(position, Math.max(totalItems, 1)));
+}
+
+// As posições de uma lista são reescritas em bloco (deslocar tudo a partir do
+// alvo). Como `unique(list_id, position)` é verificada linha a linha, dois
+// writers na mesma lista colidem no meio do deslocamento. O advisory lock
+// serializa quem mexe na mesma lista; ele é liberado no fim da transação e não
+// bloqueia listas diferentes.
+async function lockLists(tx: Prisma.TransactionClient, ...listIds: string[]) {
+  // Ordem estável: duas transações que travam as mesmas listas em ordens
+  // opostas se bloqueariam mutuamente.
+  const uniqueIds = [...new Set(listIds)].sort();
+
+  for (const listId of uniqueIds) {
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${listId}, 0))`;
+  }
 }
 
 function isUniqueConstraintError(error: unknown): error is Prisma.PrismaClientKnownRequestError {
